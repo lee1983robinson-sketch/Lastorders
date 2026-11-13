@@ -54,3 +54,10 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - Milestones at 5, 10, 20, 30 and 50 with their own banner, colour flash, particles and musical sting.
 - New personal best (only when an earlier best is genuinely beaten): big animated banner with trophy and light rays, gold confetti, a crown for the rest of the run, a fanfare, and a gold record-breaking game-over card.
 - Gameplay, collisions, scoring, kebab bonus, drinks, controls, medals, sharing and the "flying" leaderboard are unchanged.
+
+## Version 3.5: smoother Beer Goggles, house band and records for every game
+
+- Beer Goggles: no more stutters. Building lights no longer switch on and off (which forced the phone to rebuild its shaders), buildings reuse their textures instead of making new ones (which built up lag the longer you ran), lighter shadows, phone-friendly sharpness, and an automatic two-step quality drop on slow phones.
+- Every game's music now plays through the new house band: honky-tonk piano (organ for Pool and Darts, bells for the calmer puzzle games), plucked bass, drums and glass clinks, keeping each game's own tune.
+- Shared sounds use one noise buffer instead of building a new one per sound; fanfare and "unlucky" stings upgraded; music stops when you leave a game.
+- New personal best celebration (trophy, gold card, confetti, fanfare) for Snack Merge, Barman Rush, Pint Stacker, Bottle Bowling, Beer Pong, Perfect Pour, Pub Quiz, Higher or Lower and Beer Goggles. Only when an earlier best is genuinely beaten.

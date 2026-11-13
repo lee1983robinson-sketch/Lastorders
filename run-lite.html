@@ -312,7 +312,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
     if (state !== "play") return;
     state = "dead"; deadAt = performance.now(); shake = 0.4; beep(260, 50, 0.6, "sawtooth", 0.09); chase = 1;
     const L = levelOf(beers);
-    if (score > best) { best = score; store.set("bgBest", String(best)); }
+    if (score > best) { const prev = best; best = score; store.set("bgBest", String(best)); if (prev > 0 && window.PUB && PUB.record) PUB.record(prev, best); }
     if (window.PUB) PUB.submit("goggles", score);
     $("line").textContent = LEVELS[L.i].line; $("fScore").textContent = score; $("fBeers").textContent = beers; $("fBest").textContent = best; $("bestStart").textContent = best; $("shareMsg").hidden = true;
     paintFace($("caughtBy"), looks(beers), chaserKind());

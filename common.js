@@ -6,25 +6,29 @@ window.PUB = (() => {
   const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ---------- sound ----------
-  let AC = null, MASTER = null, MUSIC = null, muted = store.get("loMute") === "1";
+  let AC = null, MASTER = null, MUSIC = null, NOISE = null, muted = store.get("loMute") === "1";
+  const MUSIC_VOL = 0.42;
   function ctx() {
-    if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); MASTER = AC.createGain(); MASTER.gain.value = muted ? 0 : 1; MASTER.connect(AC.destination); MUSIC = AC.createGain(); MUSIC.gain.value = 0.34; MUSIC.connect(MASTER); }
+    if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); MASTER = AC.createGain(); MASTER.gain.value = muted ? 0 : 1; MASTER.connect(AC.destination); MUSIC = AC.createGain(); MUSIC.gain.value = MUSIC_VOL; MUSIC.connect(MASTER);
+      // one shared noise buffer instead of building a new one for every sound (smoother on phones)
+      NOISE = AC.createBuffer(1, Math.floor(AC.sampleRate * 2.5), AC.sampleRate); const nd = NOISE.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1; }
     if (AC.state === "suspended") AC.resume(); return AC;
   }
   function beep(f1, f2, dur, type = "square", vol = 0.06, delay = 0) {
     try { const A = ctx(), o = A.createOscillator(), g = A.createGain(), t0 = A.currentTime + delay; o.type = type; o.frequency.setValueAtTime(f1, t0); o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t0 + dur); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); o.connect(g).connect(MASTER); o.start(t0); o.stop(t0 + dur + 0.02); } catch (e) {}
   }
   function noise(dur, vol, freq, delay = 0, q = 0.8) {
-    try { const A = ctx(), n = Math.floor(A.sampleRate * dur), buf = A.createBuffer(1, n, A.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
-      const s = A.createBufferSource(), f = A.createBiquadFilter(), g = A.createGain(), t0 = A.currentTime + delay; s.buffer = buf; f.type = "bandpass"; f.frequency.value = freq; f.Q.value = q;
+    try { const A = ctx();
+      const s = A.createBufferSource(), f = A.createBiquadFilter(), g = A.createGain(), t0 = A.currentTime + delay; s.buffer = NOISE; f.type = "bandpass"; f.frequency.value = freq; f.Q.value = q;
       g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + Math.min(0.03, dur / 4)); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); s.connect(f).connect(g).connect(MASTER); s.start(t0); s.stop(t0 + dur); } catch (e) {}
   }
   const pop = (pitch = 1, delay = 0) => { beep(700 * pitch, 1400 * pitch, 0.07, "sine", 0.09, delay); noise(0.05, 0.05, 3000 * pitch, delay); };
   const thud = () => { beep(160, 60, 0.12, "sine", 0.12); noise(0.08, 0.06, 500); };
   const smash = () => { noise(0.35, 0.18, 3500, 0, 0.6); noise(0.25, 0.1, 6000, 0.05, 0.6); beep(1800, 900, 0.1, "triangle", 0.04); };
   const cheer = (big) => { noise(big ? 2 : 1, big ? 0.3 : 0.16, 1200); noise(big ? 1.8 : 0.9, big ? 0.18 : 0.08, 600, 0.1); if (big) [0, 0.14, 0.28].forEach((d, i) => beep([523, 659, 784][i], [523, 659, 784][i], 0.25, "square", 0.04, d)); };
-  const fanfare = () => { [523, 659, 784, 1047].forEach((f, i) => beep(f, f * 1.01, 0.18, "square", 0.05, i * 0.1)); try { confetti(); } catch (e) {} };
-  const sad = () => { beep(392, 370, 0.25, "triangle", 0.06); beep(330, 311, 0.25, "triangle", 0.06, 0.25); beep(262, 196, 0.5, "triangle", 0.06, 0.5); };
+  const fanfare = () => { try { ctx(); const at = AC.currentTime + 0.01; duck(1.2); [72, 76, 79, 84].forEach((n, i) => piano(nf(n), at + i * 0.09, 0.3, 0.08, MASTER)); brass([60, 64, 67, 72], at + 0.38, 0.6, 0.03); cymbal(at + 0.38, 1.1, 0.07); } catch (e) {} try { confetti(); } catch (e) {} };
+  let recordAt = 0;
+  const sad = () => setTimeout(() => { if (Date.now() - recordAt < 2000) return; try { ctx(); const at = AC.currentTime + 0.01; [67, 66, 65].forEach((n, i) => brass([n - 12], at + i * 0.24, 0.22, 0.032)); brass([52], at + 0.72, 0.75, 0.032); } catch (e) {} }, 30);
   function burp() {
     try { const A = ctx(), t0 = A.currentTime, len = 0.55 + Math.random() * 0.35;
       const o = A.createOscillator(), lfo = A.createOscillator(), lg = A.createGain(), am = A.createGain(), f = A.createBiquadFilter(), g = A.createGain();
@@ -34,26 +38,51 @@ window.PUB = (() => {
       g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.32, t0 + 0.05); g.gain.setValueAtTime(0.28, t0 + len * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
       o.connect(am).connect(f).connect(g).connect(MASTER); o.start(t0); lfo.start(t0); o.stop(t0 + len + 0.05); lfo.stop(t0 + len + 0.05); } catch (e) {}
   }
-  // background music: give it chords, a tune (MIDI numbers, 0 = rest) and a tempo
-  let musicTimer = null;
-  function music(chords, tune, bpm = 132) {
-    try { ctx(); if (musicTimer) return; const N = (n) => 440 * Math.pow(2, (n - 69) / 12), STEP = 60 / bpm / 2; let step = 0, next = AC.currentTime + 0.05;
-      // Every game keeps its own chord progression and melody, with a light
-      // original arcade rhythm underneath. All sounds are synthesised locally:
-      // no copyrighted recordings, downloads or extra assets are required.
-      const page = (location.pathname.split("/").pop() || "home").replace(/\.html?$/i, "");
-      const timbre = ({ "flying-pint": "sine", run: "triangle", "run-lite": "triangle", darts: "square", pop: "sine", merge: "triangle", crush: "square", barman: "sawtooth", stack: "triangle", bowling: "sine", pong: "square", pool: "triangle", pour: "sine", sort: "triangle", quiz: "sine", cards: "triangle" })[page] || "triangle";
-      const note = (f, at, dur, type, vol, dest = MUSIC) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + dur); o.connect(g).connect(dest); o.start(at); o.stop(at + dur + 0.02); };
-      const kick = (at) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.setValueAtTime(115, at); o.frequency.exponentialRampToValueAtTime(42, at + .13); g.gain.setValueAtTime(.0001, at); g.gain.exponentialRampToValueAtTime(.13, at + .008); g.gain.exponentialRampToValueAtTime(.0001, at + .15); o.connect(g).connect(MUSIC); o.start(at); o.stop(at + .16); };
-      const tick = (at, loud = false) => { const o = AC.createOscillator(), g = AC.createGain(), f = AC.createBiquadFilter(); o.type = "square"; o.frequency.value = loud ? 1750 : 2350; f.type = "highpass"; f.frequency.value = 1300; g.gain.setValueAtTime(loud ? .025 : .010, at); g.gain.exponentialRampToValueAtTime(.0001, at + .035); o.connect(f).connect(g).connect(MUSIC); o.start(at); o.stop(at + .04); };
-      const sched = () => { while (next < AC.currentTime + 0.25) { const ch = chords[Math.floor(step / 8) % chords.length], b = step % 8;
-        if (b % 4 === 0) { note(N(ch[0] - 12), next, STEP * 1.6, "triangle", 0.085); kick(next); }
-        if (b % 4 === 2) { note(N(ch[2] - 12), next, STEP * 1.5, "triangle", 0.065); tick(next, true); }
-        if (b % 2 === 1) { for (const c of ch) note(N(c), next, STEP * 0.6, timbre, 0.009); tick(next, false); }
-        const m = tune[step % tune.length]; if (m) note(N(m), next, STEP * 0.9, timbre, 0.043);
-        next += STEP; step++; } };
-      sched(); musicTimer = setInterval(sched, 100); } catch (e) {}
+  // ---------- the Last Orders house band (all original, all synthesised here) ----------
+  const nf = (n) => 440 * Math.pow(2, (n - 69) / 12);
+  function envG(g, at, peak, dur, attack = 0.006) { g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(peak, at + attack); g.gain.exponentialRampToValueAtTime(0.0001, at + dur); }
+  // honky-tonk piano: two detuned voices with a percussive decay
+  function piano(f, at, dur, vol, dest = MUSIC) {
+    for (const [type, det, v] of [["triangle", -9, 1], ["square", 9, 0.2]]) { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; o.detune.value = det;
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol * v, at + 0.006); g.gain.exponentialRampToValueAtTime(vol * v * 0.35, at + 0.12); g.gain.exponentialRampToValueAtTime(0.0001, at + dur + 0.08); o.connect(g).connect(dest); o.start(at); o.stop(at + dur + 0.1); }
   }
+  function organ(f, at, dur, vol, dest = MUSIC) { for (const [m, v] of [[1, 1], [2, 0.45], [3, 0.2]]) { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.value = f * m; envG(g, at, vol * v, dur + 0.05, 0.02); o.connect(g).connect(dest); o.start(at); o.stop(at + dur + 0.08); } }
+  function bells(f, at, dur, vol, dest = MUSIC) { for (const [m, v, d] of [[1, 1, 1], [2.76, 0.3, 0.5], [5.4, 0.12, 0.3]]) { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.value = f * m; envG(g, at, vol * v, (dur + 0.4) * d, 0.003); o.connect(g).connect(dest); o.start(at); o.stop(at + dur + 0.45); } }
+  function pluck(f, at, dur, vol) { const o = AC.createOscillator(), fl = AC.createBiquadFilter(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.value = f; fl.type = "lowpass"; fl.Q.value = 5; fl.frequency.setValueAtTime(1500, at); fl.frequency.exponentialRampToValueAtTime(170, at + 0.2); envG(g, at, vol, dur, 0.004); o.connect(fl).connect(g).connect(MUSIC); o.start(at); o.stop(at + dur + 0.02); }
+  function hit(at, dur, vol, ftype, freq, dest = MUSIC, q = 0.8) { const src = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); src.buffer = NOISE; f.type = ftype; f.frequency.value = freq; f.Q.value = q; envG(g, at, vol, dur, 0.002); src.connect(f).connect(g).connect(dest); src.start(at, Math.random() * 1.5); src.stop(at + dur + 0.02); }
+  function kick(at, vol = 0.26, dest = MUSIC) { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.setValueAtTime(150, at); o.frequency.exponentialRampToValueAtTime(45, at + 0.12); envG(g, at, vol, 0.2, 0.004); o.connect(g).connect(dest); o.start(at); o.stop(at + 0.22); }
+  function snare(at, vol = 0.09, dest = MUSIC) { hit(at, 0.15, vol, "bandpass", 1900, dest); const o = AC.createOscillator(), g = AC.createGain(); o.type = "triangle"; o.frequency.value = 190; envG(g, at, vol * 0.7, 0.08); o.connect(g).connect(dest); o.start(at); o.stop(at + 0.1); }
+  const cymbal = (at, len = 0.9, vol = 0.06) => hit(at, len, vol, "highpass", 5200, MASTER, 0.5);
+  function brass(notes, at, dur, vol) { for (const n of notes) { const o = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.value = nf(n); f.type = "lowpass"; f.frequency.setValueAtTime(600, at); f.frequency.linearRampToValueAtTime(2600, at + 0.08); f.frequency.linearRampToValueAtTime(1200, at + dur); g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.03); g.gain.setValueAtTime(vol, at + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, at + dur); o.connect(f).connect(g).connect(MASTER); o.start(at); o.stop(at + dur + 0.02); } }
+  function duck(len = 0.9, to = 0.2) { if (!AC || !MUSIC || !musicTimer) return; const n = AC.currentTime; MUSIC.gain.cancelScheduledValues(n); MUSIC.gain.setValueAtTime(MUSIC.gain.value, n); MUSIC.gain.linearRampToValueAtTime(MUSIC_VOL * to, n + 0.05); MUSIC.gain.setValueAtTime(MUSIC_VOL * to, n + len); MUSIC.gain.linearRampToValueAtTime(MUSIC_VOL, n + len + 0.35); }
+  // each game keeps its own tune and chords; the band's lead instrument and drum feel suit the game
+  const PAGE = (location.pathname.split("/").pop() || "home").replace(/\.html?$/i, "");
+  const LEAD = { pool: organ, darts: organ, sort: bells, quiz: bells, cards: bells, pour: bells }[PAGE] || piano;
+  const DRUMS = { sort: 1, quiz: 1, pour: 1, cards: 1 }[PAGE] || 2;
+  let musicTimer = null;
+  // background music: give it chords, a tune (MIDI numbers, 0 = rest) and a tempo
+  function music(chords, tune, bpm = 132) {
+    try { ctx(); if (musicTimer) return; const STEP = 60 / bpm / 2; let step = 0, next = AC.currentTime + 0.06;
+      MUSIC.gain.cancelScheduledValues(AC.currentTime); MUSIC.gain.setValueAtTime(MUSIC_VOL, AC.currentTime);
+      const sched = () => { if (!AC) return; while (next < AC.currentTime + 0.3) { const ch = chords[Math.floor(step / 8) % chords.length], b = step % 8, at = next;
+        // plucked bass: root, bounce, fifth, octave pickup
+        if (b === 0) pluck(nf(ch[0] - 12), at, STEP * 1.8, 0.13); if (b === 3) pluck(nf(ch[0] - 12), at, STEP * 0.9, 0.08);
+        if (b === 4) pluck(nf(ch[2] - 12), at, STEP * 1.8, 0.11); if (b === 6) pluck(nf(ch[0]), at, STEP * 0.9, 0.07);
+        // off-beat chords
+        if (b === 2 || b === 6) for (const c of ch) piano(nf(c), at, STEP * 0.8, 0.02);
+        // the tune, each note held until the next
+        const m = tune[step % tune.length]; if (m) { let len = 1; while (len < 3 && !tune[(step + len) % tune.length]) len++; LEAD(nf(m), at, STEP * len * 0.92, LEAD === bells ? 0.05 : 0.065); }
+        // drums
+        if (b === 0 || b === 4) kick(at, DRUMS > 1 ? 0.26 : 0.16);
+        if (DRUMS > 1 && (b === 2 || b === 6)) snare(at);
+        hit(at, 0.035, DRUMS > 1 ? 0.026 : 0.016, "highpass", 7200);
+        if (b === 7 && Math.floor(step / 8) % 4 === 3) { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.value = 2637; envG(g, at, 0.02, 0.18); o.connect(g).connect(MUSIC); o.start(at); o.stop(at + 0.2); } // glass clink
+        next += STEP; step++; } };
+      sched(); musicTimer = setInterval(sched, 90); } catch (e) {}
+  }
+  function stopMusic() { if (musicTimer) { clearInterval(musicTimer); musicTimer = null; } }
+  // leaving a game stops the band and frees the audio
+  addEventListener("pagehide", () => { stopMusic(); if (AC) { try { AC.close(); } catch (e) {} AC = null; MASTER = MUSIC = null; } });
   document.addEventListener("visibilitychange", () => { if (!AC) return; if (document.hidden) AC.suspend(); else AC.resume(); });
   function wireMute(btn = $("mute")) {
     if (!btn) return; const wave = btn.querySelector(".wave");
@@ -81,7 +110,25 @@ window.PUB = (() => {
   let toastT = null;
   function toast(html, ms = 900) { const el = $("toast"); if (!el) return; el.innerHTML = html; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), ms); }
   async function share(text, msgEl) { if (msgEl) msgEl.hidden = false; try { await navigator.clipboard.writeText(text); if (msgEl) msgEl.textContent = "Copied. Paste it to a mate."; } catch (e) { if (msgEl) msgEl.textContent = text; } }
-  const best = (key, v) => { const cur = +(store.get(key) || 0); if (v != null && v > cur) { store.set(key, String(v)); return v; } return cur; };
+  // games whose best is a real high score get the new-personal-best celebration
+  const RECORD_KEYS = { barBest: 1, bowlBest: 1, cardsBest: 1, mergeBest: 1, pongBest: 1, pourBest: 1, quizBest: 1, stackBest: 1 };
+  const best = (key, v) => { const cur = +(store.get(key) || 0); if (v != null && v > cur) { store.set(key, String(v)); if (RECORD_KEYS[key] && cur > 0) record(cur, v); return v; } return cur; };
+  let pendingRecord = null;
+  const TROPHY = '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="pbtg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6C4"/><stop offset=".5" stop-color="#FFC53D"/><stop offset="1" stop-color="#C77700"/></linearGradient></defs><path d="M18 12H9c0 9 4 14 10 15M46 12h9c0 9-4 14-10 15" fill="none" stroke="#FFC53D" stroke-width="4" stroke-linecap="round"/><path d="M18 7h28v15c0 9-6 16-14 16s-14-7-14-16z" fill="url(#pbtg)"/><path d="M32 12l2.6 5.3 5.9.9-4.3 4.1 1 5.8L32 25.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="#FFF8D6"/><rect x="28" y="37" width="8" height="9" fill="#E8A21A"/><rect x="20" y="46" width="24" height="8" rx="2" fill="url(#pbtg)"/><rect x="16" y="54" width="32" height="5" rx="2" fill="#B86E00"/></svg>';
+  function clearRecord() { const over = $("over"); if (!over) return; const c = over.querySelector(".card"); if (c) c.classList.remove("pb-record"); over.querySelectorAll(".pb-banner").forEach((e) => e.remove()); }
+  function showRecord(r) {
+    const over = $("over"), card = over && over.querySelector(".card"); if (!card) return; clearRecord();
+    const d = document.createElement("div"); d.className = "pb-banner"; d.innerHTML = TROPHY + '<div class="pb-title">NEW PERSONAL BEST!</div><div class="pb-sub">Previous best ' + r.prev + ' · beaten by ' + (r.v - r.prev) + '</div>';
+    card.prepend(d); card.classList.add("pb-record");
+    try { ctx(); const at = AC.currentTime + 0.05; duck(2.2, 0.1);
+      [84, 88, 91, 96].forEach((n, i) => bells(nf(n), at + i * 0.08, 0.5, 0.05, MASTER));
+      for (let i = 0; i < 8; i++) snare(at + 0.3 + i * 0.035, 0.03 + i * 0.008, MASTER);
+      brass([60, 64, 67], at + 0.6, 0.14, 0.035); brass([60, 64, 67], at + 0.78, 0.14, 0.035); brass([65, 69, 72], at + 0.96, 0.2, 0.035); brass([67, 71, 74, 79], at + 1.2, 0.95, 0.035);
+      kick(at + 1.2, 0.35, MASTER); cymbal(at + 1.2, 1.6, 0.08); } catch (e) {}
+    try { confetti(170, ["#FFD45C", "#FFB627", "#FFF6C4", "#FF3D7F", "#3DE0FF"]); } catch (e) {}
+  }
+  // the celebration appears when the game-over card does (or straight away if it is already up)
+  function record(prev, v) { recordAt = Date.now(); const over = $("over"); pendingRecord = { prev, v }; if (over && !over.hidden) { showRecord(pendingRecord); pendingRecord = null; } }
   // studio credit on every start screen
   addEventListener("DOMContentLoaded", () => { const c = document.querySelector("#start .card"); if (c && !c.querySelector(".credit") && !/Robbo/.test(c.textContent)) { const p = document.createElement("p"); p.className = "fine credit"; p.innerHTML = '18+ · Know your limits: drinkaware.co.uk<br>A Robbo\'s Game Lab game'; c.appendChild(p); } });
   if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
@@ -89,10 +136,10 @@ window.PUB = (() => {
 
 
   // ---------- shared polish: confetti, count-up scores, score bumps, page fades ----------
-  function confetti(n = 120) {
+  function confetti(n = 120, palette) {
     if (REDUCED) n = 30; const c = document.createElement("canvas"); c.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95"; document.body.appendChild(c);
     const dpr = Math.min(devicePixelRatio || 1, 2), w = innerWidth, h = innerHeight; c.width = w * dpr; c.height = h * dpr; const x = c.getContext("2d"); x.scale(dpr, dpr);
-    const cols = ["#FFB627", "#FF3D7F", "#3DE0FF", "#5FE3B0", "#FFF6E0", "#A45CFF"], P = [];
+    const cols = palette || ["#FFB627", "#FF3D7F", "#3DE0FF", "#5FE3B0", "#FFF6E0", "#A45CFF"], P = [];
     for (let i = 0; i < n; i++) P.push({ x: w / 2 + (Math.random() - 0.5) * w * 0.3, y: h * 0.35, vx: (Math.random() - 0.5) * 700, vy: -300 - Math.random() * 600, r: Math.random() * 6, vr: (Math.random() - 0.5) * 12, s: 5 + Math.random() * 6, c: cols[i % cols.length] });
     let last = performance.now(), life = 0;
     (function f(now) { const dt = Math.min(0.033, (now - last) / 1000); last = now; life += dt; x.clearRect(0, 0, w, h);
@@ -105,7 +152,7 @@ window.PUB = (() => {
     (function f(now) { const k = Math.min(1, (now - t0) / dur), v = Math.round(target * (1 - Math.pow(1 - k, 3))); el.textContent = (raw.includes(",") ? v.toLocaleString() : v) + suffix; if (k < 1) requestAnimationFrame(f); else { el.textContent = raw; el.classList.remove("counting"); } })(t0);
   }
   addEventListener("DOMContentLoaded", () => {
-    const over = $("over"); if (over) new MutationObserver(() => { if (!over.hidden) setTimeout(() => over.querySelectorAll(".stat b").forEach(countUp), 120); }).observe(over, { attributes: true, attributeFilter: ["hidden"] });
+    const over = $("over"); if (over) new MutationObserver(() => { if (!over.hidden) { if (pendingRecord) { showRecord(pendingRecord); pendingRecord = null; } setTimeout(() => over.querySelectorAll(".stat b").forEach(countUp), 120); } else clearRecord(); }).observe(over, { attributes: true, attributeFilter: ["hidden"] });
     document.querySelectorAll(".pill b, .nums .sc").forEach((b) => { let prev = b.textContent; new MutationObserver(() => { if (b.textContent !== prev) { prev = b.textContent; b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump"); setTimeout(() => b.classList.remove("bump"), 160); } }).observe(b, { childList: true, characterData: true, subtree: true }); });
   });
   document.addEventListener("click", (e) => {
@@ -200,5 +247,5 @@ window.PUB = (() => {
       get count() { return list.length; },
     };
   }
-  return { confetti, submit, openBoard, playerId, GAME_NAMES, $, store, REDUCED, ctx, beep, noise, pop, thud, smash, cheer, fanfare, sad, burp, music, wireMute, fit, show, gate, toast, share, best, rr, shade, particles };
+  return { record, stopMusic, confetti, submit, openBoard, playerId, GAME_NAMES, $, store, REDUCED, ctx, beep, noise, pop, thud, smash, cheer, fanfare, sad, burp, music, wireMute, fit, show, gate, toast, share, best, rr, shade, particles };
 })();

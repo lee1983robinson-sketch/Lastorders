@@ -105,3 +105,16 @@ a.game b { text-shadow: 0 2px 12px rgba(0,0,0,.3); }
 .new { box-shadow: 0 3px 12px rgba(255,61,127,.24); }
 @media (hover: none) { a.game:hover { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .btn::after { display: none; } a.game .art svg { transition: none; } }
+
+/* ---------- new personal best (every score game) ---------- */
+.pb-banner { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.pb-banner svg { width: 64px; height: 64px; filter: drop-shadow(0 0 12px #FFB627AA); animation: pbTrophy .7s cubic-bezier(.2,1.6,.4,1) both, pbBob 2.2s ease-in-out .7s infinite; }
+.pb-title { font-family: var(--display); font-size: 26px; line-height: 1; background: linear-gradient(180deg, #FFF6C4, #FFC53D 55%, #E08A00); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 0 #5A2E00); }
+.pb-sub { font-size: 13px; color: #FFE6A6; font-weight: 800; letter-spacing: .4px; }
+.card.pb-record { border-color: #FFD45C; animation: pbGlow 1.8s ease-in-out infinite !important; }
+.card.pb-record .stat:first-child { border-color: #FFD45C88; background: linear-gradient(145deg, #4A3A10, #221A08); }
+.card.pb-record .stat:first-child b { color: #FFE27A; }
+@keyframes pbTrophy { from { transform: scale(.2) rotate(-25deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pbBob { 50% { transform: translateY(-4px) rotate(3deg); } }
+@keyframes pbGlow { 0%, 100% { box-shadow: 0 24px 80px #000e, 0 0 0 2px #FFD45C55, 0 0 50px #FFB62744; } 50% { box-shadow: 0 24px 80px #000e, 0 0 0 2px #FFD45CAA, 0 0 90px #FFB62788; } }
+@media (prefers-reduced-motion: reduce) { .pb-banner svg, .card.pb-record { animation: none !important; } }

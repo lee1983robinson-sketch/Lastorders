@@ -119,9 +119,11 @@ const looks = (b) => { const L = levelOf(b); return L.i === 4 ? 4 : L.i + L.f * 
 
 // ---------------- renderer, scene, camera ----------------
 const cv = $("game");
-const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// Performance: phones get a lower pixel cap, no MSAA on very sharp screens, and cheaper shadow filtering.
+const DPR = window.devicePixelRatio || 1, MOBILE = matchMedia("(pointer: coarse)").matches;
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: DPR < 2, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(DPR, MOBILE ? 1.5 : 1.75));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0b0c22);
@@ -133,7 +135,7 @@ addEventListener("resize", fit);
 // lights
 scene.add(new THREE.HemisphereLight(0x7a7cff, 0x2a1418, 0.7));
 const moon = new THREE.DirectionalLight(0xa9b8ff, 1.1);
-moon.castShadow = true; moon.shadow.mapSize.set(1024, 1024);
+moon.castShadow = true; moon.shadow.mapSize.set(MOBILE ? 512 : 1024, MOBILE ? 512 : 1024);
 Object.assign(moon.shadow.camera, { left: -9, right: 9, top: 14, bottom: -14, near: 1, far: 70 }); moon.shadow.bias = -0.0008;
 scene.add(moon, moon.target);
 const LAMP_LIGHTS = []; for (let i = 0; i < 4; i++) { const l = new THREE.PointLight(0xffc477, 30, 16, 1.8); scene.add(l); LAMP_LIGHTS.push(l); }
@@ -193,27 +195,28 @@ for (const s of [-1, 1]) {
 }
 // buildings: two rows that recycle as you run
 const BUILD_X = ROAD_W / 2 + 3 + 3.2;
-const buildings = [];
+const buildings = [], BOX = new THREE.BoxGeometry(1, 1, 1);
+// Recycling a building only changes its size, texture repeat and sign. Nothing is created or recompiled
+// while you run, which is what used to cause the stutters (and the slow build-up of lag).
 function dressBuilding(b) {
-  const len = rnd(7, 12), h = rnd(7, 19), set = WINDOW_SETS[Math.floor(Math.random() * WINDOW_SETS.length)];
+  const len = rnd(7, 12), h = rnd(7, 19);
   b.len = len; b.mesh.scale.set(6.4, h, len); b.mesh.position.y = h / 2;
-  const map = set.map.clone(), em = set.em.clone(); map.needsUpdate = em.needsUpdate = true;
-  map.repeat.set(len / 7, h / 9); em.repeat.copy(map.repeat);
-  b.mesh.material.map = map; b.mesh.material.emissiveMap = em; b.mesh.material.needsUpdate = true;
+  b.map.repeat.set(len / 7, h / 9); b.em.repeat.copy(b.map.repeat);
   b.sign.visible = Math.random() < 0.45;
-  if (b.sign.visible) { const s = SIGN_MATS[Math.floor(Math.random() * SIGN_MATS.length)]; b.sign.material = s.mat; b.light.color.set(s.col); b.door.visible = true; } else b.door.visible = false;
-  b.light.visible = b.sign.visible;
+  if (b.sign.visible) { const s = SIGN_MATS[Math.floor(Math.random() * SIGN_MATS.length)]; b.sign.material = s.mat; b.col = s.col; b.glow.material.color.set(s.col); b.door.visible = true; } else b.door.visible = false;
+  b.glow.visible = b.sign.visible;
 }
 for (const side of [-1, 1]) {
   let z = 12;
   while (z > -140) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ roughness: 0.9, emissive: 0xffffff, emissiveIntensity: 1.1 }));
+    const set = WINDOW_SETS[Math.floor(Math.random() * WINDOW_SETS.length)], map = set.map.clone(), em = set.em.clone();
+    const mesh = new THREE.Mesh(BOX, new THREE.MeshStandardMaterial({ roughness: 0.9, emissive: 0xffffff, emissiveIntensity: 1.1, map, emissiveMap: em }));
     mesh.receiveShadow = true;
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.85), SIGN_MATS[0].mat); sign.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
     const door = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 2.3), new THREE.MeshBasicMaterial({ color: 0xffb35a, toneMapped: false })); door.rotation.y = sign.rotation.y;
-    const light = new THREE.PointLight(0xff3d7f, 8, 7, 2);
-    const b = { side, mesh, sign, door, light, len: 8 };
-    scene.add(mesh, sign, door, light);
+    const gl = glow(0xff3d7f, 3.4, 0.5);
+    const b = { side, mesh, sign, door, glow: gl, map, em, col: "#ff3d7f", len: 8 };
+    scene.add(mesh, sign, door, gl);
     dressBuilding(b);
     b.z = z - b.len / 2; place(b); buildings.push(b);
     z -= b.len + 0.4;
@@ -222,7 +225,7 @@ for (const side of [-1, 1]) {
 function place(b) {
   b.mesh.position.set(b.side * BUILD_X, b.mesh.position.y, b.z);
   const face = b.side * (BUILD_X - 3.22);
-  b.sign.position.set(face, 3.4, b.z); b.door.position.set(face, 1.15, b.z + Math.min(2, b.len / 3)); b.light.position.set(face - b.side * 0.8, 3.2, b.z);
+  b.sign.position.set(face, 3.4, b.z); b.door.position.set(face, 1.15, b.z + Math.min(2, b.len / 3)); b.glow.position.set(face - b.side * 0.35, 3.4, b.z);
 }
 // street lamps
 const lamps = [];
@@ -231,7 +234,7 @@ const lamps = [];
   const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffd28a, toneMapped: false });
   for (let i = 0; i < 14; i++) {
     const side = i % 2 ? 1 : -1, g = new THREE.Group();
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 5.2, 8), poleMat); pole.position.y = 2.6; pole.castShadow = true;
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 5.2, 8), poleMat); pole.position.y = 2.6;
     const arm = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 0.08), poleMat); arm.position.set(-side * 0.55, 5.1, 0);
     const bulb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.3), bulbMat); bulb.position.set(-side * 1.05, 5.0, 0);
     const gl = glow(0xffc477, 3.2, 0.7); gl.position.copy(bulb.position);
@@ -401,7 +404,7 @@ function caught() {
   if (state !== "play") return;
   state = "dead"; deadAt = performance.now(); shake = 0.5; beep(260, 50, 0.6, "sawtooth", 0.09);
   const L = levelOf(beers);
-  if (score > best) { best = score; store.set("bgBest", String(best)); }
+  if (score > best) { const prev = best; best = score; store.set("bgBest", String(best)); if (prev > 0 && window.PUB && PUB.record) PUB.record(prev, best); }
   if (window.PUB) PUB.submit("goggles", score);
   $("line").textContent = LEVELS[L.i].line; $("fScore").textContent = score; $("fBeers").textContent = beers; $("fBest").textContent = best; $("bestStart").textContent = best; $("shareMsg").hidden = true;
   paintFace($("caughtBy"), looks(beers), chaserKind());
@@ -434,6 +437,13 @@ function moveWorld(d) {
   roadTex.offset.y += d / 10; paveTex.offset.y += d / 3;
   for (const b of buildings) { b.z += d; if (b.z - b.len / 2 > 14) { let minZ = Infinity; for (const o of buildings) if (o.side === b.side) minZ = Math.min(minZ, o.z - o.len / 2); dressBuilding(b); b.z = minZ - 0.4 - b.len / 2; } place(b); }
   for (const l of lamps) { l.position.z += d; if (l.position.z > 10) l.position.z -= 14 * 8; }
+  updateNeon();
+}
+const NEON = [0, 1].map(() => { const l = new THREE.PointLight(0xff3d7f, 0, 7, 2); scene.add(l); return l; });
+function updateNeon() {
+  let a = null, b2 = null;
+  for (const b of buildings) { if (!b.sign.visible || b.z > 6 || b.z < -34) continue; if (!a || b.z > a.z) { b2 = a; a = b; } else if (!b2 || b.z > b2.z) b2 = b; }
+  [a, b2].forEach((b, i) => { const l = NEON[i]; if (b && !lowFx) { l.intensity = 8; l.color.set(b.col); l.position.set(b.glow.position.x - b.side * 0.5, 3.2, b.z); } else l.intensity = 0; });
 }
 function update(dt) {
   T += dt;
@@ -479,13 +489,13 @@ function frameCamera(dt) {
   const tx = px * 0.55, ty = 3.5 + jy * 0.35;
   camPos.x = lerp(camPos.x, tx, Math.min(1, dt * 6)); camPos.y = lerp(camPos.y, ty, Math.min(1, dt * 4));
   camera.position.copy(camPos);
-  if (shake > 0 && !REDUCED) camera.position.add(new THREE.Vector3((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake, 0));
+  if (shake > 0 && !REDUCED) { camera.position.x += (Math.random() - 0.5) * shake; camera.position.y += (Math.random() - 0.5) * shake; }
   look.set(px * 0.75, 0.9, -9); camera.lookAt(look);
   camera.rotation.z += (px - lane * LANE) * 0.05;
   moon.position.set(px - 8, 18, 6); moon.target.position.set(px, 0, -6);
   // put the 4 lamp lights on the nearest lamps ahead
   const near = lamps.filter((l) => l.position.z < 4 && l.position.z > -40).sort((a, b) => b.position.z - a.position.z).slice(0, 4);
-  LAMP_LIGHTS.forEach((L, i) => { const l = near[i]; if (l) { const side = Math.sign(l.position.x); L.position.set(l.position.x - side * 1.05, 4.6, l.position.z); L.visible = true; } else L.visible = false; });
+  LAMP_LIGHTS.forEach((L, i) => { const l = near[i]; if (l) { const side = Math.sign(l.position.x); L.position.set(l.position.x - side * 1.05, 4.6, l.position.z); L.intensity = lowFx ? 0 : 30; } else L.intensity = 0; });
 }
 
 // ---------------- loop ----------------
@@ -495,5 +505,13 @@ fit(); reset(); drawWho(); $("bestStart").textContent = best;
 show(store.get("lo18") === "1" ? "start" : "gate"); $("hud").hidden = true;
 requestAnimationFrame(loop);
 // drop to a lighter mode on slow phones
-let fpsN = 0, fpsT0 = 0, lowered = false;
-function watchFps(now) { if (state !== "play" || lowered) return; if (!fpsT0) fpsT0 = now; fpsN++; if (now - fpsT0 > 3000) { if (fpsN / 3 < 28) { lowered = true; renderer.setPixelRatio(1); renderer.shadowMap.enabled = false; for (const L of LAMP_LIGHTS) L.intensity = 0; scene.traverse((m) => { if (m.material) m.material.needsUpdate = true; }); fit(); } fpsT0 = now; fpsN = 0; } }
+// step 1: sharper-than-needed pixels and shadows go; step 2: the extra lights go. Light count never changes.
+let fpsN = 0, fpsT0 = 0, quality = 2, lowFx = false;
+function watchFps(now) {
+  if (state !== "play" || quality === 0) { fpsT0 = 0; fpsN = 0; return; }
+  if (!fpsT0) fpsT0 = now; fpsN++;
+  if (now - fpsT0 < 2500) return;
+  const fps = fpsN / ((now - fpsT0) / 1000); fpsT0 = now; fpsN = 0;
+  if (quality === 2 && fps < 48) { quality = 1; renderer.setPixelRatio(1); renderer.shadowMap.enabled = false; scene.traverse((m) => { if (m.material) m.material.needsUpdate = true; }); fit(); }
+  else if (quality === 1 && fps < 34) { quality = 0; lowFx = true; for (const L of LAMP_LIGHTS) L.intensity = 0; }
+}
