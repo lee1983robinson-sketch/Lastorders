@@ -6,6 +6,7 @@ It's a static website (no server, no database), so it can go on Render as a free
 
 - `index.html`: Last Orders, the flappy pint game
 - `run.html` + `run3d.js`: Beer Goggles, the 3D running game (uses three.js in `vendor/`, MIT licence)
+- `darts.html`: 501 darts against a pub opponent
 - `run-lite.html`: the flat 2D version of Beer Goggles for older phones
 - `manifest.webmanifest`, `sw.js`, icons: make it installable as an app ("Add to Home screen") and playable offline
 - `og.png`: the picture shown when the link is shared on Facebook or WhatsApp
