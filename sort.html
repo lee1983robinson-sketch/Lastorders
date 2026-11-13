@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Drink Sort</title>
+<meta name="description" content="Pour drinks between glasses until each holds one drink. A tricky pub puzzle. 18+.">
+<meta name="theme-color" content="#0A0E24">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Drink Sort">
+<meta property="og:description" content="Pour drinks between glasses until each holds one drink. A tricky pub puzzle. 18+.">
+<meta property="og:image" content="/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
+<style>.tools{position:absolute;left:62px;right:62px;bottom:12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tools button{min-height:44px;border-radius:12px;border:1px solid var(--line);background:#12163Acc;color:var(--ink);font:800 12px var(--body);cursor:pointer;padding:0 4px}
+.tools button:disabled{opacity:.4;cursor:default}.toast{top:10%}</style>
+</head>
+<body class="game">
+<div class="stage">
+  <div class="screen">
+    <canvas id="game" aria-label="Drink Sort game" role="img"></canvas>
+    <div class="hud"><div class="pill"><span>Level</span><b id="lvl">1</b></div><div class="pill r"><span>Pours</span><b id="moves">0</b></div></div>
+    <div class="tools"><button type="button" id="undo">Undo (3)</button><button type="button" id="add">+1 glass</button><button type="button" id="restart">Restart</button></div>
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <button class="iconbtn mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+    <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+    <div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>DRINK SORT</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+    <div class="overlay" id="start" hidden><div class="card"><h1>DRINK SORT</h1><p class="big">Pour the drinks between glasses until every glass holds just one drink.</p>
+<p>Tap a glass to pick it up, then tap another to pour. You can only pour onto the same drink or into an empty glass, and each glass holds four. It gets properly tricky, so use your undos wisely.</p>
+<button class="btn" id="go" type="button">PLAY LEVEL <span id="startLvl" style="margin-left:6px">1</span></button>
+<button class="btn ghost" id="pick1" type="button">Start again from level 1</button>
+<button class="btn ghost lb-btn" type="button" data-lb="sort">Leaderboard</button><a class="btn ghost" href="/">All pub games</a></div></div>
+    <div class="overlay" id="over" hidden><div class="card"><h2 id="oTitle">SORTED!</h2><div class="stars" id="oStars"></div><p class="big" id="oSub"></p>
+<button class="btn" id="again" type="button">NEXT LEVEL</button>
+<button class="btn ghost lb-btn" type="button" data-lb="sort">Leaderboard</button><div class="row"><a class="btn ghost" href="/">All games</a><button class="btn ghost" id="share" type="button">Copy score</button></div><p class="fine" id="shareMsg" hidden></p></div></div>
+  </div>
+</div>
+<script src="/common.js"></script>
+<script src="/sort.js"></script>
+</body>
+</html>

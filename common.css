@@ -42,3 +42,27 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
 .stars { font-size: 34px; letter-spacing: 6px; color: #3A3E70; }
 .stars .on { color: var(--lager); text-shadow: 0 0 14px #FFB62799; }
 @media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } .toast { transition: none; } }
+
+/* ---------- motion & polish (shared by every game) ---------- */
+@keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cardIn { from { transform: translateY(26px) scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rise { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+body { animation: pageIn .35s ease-out; }
+body.leaving { opacity: 0; transition: opacity .16s ease-in; }
+.overlay:not([hidden]) { animation: fadeIn .25s ease-out; }
+.overlay:not([hidden]) .card { animation: cardIn .45s cubic-bezier(.2, 1.25, .4, 1) both; }
+.overlay:not([hidden]) .card > * { animation: rise .4s ease-out both; }
+.overlay:not([hidden]) .card > *:nth-child(2) { animation-delay: .05s; } .overlay:not([hidden]) .card > *:nth-child(3) { animation-delay: .1s; }
+.overlay:not([hidden]) .card > *:nth-child(4) { animation-delay: .15s; } .overlay:not([hidden]) .card > *:nth-child(5) { animation-delay: .2s; }
+.overlay:not([hidden]) .card > *:nth-child(n+6) { animation-delay: .25s; }
+.btn { transition: transform .08s, box-shadow .08s, filter .15s; }
+.btn:hover { filter: brightness(1.08); }
+.overlay:not([hidden]) .card > .btn:not(.ghost):first-of-type { animation: rise .4s ease-out both, pulse 1.8s ease-in-out 1s infinite; }
+.iconbtn { transition: transform .1s, background .15s; } .iconbtn:active { transform: scale(.92); }
+.stat b.counting { color: var(--lager); }
+.pill b { transition: transform .15s; } .pill b.bump { transform: scale(1.18); }
+@media (max-height: 640px) { .card { padding: 14px; gap: 9px; } h1 { font-size: 32px; } .btn { min-height: 46px; } .big { font-size: 15px; } }
+@media (prefers-reduced-motion: reduce) { body, .overlay:not([hidden]), .overlay:not([hidden]) .card, .overlay:not([hidden]) .card > * { animation: none !important; } }
+.overlay .card { max-height: 100%; overflow-y: auto; pointer-events: auto; box-sizing: border-box; }

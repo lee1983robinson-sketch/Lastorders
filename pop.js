@@ -115,7 +115,7 @@
   function win() {
     if (state !== "play") return; state = "over"; const s = stars(); score += s * 100; fanfare(); cheer(false);
     const prev = +(store.get("popStars" + level) || 0); if (s > prev) store.set("popStars" + level, String(s));
-    level++; store.set("popLevel", String(Math.max(level, +(store.get("popLevel") || 1)))); best("popBest", level - 1);
+    PUB.submit("pop", level); level++; store.set("popLevel", String(Math.max(level, +(store.get("popLevel") || 1)))); best("popBest", level - 1);
     $("oTitle").textContent = "LEVEL " + (level - 1) + " CLEARED!"; $("oStars").innerHTML = [1, 2, 3].map((i) => `<span class="${i <= s ? "on" : ""}">★</span>`).join(""); $("oStars").hidden = false;
     $("oSub").textContent = s === 3 ? "Three stars. Absolute pro." : s === 2 ? "Not bad at all. Fewer shots for three stars." : "Done it! Try fewer shots for more stars.";
     $("oScore").textContent = score; $("oShots").textContent = shots; $("again").textContent = "NEXT LEVEL"; $("shareMsg").hidden = true; show("over"); hud();

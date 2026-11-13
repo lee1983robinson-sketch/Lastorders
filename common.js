@@ -23,7 +23,7 @@ window.PUB = (() => {
   const thud = () => { beep(160, 60, 0.12, "sine", 0.12); noise(0.08, 0.06, 500); };
   const smash = () => { noise(0.35, 0.18, 3500, 0, 0.6); noise(0.25, 0.1, 6000, 0.05, 0.6); beep(1800, 900, 0.1, "triangle", 0.04); };
   const cheer = (big) => { noise(big ? 2 : 1, big ? 0.3 : 0.16, 1200); noise(big ? 1.8 : 0.9, big ? 0.18 : 0.08, 600, 0.1); if (big) [0, 0.14, 0.28].forEach((d, i) => beep([523, 659, 784][i], [523, 659, 784][i], 0.25, "square", 0.04, d)); };
-  const fanfare = () => [523, 659, 784, 1047].forEach((f, i) => beep(f, f * 1.01, 0.18, "square", 0.05, i * 0.1));
+  const fanfare = () => { [523, 659, 784, 1047].forEach((f, i) => beep(f, f * 1.01, 0.18, "square", 0.05, i * 0.1)); try { confetti(); } catch (e) {} };
   const sad = () => { beep(392, 370, 0.25, "triangle", 0.06); beep(330, 311, 0.25, "triangle", 0.06, 0.25); beep(262, 196, 0.5, "triangle", 0.06, 0.5); };
   function burp() {
     try { const A = ctx(), t0 = A.currentTime, len = 0.55 + Math.random() * 0.35;
@@ -73,8 +73,105 @@ window.PUB = (() => {
   function toast(html, ms = 900) { const el = $("toast"); if (!el) return; el.innerHTML = html; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), ms); }
   async function share(text, msgEl) { if (msgEl) msgEl.hidden = false; try { await navigator.clipboard.writeText(text); if (msgEl) msgEl.textContent = "Copied. Paste it to a mate."; } catch (e) { if (msgEl) msgEl.textContent = text; } }
   const best = (key, v) => { const cur = +(store.get(key) || 0); if (v != null && v > cur) { store.set(key, String(v)); return v; } return cur; };
+  // studio credit on every start screen
+  addEventListener("DOMContentLoaded", () => { const c = document.querySelector("#start .card"); if (c && !c.querySelector(".credit") && !/Robbo/.test(c.textContent)) { const p = document.createElement("p"); p.className = "fine credit"; p.innerHTML = '18+ · Know your limits: drinkaware.co.uk<br>A Robbo\'s Game Lab game'; c.appendChild(p); } });
   if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
 
+
+
+  // ---------- shared polish: confetti, count-up scores, score bumps, page fades ----------
+  function confetti(n = 120) {
+    if (REDUCED) n = 30; const c = document.createElement("canvas"); c.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95"; document.body.appendChild(c);
+    const dpr = Math.min(devicePixelRatio || 1, 2), w = innerWidth, h = innerHeight; c.width = w * dpr; c.height = h * dpr; const x = c.getContext("2d"); x.scale(dpr, dpr);
+    const cols = ["#FFB627", "#FF3D7F", "#3DE0FF", "#5FE3B0", "#FFF6E0", "#A45CFF"], P = [];
+    for (let i = 0; i < n; i++) P.push({ x: w / 2 + (Math.random() - 0.5) * w * 0.3, y: h * 0.35, vx: (Math.random() - 0.5) * 700, vy: -300 - Math.random() * 600, r: Math.random() * 6, vr: (Math.random() - 0.5) * 12, s: 5 + Math.random() * 6, c: cols[i % cols.length] });
+    let last = performance.now(), life = 0;
+    (function f(now) { const dt = Math.min(0.033, (now - last) / 1000); last = now; life += dt; x.clearRect(0, 0, w, h);
+      for (const p of P) { p.vy += 900 * dt; p.vx *= 0.99; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.globalAlpha = Math.max(0, 1 - life / 2.6); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore(); }
+      if (life < 2.6) requestAnimationFrame(f); else c.remove(); })(last);
+  }
+  function countUp(el) {
+    const raw = el.textContent.trim(), m = raw.match(/^([\d,]+)(.*)$/); if (!m || el.dataset.counted === raw) return; const target = +m[1].replace(/,/g, ""), suffix = m[2]; if (!(target > 0)) return;
+    el.dataset.counted = raw; if (REDUCED) return; const t0 = performance.now(), dur = Math.min(1100, 400 + target * 4); el.classList.add("counting");
+    (function f(now) { const k = Math.min(1, (now - t0) / dur), v = Math.round(target * (1 - Math.pow(1 - k, 3))); el.textContent = (raw.includes(",") ? v.toLocaleString() : v) + suffix; if (k < 1) requestAnimationFrame(f); else { el.textContent = raw; el.classList.remove("counting"); } })(t0);
+  }
+  addEventListener("DOMContentLoaded", () => {
+    const over = $("over"); if (over) new MutationObserver(() => { if (!over.hidden) setTimeout(() => over.querySelectorAll(".stat b").forEach(countUp), 120); }).observe(over, { attributes: true, attributeFilter: ["hidden"] });
+    document.querySelectorAll(".pill b, .nums .sc").forEach((b) => { let prev = b.textContent; new MutationObserver(() => { if (b.textContent !== prev) { prev = b.textContent; b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump"); setTimeout(() => b.classList.remove("bump"), 160); } }).observe(b, { childList: true, characterData: true, subtree: true }); });
+  });
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest && e.target.closest(".btn, .iconbtn, .who, .opp button, .drink"); if (b && !b.disabled) beep(1300, 1000, 0.025, "sine", 0.025);
+    const a = e.target.closest && e.target.closest("a[href^='/']"); if (a && !e.defaultPrevented && !a.hasAttribute("data-lb") && !e.metaKey && !e.ctrlKey && !REDUCED) { e.preventDefault(); document.body.classList.add("leaving"); setTimeout(() => (location.href = a.href), 160); }
+  });
+  addEventListener("pageshow", () => document.body && document.body.classList.remove("leaving"));
+  // ---------- online leaderboards ----------
+  const GAME_NAMES = { flying: "Flying Pint", goggles: "Beer Goggles", darts: "Darts", pop: "Pub Pop", merge: "Snack Merge", crush: "Bar Crush", barman: "Barman Rush", stack: "Pint Stacker",
+    bowling: "Bottle Bowling", pong: "Beer Pong", pool: "Pool", pour: "Perfect Pour", sort: "Drink Sort", quiz: "Pub Quiz", cards: "Higher or Lower" };
+  const UNITS = { pop: "level", crush: "level", sort: "level", darts: "legs won", stack: "high", cards: "in a row" };
+  const LB_API = (store.get("lbApi") || "https://lastorders-api.onrender.com").replace(/\/+$/, "");
+  function playerId() { let id = store.get("lbId"); if (!id || !/^[a-z0-9]{12,40}$/.test(id)) { id = ""; const a = new Uint8Array(14); (crypto.getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => (a[i] = Math.random() * 256))); for (const b of a) id += (b % 36).toString(36); store.set("lbId", id); } return id; }
+  async function api(path, body) {
+    const r = await fetch(LB_API + path, { method: body ? "POST" : "GET", headers: body ? { "content-type": "application/json" } : {}, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout ? AbortSignal.timeout(65000) : undefined });
+    const j = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(j.error || "Scoreboard problem."), { status: r.status }); return j;
+  }
+  let flushing = false;
+  async function flush() {
+    if (flushing) return; flushing = true;
+    try { let q = JSON.parse(store.get("lbQueue") || "[]");
+      while (q.length) { const it = q[0]; try { const j = await api("/api/score", { game: it.game, score: it.score, id: playerId(), name: store.get("lbName") || undefined }); if (j.name) store.set("lbName", j.name); note(j, it.game); } catch (e) { if (e.status === 400) {} else break; } q.shift(); store.set("lbQueue", JSON.stringify(q)); q = JSON.parse(store.get("lbQueue") || "[]"); }
+    } catch (e) {} flushing = false;
+  }
+  function submit(game, score) { score = Math.floor(score); if (!GAME_NAMES[game] || !(score > 0)) return; let q = []; try { q = JSON.parse(store.get("lbQueue") || "[]"); } catch (e) {} q = q.filter((x) => x.game !== game || x.score > score); if (!q.some((x) => x.game === game && x.score >= score)) q.push({ game, score }); store.set("lbQueue", JSON.stringify(q.slice(-30))); flush(); }
+  function note(j, game) {
+    if (!j || !j.today) return; const el = document.createElement("div"); el.className = "lb-note";
+    el.innerHTML = `${j.todayBest ? "New best today! " : ""}You're <b>#${j.today.r}</b> today on ${GAME_NAMES[game]}` + (j.all ? ` · <b>#${j.all.r}</b> all time` : "") + ` <button type="button" data-lb="${game}">See board</button>`;
+    document.body.appendChild(el); setTimeout(() => el.classList.add("on"), 20); setTimeout(() => { el.classList.remove("on"); setTimeout(() => el.remove(), 400); }, 6000);
+  }
+  const LBCSS = `.lb-wrap{position:fixed;inset:0;z-index:100;background:#050612cc;display:flex;align-items:center;justify-content:center;padding:14px;font-family:Inter,system-ui,sans-serif;color:#F4F1FF}
+.lb-box{width:min(420px,100%);max-height:92vh;display:flex;flex-direction:column;gap:10px;background:#12153A;border:2px solid #2C2F66;border-radius:22px;padding:16px;box-shadow:0 20px 60px #000c}
+.lb-head{display:flex;align-items:center;gap:8px}.lb-head h3{margin:0;flex:1;font:400 22px Bungee,Impact,sans-serif;color:#FFB627}
+.lb-x{width:44px;height:44px;border-radius:12px;border:1px solid #2C2F66;background:#1C2150;color:#F4F1FF;font-size:20px;cursor:pointer}
+.lb-box select,.lb-box input{min-height:44px;border-radius:12px;border:1px solid #2C2F66;background:#0A0E24;color:#F4F1FF;font:600 15px Inter,sans-serif;padding:0 12px;width:100%;box-sizing:border-box}
+.lb-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}.lb-tabs button{min-height:40px;border-radius:12px;border:1px solid #2C2F66;background:#0A0E24;color:#B9B6D9;font:800 14px Inter,sans-serif;cursor:pointer}.lb-tabs button.on{background:#FFB627;color:#2A1400;border-color:#FFB627}
+.lb-list{overflow-y:auto;min-height:120px;display:flex;flex-direction:column;gap:4px;margin:0;padding:0;list-style:none}
+.lb-list li{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:#0A0E24;font-size:15px}
+.lb-list li.me{background:#2A2350;outline:2px solid #FFB627}.lb-list .r{font:400 15px Bungee,Impact,sans-serif;color:#B9B6D9}.lb-list li:nth-child(1) .r{color:#FFD24A}.lb-list li:nth-child(2) .r{color:#D8DEE9}.lb-list li:nth-child(3) .r{color:#E0975A}
+.lb-list .s{font:400 16px Bungee,Impact,sans-serif;color:#FFF6E0;font-variant-numeric:tabular-nums}.lb-list .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-msg{font-size:14px;color:#B9B6D9;text-align:center;padding:14px 4px}.lb-you{font-size:13px;color:#B9B6D9;text-align:center}
+.lb-name{display:flex;gap:6px}.lb-name button{min-height:44px;border-radius:12px;border:0;background:#FFB627;color:#2A1400;font:400 15px Bungee,Impact,sans-serif;padding:0 14px;cursor:pointer;white-space:nowrap}
+.lb-err{font-size:13px;color:#FF7A8E;min-height:1em}
+.lb-note{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;transition:.35s;z-index:90;background:#12153Aee;border:1px solid #FFB627;border-radius:14px;padding:10px 12px;font:600 13px Inter,sans-serif;color:#F4F1FF;width:max-content;max-width:calc(100% - 32px);text-align:center}
+.lb-note.on{opacity:1;transform:translate(-50%,0)}.lb-note b{color:#FFB627}.lb-note button{margin-left:6px;border:0;border-radius:8px;background:#FFB627;color:#2A1400;font:800 12px Inter,sans-serif;padding:6px 8px;cursor:pointer}
+.lb-btn{background:#1C2150!important;color:#F4F1FF!important}`;
+  function openBoard(game) {
+    if (!document.getElementById("lbcss")) { const st = document.createElement("style"); st.id = "lbcss"; st.textContent = LBCSS; document.head.appendChild(st); }
+    const old = document.getElementById("lbWrap"); if (old) old.remove();
+    let period = "today"; game = GAME_NAMES[game] ? game : "flying";
+    const w = document.createElement("div"); w.className = "lb-wrap"; w.id = "lbWrap"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", "Leaderboard");
+    w.innerHTML = `<div class="lb-box"><div class="lb-head"><h3>LEADERBOARD</h3><button class="lb-x" type="button" aria-label="Close">✕</button></div>
+      <label for="lbGame" style="position:absolute;left:-9999px">Game</label><select id="lbGame">${Object.entries(GAME_NAMES).map(([k, v]) => `<option value="${k}" ${k === game ? "selected" : ""}>${v}</option>`).join("")}</select>
+      <div class="lb-tabs" role="tablist"><button type="button" role="tab" data-p="today" class="on">Today</button><button type="button" role="tab" data-p="all">All time</button></div>
+      <ol class="lb-list" id="lbList"></ol><div class="lb-you" id="lbYou"></div>
+      <div class="lb-name"><label for="lbNick" style="position:absolute;left:-9999px">Your nickname</label><input id="lbNick" maxlength="16" placeholder="Your nickname" autocomplete="nickname" value="${(store.get("lbName") || "").replace(/"/g, "")}"><button type="button" id="lbSave">SAVE</button></div><div class="lb-err" id="lbErr" aria-live="polite"></div></div>`;
+    document.body.appendChild(w);
+    const close = () => w.remove(); w.addEventListener("click", (e) => { if (e.target === w) close(); }); w.querySelector(".lb-x").addEventListener("click", close);
+    const unit = () => UNITS[game] || "";
+    async function load() {
+      const L = w.querySelector("#lbList"), Y = w.querySelector("#lbYou"); L.innerHTML = `<div class="lb-msg">Loading… The scoreboard can take up to a minute to wake up the first time.</div>`; Y.textContent = "";
+      try { flush(); const j = await api(`/api/top?game=${game}&period=${period}&id=${playerId()}`);
+        L.innerHTML = j.top.length ? j.top.map((r) => `<li class="${r.me ? "me" : ""}"><span class="r">${r.r}</span><span class="n">${esc(r.n)}${r.me ? " (you)" : ""}</span><span class="s">${r.s.toLocaleString()}</span></li>`).join("") : `<div class="lb-msg">No scores ${period === "today" ? "today" : "yet"}. Be the first!</div>`;
+        Y.textContent = j.you ? `You're #${j.you.r} of ${j.total} with ${j.you.s.toLocaleString()} ${unit()}` : j.total ? `${j.total} players. Play a game to get on the board.` : "";
+      } catch (e) { L.innerHTML = `<div class="lb-msg">Couldn't reach the scoreboard just now. Your scores are saved on your phone and will be sent next time.</div>`; }
+    }
+    w.querySelector("#lbGame").addEventListener("change", (e) => { game = e.target.value; load(); });
+    w.querySelectorAll(".lb-tabs button").forEach((b) => b.addEventListener("click", () => { period = b.dataset.p; w.querySelectorAll(".lb-tabs button").forEach((x) => x.classList.toggle("on", x === b)); load(); }));
+    w.querySelector("#lbSave").addEventListener("click", async () => { const n = w.querySelector("#lbNick").value.trim(), E = w.querySelector("#lbErr"); E.style.color = "#B9B6D9"; E.textContent = "Saving…";
+      try { const j = await api("/api/name", { id: playerId(), name: n }); store.set("lbName", j.name); E.style.color = "#5FE3B0"; E.textContent = "Saved. You're " + j.name + " now."; load(); } catch (e) { E.style.color = "#FF7A8E"; E.textContent = e.message; } });
+    load();
+  }
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  document.addEventListener("click", (e) => { const el = e.target.closest && e.target.closest("[data-lb]"); if (!el) return; e.preventDefault(); openBoard(el.dataset.lb); });
+  addEventListener("load", () => setTimeout(flush, 1500));
   // ---------- drawing helpers ----------
   function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
   function shade(hex, amt) { const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255; const f = amt < 0 ? 0 : 255, t = Math.abs(amt); r = Math.round((f - r) * t + r); g = Math.round((f - g) * t + g); b = Math.round((f - b) * t + b); return `rgb(${r},${g},${b})`; }
@@ -94,5 +191,5 @@ window.PUB = (() => {
       get count() { return list.length; },
     };
   }
-  return { $, store, REDUCED, ctx, beep, noise, pop, thud, smash, cheer, fanfare, sad, burp, music, wireMute, fit, show, gate, toast, share, best, rr, shade, particles };
+  return { confetti, submit, openBoard, playerId, GAME_NAMES, $, store, REDUCED, ctx, beep, noise, pop, thud, smash, cheer, fanfare, sad, burp, music, wireMute, fit, show, gate, toast, share, best, rr, shade, particles };
 })();

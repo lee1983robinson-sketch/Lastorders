@@ -17,6 +17,7 @@
 <meta property="og:image" content="/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
 <style>
 /* Layout: one full-height arcade screen; a 360x640 world letterboxed in the middle, HUD and menus float over it. Single dark look by choice. */
 :root {
@@ -83,6 +84,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
     <div class="toast" id="toast" aria-live="polite"></div>
     <button class="mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
 
+    <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
     <div class="overlay" id="gate" hidden>
       <div class="card">
         <span class="age">18+</span>
@@ -105,8 +107,9 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
         </div>
         <div class="keys">Swipe left / right to change lanes<br>Swipe up to jump bins and cones<br>Swipe down to slide under scaffolding<br>Kebabs give you a burst of speed</div>
         <button class="btn" id="go" type="button">LEG IT!</button>
+        <button class="btn ghost lb-btn" type="button" data-lb="goggles">Leaderboard</button>
         <a class="btn ghost" href="/">All pub games</a>
-        <p class="fine">Best: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk</p>
+        <p class="fine">Best: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk<br>A Robbo's Game Lab game</p>
       </div>
     </div>
 
@@ -120,6 +123,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
           <div class="stat"><b id="fBest">0</b><span>Best</span></div>
         </div>
         <button class="btn" id="again" type="button">RUN AGAIN</button>
+        <button class="btn ghost lb-btn" type="button" data-lb="goggles">Leaderboard</button>
         <div class="row"><button class="btn ghost" id="menu" type="button">Change runner</button><button class="btn ghost" id="share" type="button">Copy score</button></div>
         <p class="fine" id="shareMsg" hidden></p>
       </div>
@@ -127,6 +131,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
   </div>
 </div>
 
+<script src="/common.js"></script>
 <script>
 (() => {
   "use strict";
@@ -308,6 +313,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
     state = "dead"; deadAt = performance.now(); shake = 0.4; beep(260, 50, 0.6, "sawtooth", 0.09); chase = 1;
     const L = levelOf(beers);
     if (score > best) { best = score; store.set("bgBest", String(best)); }
+    if (window.PUB) PUB.submit("goggles", score);
     $("line").textContent = LEVELS[L.i].line; $("fScore").textContent = score; $("fBeers").textContent = beers; $("fBest").textContent = best; $("bestStart").textContent = best; $("shareMsg").hidden = true;
     paintFace($("caughtBy"), looks(beers), chaserKind());
     setTimeout(() => { if (state === "dead") { show("over"); $("hud").hidden = true; $("again").focus({ preventScroll: true }); } }, 900);

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Bottle Bowling</title>
+<meta name="description" content="Ten-pin bowling with beer bottles. Hook it into the pocket. 18+.">
+<meta name="theme-color" content="#0A0E24">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Bottle Bowling">
+<meta property="og:description" content="Ten-pin bowling with beer bottles. Hook it into the pocket. 18+.">
+<meta property="og:image" content="/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
+<style>.sheet{position:absolute;top:62px;left:8px;right:8px;display:grid;grid-template-columns:repeat(9,minmax(0,1fr)) minmax(0,1.4fr);gap:2px;pointer-events:none}
+.fr{background:#0A0E24d9;border:1px solid #2C2F66;border-radius:6px;padding:2px 2px 3px;display:flex;flex-direction:column;align-items:center;min-height:34px}
+.fr.on{border-color:var(--lager)}.fr .mk{display:flex;gap:1px;justify-content:flex-end;width:100%;min-height:12px}.fr i{font:800 10px Inter,sans-serif;font-style:normal;color:var(--muted);min-width:8px;text-align:center}
+.fr b{font:400 12px Bungee,Impact,sans-serif;color:var(--foam);font-variant-numeric:tabular-nums}
+.toast{top:46%}</style>
+</head>
+<body class="game">
+<div class="stage">
+  <div class="screen">
+    <canvas id="game" aria-label="Bottle Bowling game" role="img"></canvas>
+    <div class="hud"><div class="pill"><span>Frame</span><b id="frame">1</b></div><div class="pill r"><span>Score</span><b id="total">0</b></div></div>
+    <div class="sheet" id="sheet" aria-label="Score sheet"></div>
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <button class="iconbtn mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+    <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+    <div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>BOTTLE BOWLING</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+    <div class="overlay" id="start" hidden><div class="card"><h1>BOTTLE BOWLING</h1><p class="big">Ten frames, ten beer bottles. Knock 'em all down.</p>
+<p>Drag sideways at the bottom to line up. Swipe up to bowl: faster swipe, faster ball. Curve the end of your swipe to hook it into the pocket. Strikes and spares score like real bowling, up to 300.</p>
+<button class="btn" id="go" type="button">BOWL!</button>
+<button class="btn ghost lb-btn" type="button" data-lb="bowling">Leaderboard</button><a class="btn ghost" href="/">All pub games</a></div></div>
+    <div class="overlay" id="over" hidden><div class="card"><h2>GAME OVER</h2><p class="big" id="oSub"></p>
+<div class="stats"><div class="stat"><b id="oScore">0</b><span>Score</span></div><div class="stat"><b id="oBest">0</b><span>Best</span></div></div>
+<button class="btn" id="again" type="button">BOWL AGAIN</button>
+<button class="btn ghost lb-btn" type="button" data-lb="bowling">Leaderboard</button><div class="row"><a class="btn ghost" href="/">All games</a><button class="btn ghost" id="share" type="button">Copy score</button></div><p class="fine" id="shareMsg" hidden></p></div></div>
+  </div>
+</div>
+<script src="/common.js"></script>
+<script src="/bowling.js"></script>
+</body>
+</html>

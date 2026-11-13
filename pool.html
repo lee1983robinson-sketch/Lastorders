@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Pool</title>
+<meta name="description" content="UK pub pool, reds and yellows, against the pub regulars. 18+.">
+<meta name="theme-color" content="#0A0E24">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Pool">
+<meta property="og:description" content="UK pub pool, reds and yellows, against the pub regulars. 18+.">
+<meta property="og:image" content="/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
+<style>.pill.on{border-color:var(--lager);box-shadow:0 0 14px #FFB62755}.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px;box-shadow:inset -2px -2px 0 #0004}
+.msg{position:absolute;top:62px;left:8px;right:8px;text-align:center;font:600 13px Inter,sans-serif;color:var(--foam);pointer-events:none;text-shadow:0 1px 0 #000}
+.free{position:absolute;top:84px;left:50%;transform:translateX(-50%);font:800 11px Inter,sans-serif;background:var(--neon);color:#2A0010;padding:3px 8px;border-radius:8px;pointer-events:none}
+.opp{display:flex;flex-direction:column;gap:8px}.opp button{min-height:56px;border-radius:14px;border:2px solid var(--line);background:var(--tile);color:var(--ink);font:700 15px var(--body);cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:0 14px;text-align:left}
+.opp button small{display:block;font-weight:500;font-size:12px;color:var(--muted)}.opp button.on{border-color:var(--lager);background:#2A2350}.opp em{font-style:normal;font-size:12px;color:var(--lager);font-weight:800}
+.toast{top:44%;font-size:20px;white-space:normal;width:90%}</style>
+</head>
+<body class="game">
+<div class="stage">
+  <div class="screen">
+    <canvas id="game" aria-label="Pool game" role="img"></canvas>
+    <div class="hud"><div class="pill" id="p0"><span>You</span><b id="g0" style="font:800 13px Inter,sans-serif">Open table</b></div><div class="pill r" id="p1"><span id="oppName">Big Dave</span><b id="g1" style="font:800 13px Inter,sans-serif">Open table</b></div></div>
+    <div class="msg" id="msg" aria-live="polite"></div><div class="free" id="free" hidden>2 shots</div>
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <button class="iconbtn mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+    <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+    <div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>POOL</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+    <div class="overlay" id="start" hidden><div class="card"><h1>POOL</h1><p class="big">UK pub pool. Reds and yellows, black last. Pick who you're playing.</p>
+<div class="opp" role="group" aria-label="Opponent"><button type="button" data-o="0"><span>Shaky Steve<small>Can't hit a barn door</small></span><em>Easy</em></button><button type="button" data-o="1"><span>Big Dave<small>Pub team captain</small></span><em>Medium</em></button><button type="button" data-o="2"><span>The Landlord<small>His table, his rules</small></span><em>Hard</em></button></div>
+<p>Put your finger behind the white ball and pull back: the further you pull, the harder the shot. Let go to hit. Fouls give your opponent two shots.</p>
+<button class="btn" id="go" type="button">RACK 'EM UP</button>
+<button class="btn ghost lb-btn" type="button" data-lb="pool">Leaderboard</button><a class="btn ghost" href="/">All pub games</a></div></div>
+    <div class="overlay" id="over" hidden><div class="card"><h2 id="oTitle">FRAME!</h2><p class="big" id="oSub"></p>
+<div class="stats"><div class="stat"><b id="oWins">0</b><span>Frames won</span></div><div class="stat"><b>15</b><span>Balls</span></div></div>
+<button class="btn" id="again" type="button">ANOTHER FRAME</button><button class="btn ghost" id="menu" type="button">Change opponent</button>
+<button class="btn ghost lb-btn" type="button" data-lb="pool">Leaderboard</button><div class="row"><a class="btn ghost" href="/">All games</a><button class="btn ghost" id="share" type="button">Copy score</button></div><p class="fine" id="shareMsg" hidden></p></div></div>
+  </div>
+</div>
+<script src="/common.js"></script>
+<script src="/pool.js"></script>
+</body>
+</html>

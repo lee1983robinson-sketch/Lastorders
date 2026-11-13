@@ -18,6 +18,7 @@
 <meta property="og:image" content="/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
 <style>
 body{margin:0}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
@@ -83,7 +84,8 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
   <div class="toast" id="toast" aria-hidden="true"></div>
   <button class="mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
 
-  <div class="overlay" id="gate" hidden>
+  <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+    <div class="overlay" id="gate" hidden>
     <div class="card">
       <span class="age">18+</span>
       <h1>FLYING PINT</h1>
@@ -108,8 +110,9 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
       </div>
       <p class="fine" id="drinkHint" aria-live="polite"></p>
       <button class="btn" id="go" type="button">START DRINKING</button>
+      <button class="btn ghost lb-btn" type="button" data-lb="flying">Leaderboard</button>
       <a class="btn ghost" href="/">All pub games</a>
-      <p class="fine">Best so far: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk</p>
+      <p class="fine">Best so far: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk<br>A Robbo's Game Lab game</p>
     </div>
   </div>
 
@@ -123,12 +126,14 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
       <div class="medal" id="medal">Lightweight</div>
       <button class="btn" id="again" type="button">ANOTHER ROUND</button>
       <button class="btn ghost" id="change" type="button">Change drink</button>
+      <button class="btn ghost lb-btn" type="button" data-lb="flying">Leaderboard</button>
       <button class="btn ghost" id="share" type="button">Copy my score to send a mate</button>
       <p class="fine" id="shareMsg" hidden></p>
     </div>
   </div>
 </div>
 
+<script src="/common.js"></script>
 <script>
 (() => {
   const W = 360, H = 640, GROUND = 584;
@@ -254,6 +259,7 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
     if (state !== "play") return;
     state = "dead"; deadAt = performance.now(); shake = 0.35; beep(300, 60, 0.45, "sawtooth", 0.08);
     if (score > best) { best = score; store.set("loBest", String(best)); }
+    if (window.PUB) PUB.submit("flying", score);
     $("roast").textContent = ROASTS[Math.floor(Math.random() * ROASTS.length)];
     $("final").textContent = score; $("best").textContent = best; $("bestStart").textContent = best;
     $("medal").textContent = (score >= best && score > 0 ? "New best! " : "") + MEDALS.find(([n]) => score >= n)[1] + " · " + D().short;

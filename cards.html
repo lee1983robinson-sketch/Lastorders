@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Higher or Lower</title>
+<meta name="description" content="Guess higher or lower. Aces high, pairs lose. How many in a row? 18+.">
+<meta name="theme-color" content="#0A0E24">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Higher or Lower">
+<meta property="og:description" content="Guess higher or lower. Aces high, pairs lose. How many in a row? 18+.">
+<meta property="og:image" content="/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
+<style>.ctl{position:absolute;left:62px;right:62px;bottom:64px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ctl .btn{min-height:60px;font-size:20px}.ctl .lo{background:#3D8BFF;color:#06122E;box-shadow:0 4px 0 #1840A0}
+.ctl .sw{grid-column:1/-1;min-height:40px;font-size:13px}.ctl button:disabled{opacity:.45}.toast{top:16%}</style>
+</head>
+<body class="game">
+<div class="stage">
+  <div class="screen">
+    <canvas id="game" aria-label="Higher or Lower game" role="img"></canvas>
+    <div class="hud"><div class="pill"><span>In a row</span><b id="streak">0</b></div><div class="pill r"><span>Best</span><b id="best">0</b></div></div>
+    <div class="ctl" id="ctl" hidden><button class="btn" id="hi" type="button">HIGHER ▲</button><button class="btn lo" id="lo" type="button">LOWER ▼</button><button class="btn ghost sw" id="swap" type="button">Change card (1)</button></div>
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <button class="iconbtn mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+    <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+    <div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>HIGHER OR LOWER</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+    <div class="overlay" id="start" hidden><div class="card"><h1>HIGHER OR LOWER</h1><p class="big">Is the next card higher or lower? How many can you get in a row?</p>
+<p>Aces are high, and if it's a pair you lose. You can change your card once per game if you're stuck with a 7.</p>
+<button class="btn" id="go" type="button">DEAL</button>
+<button class="btn ghost lb-btn" type="button" data-lb="cards">Leaderboard</button><a class="btn ghost" href="/">All pub games</a></div></div>
+    <div class="overlay" id="over" hidden><div class="card"><h2 id="oTitle">WRONG CALL!</h2><p class="big" id="oSub"></p>
+<div class="stats"><div class="stat"><b id="oScore">0</b><span>In a row</span></div><div class="stat"><b id="oBest">0</b><span>Best</span></div></div>
+<button class="btn" id="again" type="button">DEAL AGAIN</button>
+<button class="btn ghost lb-btn" type="button" data-lb="cards">Leaderboard</button><div class="row"><a class="btn ghost" href="/">All games</a><button class="btn ghost" id="share" type="button">Copy score</button></div><p class="fine" id="shareMsg" hidden></p></div></div>
+  </div>
+</div>
+<script src="/common.js"></script>
+<script src="/cards.js"></script>
+</body>
+</html>

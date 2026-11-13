@@ -1,6 +1,8 @@
 # Last Orders
 
-Last Orders: eight 18+ pub games in one place, with a home screen at `/`.
+By **Robbo's Game Lab**. Logo files: `lab-badge.svg`, `lab-logo.png`.
+
+Last Orders: fifteen 18+ pub games in one place, with a home screen at `/`.
 
 It's a static website (no server, no database), so it can go on Render as a free **Static Site**, which never goes to sleep and doesn't use your free web-service hours.
 
@@ -15,3 +17,15 @@ It's a static website (no server, no database), so it can go on Render as a free
 - `og.png`: the picture shown when the link is shared on Facebook or WhatsApp
 
 When you change the game, bump `VERSION` in `sw.js` so phones pick up the new version.
+
+## Leaderboards
+
+`api/` is a separate tiny Node service (no npm packages) for the online leaderboards. On Render it's its own
+**Web Service** with Root Directory `api`, Start Command `node server.js`, and the same Upstash settings as StatsPack
+(`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`). Its keys all start with `lo:`.
+The games send scores to `https://lastorders-api.onrender.com`. If Render gives the service a different address,
+change `LB_API` near the top of the leaderboard section in `common.js`.
+
+## Games
+
+flying-pint, run (Beer Goggles 3D), run-lite, darts, pop, merge, crush, barman, stack, bowling, pong, pool, pour, sort, quiz (+ quiz-data.js), cards.

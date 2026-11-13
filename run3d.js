@@ -402,6 +402,7 @@ function caught() {
   state = "dead"; deadAt = performance.now(); shake = 0.5; beep(260, 50, 0.6, "sawtooth", 0.09);
   const L = levelOf(beers);
   if (score > best) { best = score; store.set("bgBest", String(best)); }
+  if (window.PUB) PUB.submit("goggles", score);
   $("line").textContent = LEVELS[L.i].line; $("fScore").textContent = score; $("fBeers").textContent = beers; $("fBest").textContent = best; $("bestStart").textContent = best; $("shareMsg").hidden = true;
   paintFace($("caughtBy"), looks(beers), chaserKind());
   setTimeout(() => { if (state === "dead") { show("over"); $("hud").hidden = true; $("again").focus({ preventScroll: true }); } }, 1100);

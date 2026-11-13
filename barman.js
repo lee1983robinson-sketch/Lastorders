@@ -25,7 +25,7 @@
     pints.push({ lane: ln, x: END - 6 }); noise(0.18, 0.06, 900); beep(500, 300, 0.06, "triangle", 0.04);
   }
   function loseLife(msg, x, y) { lives--; smash(); FX.burst(x, y, "#CFE7F2", 16, 200, 2.5); toast(msg, 1100); hud(); if (navigator.vibrate) try { navigator.vibrate(120); } catch (e) {} if (lives <= 0) setTimeout(gameOver, 700); }
-  function gameOver() { if (state !== "play") return; state = "over"; sad(); bestScore = best("barBest", score); $("oScore").textContent = score; $("oBest").textContent = bestScore; $("oNight").textContent = level; $("oSub").textContent = level >= 5 ? "Proper Friday night shift, that." : "The landlord wants a word."; $("shareMsg").hidden = true; show("over"); }
+  function gameOver() { if (state !== "play") return; state = "over"; sad(); bestScore = best("barBest", score); PUB.submit("barman", score); $("oScore").textContent = score; $("oBest").textContent = bestScore; $("oNight").textContent = level; $("oSub").textContent = level >= 5 ? "Proper Friday night shift, that." : "The landlord wants a word."; $("shareMsg").hidden = true; show("over"); }
   function update(dt) {
     t += dt; for (let i = 0; i < 4; i++) cool[i] = Math.max(0, cool[i] - dt); pourT = Math.max(0, pourT - dt);
     barmanY += (LANES[lane] - barmanY) * Math.min(1, dt * 18);

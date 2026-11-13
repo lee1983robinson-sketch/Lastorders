@@ -17,6 +17,7 @@
 <meta property="og:image" content="/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
 <style>
 /* Layout: a pub wall with the board centred, a TV-style scoreboard above, menus float over. Single dark look by choice. */
 :root {
@@ -82,6 +83,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
     <div class="hint" id="hint" hidden></div>
     <button class="mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
 
+    <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
     <div class="overlay" id="gate" hidden>
       <div class="card">
         <span class="age">18+</span><h1>DARTS</h1>
@@ -102,8 +104,9 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
         </div>
         <p>Press and drag to aim, let go to throw. Your hand sways, and it gets worse every leg. Time your release.</p>
         <button class="btn" id="go" type="button">GAME ON!</button>
+        <button class="btn ghost lb-btn" type="button" data-lb="darts">Leaderboard</button>
         <div class="row"><a class="btn ghost" href="/">All games</a><a class="btn ghost" href="/run.html">Beer Goggles</a></div>
-        <p class="fine">Legs won: <b id="wonAll">0</b> · 18+ · Know your limits: drinkaware.co.uk</p>
+        <p class="fine">Legs won: <b id="wonAll">0</b> · 18+ · Know your limits: drinkaware.co.uk<br>A Robbo's Game Lab game</p>
       </div>
     </div>
 
@@ -118,6 +121,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
           <div class="stat"><b id="sCo">-</b><span>Best checkout</span></div>
         </div>
         <button class="btn" id="again" type="button">REMATCH</button>
+        <button class="btn ghost lb-btn" type="button" data-lb="darts">Leaderboard</button>
         <div class="row"><button class="btn ghost" id="menu" type="button">Change opponent</button><button class="btn ghost" id="share" type="button">Copy result</button></div>
         <p class="fine" id="shareMsg" hidden></p>
       </div>
@@ -125,6 +129,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
   </div>
 </div>
 
+<script src="/common.js"></script>
 <script>
 (() => {
   "use strict";
@@ -259,7 +264,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
   function endTurn() { turn = 1 - turn; fly = null; startTurn(); }
   function legWon(fromRem) {
     busy = true; const w = turn; P[w].legs++;
-    if (w === 0) { stats.co = Math.max(stats.co, fromRem); wonAll++; store.set("dWon", String(wonAll)); }
+    if (w === 0) { stats.co = Math.max(stats.co, fromRem); wonAll++; store.set("dWon", String(wonAll)); if (window.PUB) PUB.submit("darts", wonAll); }
     callout(w === 0 ? "GAME SHOT!<br>AND THE LEG!" : OPP[opp].name.toUpperCase() + "<br>TAKES THE LEG", 2200); w === 0 ? cheer(true) : groan(); ui();
     setTimeout(() => {
       if (P[w].legs >= 2) return matchOver(w);
@@ -339,8 +344,8 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
     const spot = g.createRadialGradient(BX, BY - 40, 10, BX, BY, 240); spot.addColorStop(0, "rgba(255,220,160,.20)"); spot.addColorStop(1, "rgba(255,220,160,0)"); g.fillStyle = spot; g.fillRect(0, 0, W, H);
     if (boardImg) g.drawImage(boardImg, BX - boardS / 2, BY - boardS / 2, boardS, boardS);
     // chalkboard
-    g.fillStyle = "#1B2620"; g.fillRect(16, H - 74, 120, 52); g.strokeStyle = "#5A3A22"; g.lineWidth = 4; g.strokeRect(16, H - 74, 120, 52);
-    g.fillStyle = "#E8E8E0"; g.font = "13px Bungee, Impact, sans-serif"; g.textAlign = "left"; g.textBaseline = "top"; g.fillText(state === "play" ? "LEG " + legNo + " OF 3" : "DARTS", 26, H - 66); g.font = "11px Inter, Arial"; g.fillText(state === "play" ? "Sway: " + ["steady", "tipsy", "steaming"][Math.min(2, legNo - 1)] : "Game on", 26, H - 44);
+    g.fillStyle = "#1B2620"; g.fillRect(62, H - 74, 120, 52); g.strokeStyle = "#5A3A22"; g.lineWidth = 4; g.strokeRect(62, H - 74, 120, 52);
+    g.fillStyle = "#E8E8E0"; g.font = "13px Bungee, Impact, sans-serif"; g.textAlign = "left"; g.textBaseline = "top"; g.fillText(state === "play" ? "LEG " + legNo + " OF 3" : "DARTS", 72, H - 66); g.font = "11px Inter, Arial"; g.fillText(state === "play" ? "Sway: " + ["steady", "tipsy", "steaming"][Math.min(2, legNo - 1)] : "Game on", 72, H - 44);
     // darts in the board
     for (const d of darts) { const p = toPX(d.x, d.y); drawDart(p.x, p.y, d.who); }
     // flying dart

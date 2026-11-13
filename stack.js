@@ -36,7 +36,7 @@
   }
   function fallOff(f, off) { topple = { items: [{ ...f, vx: Math.sign(off) * 120, vy: -60, a: 0, va: Math.sign(off) * 4 }] }; over("It slid right off!"); }
   function toppleFrom(i, dir) { topple = { items: stack.splice(i).map((s, k) => ({ ...s, vx: dir * (80 + k * 20), vy: -40 - k * 10, a: 0, va: dir * (2 + k * 0.3) })) }; over("TIMBER! The lot's gone over."); }
-  function over(msg) { state = "over"; smash(); setTimeout(smash, 250); sad(); const b = best("stackBest", score); setTimeout(() => { $("oScore").textContent = score; $("oBest").textContent = b; $("oSub").textContent = msg; $("shareMsg").hidden = true; show("over"); }, 1300); }
+  function over(msg) { state = "over"; smash(); setTimeout(smash, 250); sad(); const b = best("stackBest", score); PUB.submit("stack", score); setTimeout(() => { $("oScore").textContent = score; $("oBest").textContent = b; $("oSub").textContent = msg; $("shareMsg").hidden = true; show("over"); }, 1300); }
   function update(dt) {
     t += dt; cam += (camT - cam) * Math.min(1, dt * 4);
     if (mover) { mover.x += mover.dir * mover.speed * dt; if (mover.x > W - mover.w / 2 - 8) { mover.x = W - mover.w / 2 - 8; mover.dir = -1; } if (mover.x < mover.w / 2 + 8) { mover.x = mover.w / 2 + 8; mover.dir = 1; } }

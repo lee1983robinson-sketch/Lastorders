@@ -91,7 +91,7 @@
     addBody(held, x, DROPY); held = nextT; nextT = pickT(); canDrop = false; beep(400, 250, 0.08, "sine", 0.05); setTimeout(() => (canDrop = true), 450);
   }
   function over() {
-    state = "over"; sad(); const b = best("mergeBest", score);
+    state = "over"; sad(); const b = best("mergeBest", score); PUB.submit("merge", score);
     $("oScore").textContent = score; $("oBest").textContent = b; $("oBig").textContent = TIERS[biggest].n; $("oSub").textContent = biggest >= 9 ? "A Sunday roast! You legend." : biggest >= 7 ? "Got to the " + TIERS[biggest].n.toLowerCase() + ". Not bad at all." : "Glass is full. Have another go."; $("shareMsg").hidden = true; show("over");
   }
   const cv = $("game");

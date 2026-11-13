@@ -1,0 +1,9 @@
+{
+  "name": "lastorders-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Online leaderboards for the Last Orders pub games by Robbo's Game Lab",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": "22.x" }
+}

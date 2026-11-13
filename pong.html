@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Beer Pong</title>
+<meta name="description" content="Flick the ball into the cups. Heat up, catch fire, clear the rack. 18+.">
+<meta name="theme-color" content="#0A0E24">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Beer Pong">
+<meta property="og:description" content="Flick the ball into the cups. Heat up, catch fire, clear the rack. 18+.">
+<meta property="og:image" content="/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
+<style>.toast{top:44%}</style>
+</head>
+<body class="game">
+<div class="stage">
+  <div class="screen">
+    <canvas id="game" aria-label="Beer Pong game" role="img"></canvas>
+    <div class="hud"><div class="pill"><span>Balls left</span><b id="lives">3</b></div><div class="pill" style="text-align:center"><span>Streak</span><b id="streak" style="font-size:15px">×1</b></div><div class="pill r"><span>Cups</span><b id="score">0</b></div></div>
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <button class="iconbtn mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+    <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+    <div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>BEER PONG</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+    <div class="overlay" id="start" hidden><div class="card"><h1>BEER PONG</h1><p class="big">Flick the ball into the cups. Miss three and you're out.</p>
+<p>Flick upwards from the bottom of the screen: a harder flick throws further, and flick at an angle to go left or right. Sink two in a row and you're heating up (double points). Three and you're on fire (triple). Clear the rack for a bonus and a ball back.</p>
+<button class="btn" id="go" type="button">GAME ON</button>
+<button class="btn ghost lb-btn" type="button" data-lb="pong">Leaderboard</button><a class="btn ghost" href="/">All pub games</a></div></div>
+    <div class="overlay" id="over" hidden><div class="card"><h2>OUT OF BALLS!</h2><p class="big" id="oSub"></p>
+<div class="stats"><div class="stat"><b id="oScore">0</b><span>Score</span></div><div class="stat"><b id="oBest">0</b><span>Best</span></div></div>
+<p>Racks cleared: <b id="oRacks" style="color:var(--foam)">0</b></p>
+<button class="btn" id="again" type="button">RE-RACK</button>
+<button class="btn ghost lb-btn" type="button" data-lb="pong">Leaderboard</button><div class="row"><a class="btn ghost" href="/">All games</a><button class="btn ghost" id="share" type="button">Copy score</button></div><p class="fine" id="shareMsg" hidden></p></div></div>
+  </div>
+</div>
+<script src="/common.js"></script>
+<script src="/pong.js"></script>
+</body>
+</html>

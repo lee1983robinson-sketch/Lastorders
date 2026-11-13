@@ -1,7 +1,7 @@
 {
   "name": "Last Orders",
   "short_name": "Last Orders",
-  "description": "Eight pub games in one place. 18+.",
+  "description": "Fifteen pub games in one place, by Robbo's Game Lab. 18+.",
   "start_url": "/",
   "scope": "/",
   "display": "fullscreen",
@@ -13,16 +13,16 @@
   ],
   "shortcuts": [
     {
-      "name": "Pub Pop",
-      "url": "/pop.html"
+      "name": "Pub Quiz",
+      "url": "/quiz.html"
     },
     {
       "name": "Snack Merge",
       "url": "/merge.html"
     },
     {
-      "name": "Beer Goggles",
-      "url": "/run.html"
+      "name": "Pool",
+      "url": "/pool.html"
     },
     {
       "name": "Darts",
