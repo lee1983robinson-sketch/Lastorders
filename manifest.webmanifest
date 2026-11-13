@@ -1,18 +1,52 @@
 {
   "name": "Last Orders",
   "short_name": "Last Orders",
-  "description": "Flap a flying pint home past the pubs before the beer goggles get you. 18+.",
+  "description": "Eight pub games in one place. 18+.",
   "start_url": "/",
   "scope": "/",
   "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#0A0E24",
   "theme_color": "#0A0E24",
-  "categories": ["games"],
-  "shortcuts": [{ "name": "Beer Goggles", "url": "/run.html" }, { "name": "Darts", "url": "/darts.html" }, { "name": "Last Orders", "url": "/" }],
+  "categories": [
+    "games"
+  ],
+  "shortcuts": [
+    {
+      "name": "Pub Pop",
+      "url": "/pop.html"
+    },
+    {
+      "name": "Snack Merge",
+      "url": "/merge.html"
+    },
+    {
+      "name": "Beer Goggles",
+      "url": "/run.html"
+    },
+    {
+      "name": "Darts",
+      "url": "/darts.html"
+    }
+  ],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

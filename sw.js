@@ -1,6 +1,6 @@
 // Last Orders: works offline once loaded. Bump VERSION on every release.
-const VERSION = "lo-v6";
-const FILES = ["/", "/index.html", "/run.html", "/run3d.js", "/vendor/three.module.min.js", "/run-lite.html", "/darts.html", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
+const VERSION = "lo-v7";
+const FILES = ["/", "/index.html", "/common.css", "/common.js", "/flying-pint.html", "/run.html", "/run3d.js", "/vendor/three.module.min.js", "/run-lite.html", "/darts.html", "/pop.html", "/pop.js", "/merge.html", "/merge.js", "/crush.html", "/crush.js", "/barman.html", "/barman.js", "/stack.html", "/stack.js", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", (e) => {

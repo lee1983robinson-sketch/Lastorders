@@ -2,9 +2,9 @@
 <html lang="en-GB">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Last Orders</title>
-<meta name="description" content="Flap a flying pint home past the pubs before the beer goggles get you. 18+.">
+<meta name="description" content="Eight pub games in one place. Flying Pint, Beer Goggles, Darts, Pub Pop, Snack Merge, Bar Crush, Barman Rush and Pint Stacker. 18+.">
 <meta name="theme-color" content="#0A0E24">
 <meta name="color-scheme" content="dark">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -12,436 +12,86 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta property="og:title" content="Last Orders">
-<meta property="og:description" content="Flap a flying pint home past the pubs. How far can you get? 18+">
+<meta property="og:title" content="Last Orders: pub games">
+<meta property="og:description" content="Eight pub games in one place. One more round? 18+">
 <meta property="og:image" content="/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
 <style>
-body{margin:0}
-:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
-
-/* Layout: one full-height arcade screen; the game canvas is letterboxed in the middle, menus float over it. Single dark look by choice. */
-:root {
-  --night: #0A0E24;
-  --brick: #3A1F2B;
-  --lager: #FFB627;
-  --foam: #FFF6E0;
-  --neon: #FF3D7F;
-  --ink: #F4F1FF;
-  --muted: #B9B6D9;
-  --panel: rgba(12, 14, 38, .92);
-  --display: "Bungee", "Impact", "Arial Black", sans-serif;
-  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  color-scheme: dark;
-}
-html, body { height: 100%; }
-[hidden] { display: none !important; }
-body { background: var(--night); color: var(--ink); font-family: var(--body); overflow: hidden; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
-.stage { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding-left: max(0px, env(safe-area-inset-left, 0px)); padding-right: max(0px, env(safe-area-inset-right, 0px)); }
-canvas { display: block; background: var(--night); border-radius: 0; box-shadow: 0 0 0 1px #1C2150, 0 30px 80px #000a; touch-action: none; }
-.hud { position: absolute; top: 18px; left: 0; right: 0; display: flex; justify-content: center; pointer-events: none; }
-.score { font-family: var(--display); font-size: 56px; color: var(--foam); text-shadow: 0 4px 0 #000, 0 0 24px #FFB62788; font-variant-numeric: tabular-nums; }
-.mute { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); width: 44px; height: 44px; border-radius: 12px; border: 1px solid #2C2F66; background: #12163A; color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; }
-.card { pointer-events: auto; width: min(340px, 100%); background: var(--panel); border: 2px solid #2C2F66; border-radius: 22px; padding: 24px 22px; display: flex; flex-direction: column; gap: 14px; text-align: center; box-shadow: 0 20px 60px #000c; }
-h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 46px; line-height: .95; color: var(--lager); text-shadow: 0 0 18px #FFB62766, 3px 3px 0 #7A2E00; text-wrap: balance; }
-h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 30px; line-height: 1.05; color: var(--neon); text-shadow: 0 0 16px #FF3D7F66; text-wrap: balance; }
-p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
-.big { font-size: 17px; color: var(--ink); font-weight: 600; }
-.btn { min-height: 52px; border-radius: 14px; border: 0; background: var(--lager); color: #2A1400; font-family: var(--display); font-size: 20px; cursor: pointer; box-shadow: 0 4px 0 #A86A00; }
-.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #A86A00; }
-a.btn { display: flex; align-items: center; justify-content: center; text-decoration: none; }
-.btn.ghost { background: #1C2150; color: var(--ink); box-shadow: 0 4px 0 #0A0C26; font-family: var(--body); font-weight: 800; font-size: 15px; }
-.btn:focus-visible, .mute:focus-visible { outline: 3px solid var(--neon); outline-offset: 2px; }
-.row { display: flex; gap: 10px; }
-.row > * { flex: 1; }
-.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.stat { background: #161A44; border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 2px; }
-.stat b { font-family: var(--display); font-weight: 400; font-size: 32px; color: var(--foam); font-variant-numeric: tabular-nums; }
-.stat span { font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); font-weight: 800; }
-.medal { font-family: var(--display); font-size: 18px; color: var(--lager); padding: 8px 12px; border: 2px dashed #6B4A12; border-radius: 12px; }
-.fine { font-size: 12px; color: #8F8CB8; }
-.pick { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
-.drink { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 8px; min-height: 44px; border-radius: 12px; border: 2px solid #2C2F66; background: #161A44; color: var(--muted); font: 800 11px var(--body); cursor: pointer; }
-.drink canvas { width: 44px; height: 44px; }
-.drink.on { border-color: var(--lager); color: var(--foam); background: #2A2350; }
-.drink:focus-visible { outline: 3px solid var(--neon); outline-offset: 2px; }
-.age { display: inline-block; align-self: center; font-family: var(--display); font-size: 14px; color: #2A1400; background: var(--neon); padding: 4px 10px; border-radius: 8px; }
-.toast { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); font-family: var(--display); font-size: 22px; color: var(--lager); text-shadow: 0 3px 0 #000; pointer-events: none; opacity: 0; transition: opacity .2s; }
-.toast.on { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } }
+/* Layout: one column of the pub's games as a 2-up grid of cards, header with the sign, footer with install + drinkaware. */
+body { background: radial-gradient(120% 50% at 50% 0%, #2A1840 0%, #0A0E24 55%) fixed, var(--night); }
+.wrap { max-width: 720px; margin: 0 auto; padding-block: 22px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 18px; }
+header { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.sign { font-family: var(--display); font-size: clamp(40px, 12vw, 64px); line-height: .9; color: var(--lager); text-shadow: 0 0 22px #FFB62788, 4px 4px 0 #7A2E00; margin: 0; }
+.tag { font-size: 15px; color: var(--muted); }
+.neon { font-family: var(--display); color: var(--neon); text-shadow: 0 0 14px #FF3D7F; font-size: 14px; letter-spacing: 2px; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 620px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.game { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px; border-radius: 20px; background: linear-gradient(180deg, #1A1E4C, #12153A); border: 2px solid var(--line); color: var(--ink); text-decoration: none; min-width: 0; transition: transform .15s, border-color .15s; }
+.game:hover, .game:focus-visible { transform: translateY(-2px); border-color: var(--accent, var(--lager)); }
+.game .art { aspect-ratio: 4 / 3; border-radius: 14px; background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--accent) 30%, #1A1240), #0E0B26 75%); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.game .art svg { width: 70%; height: 70%; }
+.game b { font-family: var(--display); font-weight: 400; font-size: 17px; line-height: 1.05; }
+.game span { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.game .best { font-size: 11px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: var(--accent, var(--lager)); }
+.new { position: absolute; top: 8px; right: 8px; font-family: var(--display); font-size: 11px; background: var(--neon); color: #2A0010; padding: 3px 7px; border-radius: 7px; }
+.foot { display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
+#install { width: min(340px, 100%); }
 </style>
 </head>
 <body>
+<div class="wrap">
+  <header>
+    <span class="neon">PUB GAMES</span>
+    <h1 class="sign">LAST ORDERS</h1>
+    <p class="tag">Eight games down the pub. One more round?</p>
+  </header>
 
+  <main class="grid" id="grid" aria-label="Games"></main>
 
-<div class="stage" id="stage">
-  <canvas id="game" aria-label="Last Orders game. Tap or press space to flap." role="img"></canvas>
-  <div class="hud"><div class="score" id="score" aria-live="polite" hidden>0</div></div>
-  <div class="toast" id="toast" aria-hidden="true"></div>
-  <button class="mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
-
-  <div class="overlay" id="gate" hidden>
-    <div class="card">
-      <span class="age">18+</span>
-      <h1>LAST ORDERS</h1>
-      <p class="big">This game is about booze and has some cheeky language.</p>
-      <p>Are you 18 or over?</p>
-      <div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div>
-      <p class="fine" id="gateMsg" hidden>Sorry, this one's for grown-ups. Come back when you're 18.</p>
-    </div>
-  </div>
-
-  <div class="overlay" id="start" hidden>
-    <div class="card">
-      <h1>LAST ORDERS</h1>
-      <p class="big">It's chucking-out time. Pick your drink and flap your way home.</p>
-      <p>Tap or press space to flap. Dodge the pubs, grab kebabs for +3. The higher you score, the stronger the beer goggles.</p>
-      <div class="pick" role="group" aria-label="Pick your drink">
-        <button class="drink" type="button" data-k="lager"><canvas id="pv-lager" width="56" height="56" aria-hidden="true"></canvas>Lager</button>
-        <button class="drink" type="button" data-k="stout"><canvas id="pv-stout" width="56" height="56" aria-hidden="true"></canvas>Stout</button>
-        <button class="drink" type="button" data-k="shot"><canvas id="pv-shot" width="56" height="56" aria-hidden="true"></canvas>Shot</button>
-        <button class="drink" type="button" data-k="bottle"><canvas id="pv-bottle" width="56" height="56" aria-hidden="true"></canvas>Bottle</button>
-        <button class="drink" type="button" data-k="wine"><canvas id="pv-wine" width="56" height="56" aria-hidden="true"></canvas>Wine</button>
-      </div>
-      <p class="fine" id="drinkHint" aria-live="polite"></p>
-      <button class="btn" id="go" type="button">START DRINKING</button>
-      <div class="row"><a class="btn ghost" href="/run.html">Beer Goggles</a><a class="btn ghost" href="/darts.html">Darts</a></div>
-      <p class="fine">Best so far: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk</p>
-    </div>
-  </div>
-
-  <div class="overlay" id="over" hidden>
-    <div class="card">
-      <h2 id="roast">You're barred.</h2>
-      <div class="stats">
-        <div class="stat"><b id="final">0</b><span>Score</span></div>
-        <div class="stat"><b id="best">0</b><span>Best</span></div>
-      </div>
-      <div class="medal" id="medal">Lightweight</div>
-      <button class="btn" id="again" type="button">ANOTHER ROUND</button>
-      <button class="btn ghost" id="change" type="button">Change drink</button>
-      <button class="btn ghost" id="share" type="button">Copy my score to send a mate</button>
-      <p class="fine" id="shareMsg" hidden></p>
-    </div>
+  <div class="foot">
+    <button class="btn" id="install" type="button" hidden>Add Last Orders to your phone</button>
+    <p class="fine" id="installTip">Tip: in Chrome tap the three dots, then <b>Add to Home screen</b>, and it works like an app.</p>
+    <p class="fine">18+ only. Know your limits: drinkaware.co.uk</p>
   </div>
 </div>
 
+<div class="overlay" id="gate" hidden style="position:fixed">
+  <div class="card"><span class="age">18+</span><h1>LAST ORDERS</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p>
+    <div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div>
+</div>
+
+<script src="/common.js"></script>
 <script>
 (() => {
-  const W = 360, H = 640, GROUND = 584;
-  const cv = document.getElementById("game"), cx = cv.getContext("2d");
-  const $ = (id) => document.getElementById(id);
-  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
-  const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // ---------- sizing: letterbox a 360x640 world ----------
-  let scale = 1;
-  function fit() {
-    const st = $("stage").getBoundingClientRect();
-    scale = Math.min(st.width / W, st.height / H);
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    cv.style.width = Math.floor(W * scale) + "px"; cv.style.height = Math.floor(H * scale) + "px";
-    cv.width = Math.floor(W * scale * dpr); cv.height = Math.floor(H * scale * dpr);
-    cx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
-  }
-  addEventListener("resize", fit);
-
-  // ---------- sound ----------
-  let AC = null, muted = store.get("loMute") === "1";
-  let MASTER = null, MUSIC = null;
-  function ctx() {
-    if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); MASTER = AC.createGain(); MASTER.gain.value = muted ? 0 : 1; MASTER.connect(AC.destination); MUSIC = AC.createGain(); MUSIC.gain.value = 0.55; MUSIC.connect(MASTER); }
-    if (AC.state === "suspended") AC.resume();
-    return AC;
-  }
-  function beep(f1, f2, dur, type = "square", vol = 0.06) {
-    try {
-      const A = ctx(), o = A.createOscillator(), g = A.createGain(), t0 = A.currentTime;
-      o.type = type; o.frequency.setValueAtTime(f1, t0); o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
-      g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      o.connect(g).connect(MASTER); o.start(t0); o.stop(t0 + dur);
-    } catch (e) {}
-  }
-  // a proper kebab burp: a wobbly low growl through a muffled filter
-  function burp() {
-    try {
-      const A = ctx(), t0 = A.currentTime, len = 0.55 + Math.random() * 0.35;
-      const o = A.createOscillator(), lfo = A.createOscillator(), lg = A.createGain(), am = A.createGain(), f = A.createBiquadFilter(), g = A.createGain();
-      o.type = "sawtooth"; o.frequency.setValueAtTime(95 + Math.random() * 25, t0); o.frequency.linearRampToValueAtTime(62, t0 + len);
-      lfo.type = "square"; lfo.frequency.setValueAtTime(26 + Math.random() * 10, t0); lg.gain.value = 0.5; am.gain.value = 0.5;
-      lfo.connect(lg).connect(am.gain);
-      f.type = "lowpass"; f.frequency.setValueAtTime(900, t0); f.frequency.linearRampToValueAtTime(380, t0 + len); f.Q.value = 6;
-      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.32, t0 + 0.05); g.gain.setValueAtTime(0.28, t0 + len * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
-      o.connect(am).connect(f).connect(g).connect(MASTER);
-      o.start(t0); lfo.start(t0); o.stop(t0 + len + 0.05); lfo.stop(t0 + len + 0.05);
-    } catch (e) {}
-  }
-  // background music: a bouncy pub-piano style loop, made up for this game
-  const N = (n) => 440 * Math.pow(2, (n - 69) / 12);
-  const CHORDS = [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55], [57, 60, 64], [53, 57, 60], [55, 59, 62], [55, 59, 62]];
-  const TUNE = [72, 0, 76, 79, 77, 0, 76, 74, 72, 0, 74, 76, 74, 0, 0, 0, 77, 0, 81, 79, 77, 0, 76, 74, 76, 0, 72, 74, 71, 0, 0, 0,
-                72, 0, 76, 79, 81, 0, 79, 77, 76, 0, 77, 79, 79, 0, 0, 0, 77, 76, 74, 72, 74, 0, 76, 74, 72, 0, 0, 0, 79, 0, 74, 0];
-  let step = 0, nextAt = 0, musicOn = false, musicTimer = null;
-  function note(freq, at, dur, type, vol) { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = freq; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + dur); o.connect(g).connect(MUSIC); o.start(at); o.stop(at + dur + 0.02); }
-  function schedule() {
-    const STEP = 60 / 138 / 2; // eighth notes at 138 bpm
-    while (nextAt < AC.currentTime + 0.25) {
-      const bar = Math.floor(step / 8) % 8, beat = step % 8, ch = CHORDS[bar];
-      if (beat % 4 === 0) note(N(ch[0] - 12), nextAt, STEP * 1.6, "triangle", 0.11);           // oom
-      if (beat % 4 === 2) note(N(ch[2] - 12), nextAt, STEP * 1.6, "triangle", 0.09);           // pah (bass)
-      if (beat % 2 === 1) for (const c of ch) note(N(c), nextAt, STEP * 0.7, "square", 0.012); // piano stab
-      const m = TUNE[step % 64]; if (m) note(N(m), nextAt, STEP * 0.9, "square", 0.022);
-      nextAt += STEP; step++;
-    }
-  }
-  function startMusic() {
-    try { ctx(); if (musicOn) return; musicOn = true; step = 0; nextAt = AC.currentTime + 0.05; schedule(); musicTimer = setInterval(schedule, 100); } catch (e) {}
-  }
-  document.addEventListener("visibilitychange", () => { if (!AC) return; if (document.hidden) AC.suspend(); else AC.resume(); });
-  function setMute(m) { muted = m; store.set("loMute", m ? "1" : "0"); if (MASTER) MASTER.gain.value = m ? 0 : 1; $("wave").style.display = m ? "none" : ""; $("mute").setAttribute("aria-label", m ? "Turn sound on" : "Turn sound off"); }
-  $("mute").addEventListener("click", (e) => { e.stopPropagation(); setMute(!muted); });
-  setMute(muted);
-
-  // ---------- world ----------
-  const PUBS = ["THE RED LION", "ROSE & CROWN", "THE DRUNKEN DUCK", "KEBAB & CALAMITY", "THE LOCK-IN", "THE LAST ORDERS", "THE KING'S HEAD", "THE WOBBLY GOOSE", "THE HAIR OF THE DOG", "THE DOG & DUCK", "THE BLACK BULL", "THE TIPSY TRAIN"];
-  const ROASTS = ["You're barred.", "Absolute shambles.", "Taxi for you, mate!", "Bouncer says no.", "Lightweight. Embarrassing.", "Kebab on the floor. So are you.", "That's your lot!", "Your mum's coming to get you.", "Face-planted like a Friday.", "Sober up and try again.", "Hit the deck, pal.", "Wet the bed, wet the pavement."];
-  const MEDALS = [[50, "Landlord"], [30, "Lock-In Regular"], [15, "Session Legend"], [5, "Two-Pint Wonder"], [0, "Lightweight"]];
-  let state = "menu", t = 0, score = 0, best = +(store.get("loBest") || 0);
-  let y, vy, rot, pipes, kebabs, sinceSpawn, scrollX, shake, flapT, ghosts;
-  const SKY = [];
-  for (let i = 0; i < 40; i++) SKY.push({ x: Math.random() * W, y: Math.random() * 300, r: Math.random() * 1.4 + 0.3, tw: Math.random() * 6 });
-  const SKYLINE = [];
-  { let x = 0; while (x < W * 2 + 80) { const w = 30 + Math.random() * 50, h = 80 + Math.random() * 140; const win = []; for (let wy = GROUND - h + 12; wy < GROUND - 16; wy += 18) for (let wx = x + 6; wx < x + w - 8; wx += 12) if (Math.random() < 0.35) win.push([wx, wy]); SKYLINE.push({ x, w, h, win }); x += w + 4; } }
-
-  function reset() { y = H * 0.42; vy = 0; rot = 0; pipes = []; kebabs = []; sinceSpawn = 999; scrollX = 0; score = 0; shake = 0; flapT = 0; ghosts = 0; $("score").textContent = "0"; }
-  const drunk = () => Math.min(score / 12, 1.6);
-  const speed = () => Math.min(150 + score * 3.2, 265);
-  const gapSize = () => Math.max(176 - score * 1.2, 138);
-
-  function spawn() {
-    const g = gapSize(), top = 70 + Math.random() * (GROUND - 140 - g);
-    const p = { x: W + 40, w: 64, top, bottom: top + g, name: PUBS[Math.floor(Math.random() * PUBS.length)], passed: false, hue: Math.random() < 0.5 ? "#FF3D7F" : "#3DE0FF" };
-    pipes.push(p);
-    if (Math.random() < 0.22) kebabs.push({ x: p.x + p.w + 70, y: top + g / 2, got: false });
-  }
-
-  function flap() {
-    if (state === "play") { vy = -D().flap; flapT = 0.18; beep(520, 900, 0.09, "square", 0.05); }
-  }
-
-  // ---------- input ----------
-  function press(e) {
-    if (e && e.target && e.target.closest && e.target.closest("button")) return;
-    if (state === "play") { flap(); if (e) e.preventDefault(); }
-  }
-  cv.addEventListener("pointerdown", press);
-  $("stage").addEventListener("pointerdown", (e) => { if (e.target === $("stage")) press(e); });
-  addEventListener("keydown", (e) => {
-    if (e.code !== "Space" && e.code !== "ArrowUp") return;
-    e.preventDefault();
-    if (state === "play") flap(); else if (state === "menu" && !$("start").hidden) begin(); else if (state === "dead" && canRestart()) begin();
-  });
-
-  // ---------- screens ----------
-  let deadAt = 0;
-  const canRestart = () => performance.now() - deadAt > 600;
-  function show(id) { ["gate", "start", "over"].forEach((k) => ($(k).hidden = k !== id)); }
-  function begin() { startMusic(); reset(); state = "play"; show(null); $("score").hidden = false; flap(); }
-  function die() {
-    if (state !== "play") return;
-    state = "dead"; deadAt = performance.now(); shake = 0.35; beep(300, 60, 0.45, "sawtooth", 0.08);
-    if (score > best) { best = score; store.set("loBest", String(best)); }
-    $("roast").textContent = ROASTS[Math.floor(Math.random() * ROASTS.length)];
-    $("final").textContent = score; $("best").textContent = best; $("bestStart").textContent = best;
-    $("medal").textContent = (score >= best && score > 0 ? "New best! " : "") + MEDALS.find(([n]) => score >= n)[1] + " · " + D().short;
-    $("shareMsg").hidden = true;
-    setTimeout(() => { if (state === "dead") { show("over"); $("again").focus({ preventScroll: true }); } }, 650);
-  }
-  $("go").addEventListener("click", begin);
-  $("again").addEventListener("click", () => { if (canRestart()) begin(); });
-  $("change").addEventListener("click", () => { state = "menu"; reset(); $("score").hidden = true; drawPicker(); show("start"); });
-  $("yes").addEventListener("click", () => { store.set("lo18", "1"); show("start"); $("go").focus({ preventScroll: true }); });
-  $("no").addEventListener("click", () => { $("gateMsg").hidden = false; });
-  $("share").addEventListener("click", async () => {
-    const txt = `I scored ${score} on Last Orders as a ${D().name.toLowerCase()} ${D().emoji} (${MEDALS.find(([n]) => score >= n)[1]}). Beat that.`;
-    const m = $("shareMsg"); m.hidden = false;
-    try { await navigator.clipboard.writeText(txt); m.textContent = "Copied. Paste it to a mate."; }
-    catch (e) { m.textContent = txt; }
-  });
-  function toast(msg) { const el = $("toast"); el.textContent = msg; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 700); }
-
-  // ---------- update ----------
-  function update(dt) {
-    t += dt;
-    if (state === "menu") { y = H * 0.42 + Math.sin(t * 3) * 10; scrollX += 60 * dt; return; }
-    if (state === "dead") { vy += 1500 * dt; y = Math.min(y + vy * dt, GROUND - D().hh - 2); rot = Math.min(rot + 6 * dt, 1.6); shake = Math.max(0, shake - dt); return; }
-    const sp = speed();
-    scrollX += sp * dt;
-    vy += D().g * dt; y += vy * dt; flapT = Math.max(0, flapT - dt);
-    rot = Math.max(-0.45, Math.min(1.3, vy / 600));
-    sinceSpawn += sp * dt;
-    if (sinceSpawn > 205) { spawn(); sinceSpawn = 0; }
-    for (const p of pipes) {
-      p.x -= sp * dt;
-      if (!p.passed && p.x + p.w < 90) { p.passed = true; score++; $("score").textContent = score; beep(880, 1320, 0.08, "triangle", 0.05); if (score % 10 === 0) toast("BEER GOGGLES UP!"); }
-      { const d = D(); if (90 + d.hw > p.x + 4 && 90 - d.hw < p.x + p.w - 4 && (y - d.hh < p.top || y + d.hh > p.bottom)) die(); }
-    }
-    for (const k of kebabs) { k.x -= sp * dt; if (!k.got && Math.abs(k.x - 90) < 26 && Math.abs(k.y - y) < 28) { k.got = true; score += 3; $("score").textContent = score; toast("KEBAB! +3"); burp(); } }
-    pipes = pipes.filter((p) => p.x > -80); kebabs = kebabs.filter((k) => k.x > -40 && !k.got);
-    if (y + D().hh + 2 > GROUND) { y = GROUND - D().hh - 2; die(); }
-    if (y < -40) y = -40;
-  }
-
-  // ---------- draw ----------
-  function rr(x, y, w, h, r) { cx.beginPath(); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r); cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath(); }
-  function bricks(x, y0, w, h) {
-    cx.fillStyle = "#3A1F2B"; cx.fillRect(x, y0, w, h);
-    cx.fillStyle = "#4A2836";
-    for (let by = y0, row = 0; by < y0 + h; by += 12, row++) for (let bx = x + (row % 2 ? -10 : 0); bx < x + w; bx += 20) cx.fillRect(Math.max(x, bx + 1), by + 1, Math.min(18, x + w - Math.max(x, bx + 1)), 10);
-    cx.fillStyle = "#00000055"; cx.fillRect(x + w - 8, y0, 8, h);
-  }
-  function drawPipe(p, ox) {
-    const x = p.x + ox;
-    // top: pub wall coming down, sign hanging off the bottom
-    bricks(x, -10, p.w, p.top + 10);
-    cx.fillStyle = "#24131B"; cx.fillRect(x - 6, p.top - 16, p.w + 12, 16);
-    // neon sign
-    cx.save(); cx.shadowColor = p.hue; cx.shadowBlur = 14;
-    rr(x - 14, p.top - 54, p.w + 28, 30, 6); cx.fillStyle = "#12091A"; cx.fill(); cx.lineWidth = 2.5; cx.strokeStyle = p.hue; cx.stroke(); cx.restore();
-    cx.fillStyle = "#FFF6E0"; cx.textAlign = "center"; cx.textBaseline = "middle";
-    let fs = 11; cx.font = `${fs}px Bungee, Impact, sans-serif`; while (cx.measureText(p.name).width > p.w + 20 && fs > 6) { fs -= 0.5; cx.font = `${fs}px Bungee, Impact, sans-serif`; }
-    cx.fillText(p.name, x + p.w / 2, p.top - 39);
-    // bottom: wall going up, lamp on top
-    bricks(x, p.bottom, p.w, GROUND - p.bottom);
-    cx.fillStyle = "#24131B"; cx.fillRect(x - 6, p.bottom, p.w + 12, 14);
-    cx.save(); cx.shadowColor = "#FFD27A"; cx.shadowBlur = 18; cx.fillStyle = "#FFD27A"; cx.beginPath(); cx.arc(x + p.w / 2, p.bottom + 7, 4, 0, 7); cx.fill(); cx.restore();
-  }
-  function drawKebab(k) {
-    cx.save(); cx.translate(k.x, k.y + Math.sin(t * 5 + k.x) * 4);
-    cx.shadowColor = "#FFB627"; cx.shadowBlur = 16;
-    cx.fillStyle = "#E8C38A"; cx.beginPath(); cx.moveTo(-16, -6); cx.quadraticCurveTo(0, -24, 16, -6); cx.lineTo(10, 14); cx.lineTo(-10, 14); cx.closePath(); cx.fill();
-    cx.shadowBlur = 0; cx.fillStyle = "#8A4A26"; cx.fillRect(-9, -8, 18, 9);
-    cx.fillStyle = "#5FBF5A"; cx.fillRect(-8, -10, 5, 3); cx.fillRect(2, -11, 6, 3);
-    cx.fillStyle = "#E4473A"; cx.fillRect(-2, -10, 4, 3);
-    cx.restore();
-  }
-  // ---------- drinks ----------
-  const DRINKS = {
-    lager:  { name: "Pint of Lager", short: "Lager",  hint: "The all-rounder. Steady as she goes.", g: 1500, flap: 430, hw: 15, hh: 14, wx: 13, wy: -2, emoji: "🍺" },
-    stout:  { name: "Pint of Stout", short: "Stout",  hint: "Smooth operator. A touch more glide.", g: 1440, flap: 420, hw: 15, hh: 15, wx: 13, wy: -2, emoji: "🍺" },
-    shot:   { name: "Shot",          short: "Shot",   hint: "Tiny, so easier to squeeze through. Drops like a stone.", g: 1780, flap: 475, hw: 10, hh: 11, wx: 9, wy: 0, emoji: "🥃" },
-    bottle: { name: "Bottle of Beer", short: "Bottle", hint: "Skinny but tall. Mind your head.", g: 1500, flap: 430, hw: 11, hh: 20, wx: 10, wy: 4, emoji: "🍾" },
-    wine:   { name: "Glass of Wine", short: "Wine",   hint: "Floaty and fancy. Gentle flaps.", g: 1240, flap: 380, hw: 13, hh: 15, wx: 13, wy: -6, emoji: "🍷" },
-  };
-  const ORDER = ["lager", "stout", "shot", "bottle", "wine"];
-  let pick = DRINKS[store.get("loDrink")] ? store.get("loDrink") : "lager";
-  const D = () => DRINKS[pick];
-
-  function face(g, fx, fy, col, dead, rosy) {
-    g.fillStyle = col; g.strokeStyle = col;
-    if (dead) { g.lineWidth = 2; for (const ex of [-5, 5]) { g.beginPath(); g.moveTo(fx + ex - 3, fy - 3); g.lineTo(fx + ex + 3, fy + 3); g.moveTo(fx + ex + 3, fy - 3); g.lineTo(fx + ex - 3, fy + 3); g.stroke(); } }
-    else { g.beginPath(); g.arc(fx - 5, fy, 2.2, 0, 7); g.arc(fx + 5, fy, 2.2, 0, 7); g.fill(); if (rosy) { g.fillStyle = "#FF6B8A88"; g.beginPath(); g.arc(fx - 8, fy + 5, 3, 0, 7); g.arc(fx + 8, fy + 5, 3, 0, 7); g.fill(); g.fillStyle = col; } }
-    g.beginPath(); g.arc(fx, fy + 7, 3, 0, Math.PI); g.fill();
-  }
-  function bubbles(g, x0, y0, h, n) { g.fillStyle = "#FFFFFF66"; for (let i = 0; i < n; i++) { g.beginPath(); g.arc(x0 + i * 4, y0 - ((t * 30 + i * 9) % h), 1.2, 0, 7); g.fill(); } }
-  function drawDrink(g, kind, px, py, r, flapping, dead, rosy) {
-    const d = DRINKS[kind];
-    g.save(); g.translate(px, py); g.rotate(r);
-    const flapA = flapping ? -0.9 : Math.sin(t * 14) * 0.35, ws = kind === "shot" ? 0.75 : 1;
-    for (const side of [-1, 1]) {
-      g.save(); g.translate(side * d.wx, d.wy); g.rotate(side * (0.5 - flapA * side)); g.scale(ws, ws);
-      g.fillStyle = "#FFFFFF"; g.beginPath(); g.ellipse(side * 9, -4, 11, 6, side * -0.4, 0, 7); g.fill();
-      g.fillStyle = "#D9D6F0"; g.beginPath(); g.ellipse(side * 11, -2, 7, 3, side * -0.4, 0, 7); g.fill();
-      g.restore();
-    }
-    if (kind === "lager") {
-      g.fillStyle = "#FFB627"; g.beginPath(); g.moveTo(-13, -12); g.lineTo(13, -12); g.lineTo(10, 18); g.lineTo(-10, 18); g.closePath(); g.fill();
-      g.fillStyle = "#FFCE5C"; g.fillRect(-9, -8, 4, 22); bubbles(g, -3, 10, 22, 4);
-      g.fillStyle = "#FFF6E0"; g.beginPath(); g.arc(-8, -13, 6, 0, 7); g.arc(0, -16, 7, 0, 7); g.arc(8, -13, 6, 0, 7); g.fill();
-      face(g, 0, 2, "#2A1400", dead, rosy);
-    } else if (kind === "stout") {
-      g.fillStyle = "#1B0F0B"; g.beginPath(); g.moveTo(-13, -10); g.quadraticCurveTo(-15, 4, -10, 18); g.lineTo(10, 18); g.quadraticCurveTo(15, 4, 13, -10); g.closePath(); g.fill();
-      g.fillStyle = "#4A2418"; g.fillRect(-10, -4, 3, 18);
-      g.fillStyle = "#F3E6C8"; g.beginPath(); g.moveTo(-14, -10); g.quadraticCurveTo(0, -20, 14, -10); g.lineTo(13, -6); g.lineTo(-13, -6); g.closePath(); g.fill();
-      face(g, 0, 4, "#F3E6C8", dead, rosy);
-    } else if (kind === "shot") {
-      g.fillStyle = "#CFE7F2AA"; g.beginPath(); g.moveTo(-10, -11); g.lineTo(10, -11); g.lineTo(8, 11); g.lineTo(-8, 11); g.closePath(); g.fill();
-      g.fillStyle = "#E89A2E"; g.beginPath(); g.moveTo(-9.3, -5); g.lineTo(9.3, -5); g.lineTo(8, 9); g.lineTo(-8, 9); g.closePath(); g.fill();
-      g.fillStyle = "#FFFFFF"; g.fillRect(-10, -12, 20, 2); g.fillStyle = "#FFFFFF55"; g.fillRect(-8, -3, 2, 10);
-      g.save(); g.scale(0.75, 0.75); face(g, 0, 1, "#2A1400", dead, rosy); g.restore();
-    } else if (kind === "bottle") {
-      g.fillStyle = "#6B3A12"; g.beginPath(); g.moveTo(-4, -22); g.lineTo(4, -22); g.lineTo(4, -12); g.quadraticCurveTo(10, -8, 10, -2); g.lineTo(10, 22); g.lineTo(-10, 22); g.lineTo(-10, -2); g.quadraticCurveTo(-10, -8, -4, -12); g.closePath(); g.fill();
-      g.fillStyle = "#B8BEC8"; g.fillRect(-5, -25, 10, 4);
-      g.fillStyle = "#8A4E1E"; g.fillRect(-8, -2, 3, 22);
-      g.fillStyle = "#F2E2B6"; g.fillRect(-10, 0, 20, 16);
-      face(g, 0, 6, "#2A1400", dead, rosy);
-    } else if (kind === "wine") {
-      g.fillStyle = "#E7EEF8"; g.fillRect(-1.5, 6, 3, 12); g.beginPath(); g.ellipse(0, 19, 9, 2.5, 0, 0, 7); g.fill();
-      g.fillStyle = "#E7EEF888"; g.beginPath(); g.moveTo(-13, -16); g.lineTo(13, -16); g.quadraticCurveTo(15, 6, 0, 7); g.quadraticCurveTo(-15, 6, -13, -16); g.fill();
-      g.fillStyle = "#9B1B3E"; g.beginPath(); g.moveTo(-13.6, -6); g.lineTo(13.6, -6); g.quadraticCurveTo(14, 6, 0, 6.5); g.quadraticCurveTo(-14, 6, -13.6, -6); g.fill();
-      g.fillStyle = "#FFFFFF66"; g.fillRect(-10, -14, 2, 12);
-      face(g, 0, -4, "#FFE9EF", dead, rosy);
-    }
-    g.restore();
-  }
-  // drink picker previews
-  function drawPicker() {
-    for (const k of ORDER) {
-      const c = document.getElementById("pv-" + k); if (!c) continue;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2.5), g = c.getContext("2d");
-      c.width = 56 * dpr; c.height = 56 * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, 56, 56);
-      drawDrink(g, k, 28, 30, 0, false, false, false);
-    }
-    for (const b of document.querySelectorAll(".drink")) { const on = b.dataset.k === pick; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); }
-    $("drinkHint").textContent = D().name + ": " + D().hint;
-  }
-  document.querySelectorAll(".drink").forEach((b) => b.addEventListener("click", () => { pick = b.dataset.k; store.set("loDrink", pick); beep(700, 1000, 0.06, "triangle", 0.04); drawPicker(); }));
-
-  function draw() {
-    cx.save();
-    if (shake > 0) cx.translate((Math.random() - 0.5) * 12 * shake, (Math.random() - 0.5) * 12 * shake);
-    const d = REDUCED ? 0 : drunk();
-    if (d > 0 && state === "play") { cx.translate(W / 2, H / 2); cx.rotate(Math.sin(t * 1.6) * 0.035 * d); cx.translate(-W / 2, -H / 2); }
-    // sky
-    const g = cx.createLinearGradient(0, 0, 0, GROUND); g.addColorStop(0, "#0A0E24"); g.addColorStop(1, "#2A1840"); cx.fillStyle = g; cx.fillRect(-20, -20, W + 40, H + 40);
-    for (const s of SKY) { cx.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(t + s.tw)); cx.fillStyle = "#FFF"; cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 7); cx.fill(); }
-    cx.globalAlpha = 1;
-    cx.fillStyle = "#FFE7A8"; cx.beginPath(); cx.arc(286, 92, 26, 0, 7); cx.fill(); cx.fillStyle = "#0A0E24"; cx.beginPath(); cx.arc(275, 85, 24, 0, 7); cx.fill();
-    // skyline parallax
-    const off = -(scrollX * 0.25) % (W * 2);
-    for (const rep of [0, W * 2]) for (const b of SKYLINE) {
-      const bx = b.x + off + rep; if (bx > W || bx + b.w < 0) continue;
-      cx.fillStyle = "#151034"; cx.fillRect(bx, GROUND - b.h, b.w, b.h);
-      cx.fillStyle = "#FFD27A55"; for (const [wx, wy] of b.win) cx.fillRect(wx + off + rep, wy, 5, 7);
-    }
-    // obstacles (with beer-goggle double vision)
-    if (d > 0.35 && state !== "menu") { cx.globalAlpha = Math.min(0.28, (d - 0.35) * 0.3); for (const p of pipes) drawPipe(p, 7 + Math.sin(t * 2) * 4 * d); cx.globalAlpha = 1; }
-    for (const p of pipes) drawPipe(p, 0);
-    for (const k of kebabs) drawKebab(k);
-    // street
-    cx.fillStyle = "#1B1830"; cx.fillRect(-20, GROUND, W + 40, H - GROUND + 20);
-    cx.fillStyle = "#2A2650"; cx.fillRect(-20, GROUND, W + 40, 8);
-    cx.fillStyle = "#FFD27A"; const dash = scrollX % 48; for (let x = -dash; x < W + 20; x += 48) cx.fillRect(x, GROUND + 30, 24, 4);
-    drawDrink(cx, pick, 90, y, state === "menu" ? Math.sin(t * 3) * 0.1 : rot, flapT > 0, state === "dead", drunk() > 0.6);
-    cx.restore();
-  }
-
-  // ---------- loop ----------
-  let last = performance.now();
-  function loop(now) { const dt = Math.min(0.033, (now - last) / 1000); last = now; update(dt); draw(); requestAnimationFrame(loop); }
-
-  fit(); reset();
-  $("bestStart").textContent = best;
-  show(store.get("lo18") === "1" ? "start" : "gate");
-  drawPicker();
-  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => {});
-  requestAnimationFrame(loop);
-  if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+  const { $, store } = PUB;
+  const num = (k) => +(store.get(k) || 0);
+  const GAMES = [
+    { href: "/flying-pint.html", name: "Flying Pint", tag: "Tap to flap a pint home past the pubs.", accent: "#FFB627", best: () => num("loBest") ? "Best " + num("loBest") : "",
+      art: '<path d="M42 30h36l-4 52H46z" fill="#FFB627"/><rect x="48" y="36" width="6" height="40" fill="#FFCE5C"/><circle cx="48" cy="29" r="9" fill="#FFF6E0"/><circle cx="60" cy="25" r="11" fill="#FFF6E0"/><circle cx="72" cy="29" r="9" fill="#FFF6E0"/><ellipse cx="28" cy="46" rx="16" ry="8" fill="#fff" transform="rotate(-25 28 46)"/><ellipse cx="92" cy="46" rx="16" ry="8" fill="#fff" transform="rotate(25 92 46)"/><circle cx="53" cy="52" r="3" fill="#2A1400"/><circle cx="67" cy="52" r="3" fill="#2A1400"/><path d="M54 62q6 6 12 0" stroke="#2A1400" stroke-width="3" fill="none" stroke-linecap="round"/>' },
+    { href: "/run.html", name: "Beer Goggles", tag: "3D runner. Every beer makes the chaser fitter.", accent: "#7BC74D", best: () => num("bgBest") ? "Best " + num("bgBest") : "",
+      art: '<circle cx="42" cy="50" r="18" fill="#1A1240" stroke="#7BC74D" stroke-width="6"/><circle cx="78" cy="50" r="18" fill="#1A1240" stroke="#7BC74D" stroke-width="6"/><path d="M60 50h0" stroke="#7BC74D" stroke-width="6"/><path d="M57 46q3-4 6 0" stroke="#7BC74D" stroke-width="5" fill="none"/><path d="M33 44l7 7M47 44l-7 7" stroke="#FF3D7F" stroke-width="4" stroke-linecap="round"/><path d="M78 40l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#FFB627"/>' },
+    { href: "/darts.html", name: "Darts", tag: "501 against the pub's finest. Mind the sway.", accent: "#EE3A55", best: () => num("dWon") ? num("dWon") + " legs won" : "",
+      art: '<circle cx="60" cy="54" r="36" fill="#151515"/><circle cx="60" cy="54" r="30" fill="#F2E6C8"/><circle cx="60" cy="54" r="30" fill="none" stroke="#D0283A" stroke-width="5" stroke-dasharray="9.4 9.4"/><circle cx="60" cy="54" r="19" fill="#151515"/><circle cx="60" cy="54" r="17" fill="none" stroke="#1F8A4C" stroke-width="4" stroke-dasharray="6 6"/><circle cx="60" cy="54" r="6" fill="#1F8A4C"/><circle cx="60" cy="54" r="2.5" fill="#D0283A"/><path d="M60 54l26-26" stroke="#C9CED8" stroke-width="3"/><path d="M84 30l10-2-2 10z" fill="#FFB627"/>' },
+    { href: "/pop.html", name: "Pub Pop", tag: "Bubble shooter. Match three, drop the lot.", accent: "#3D8BFF", isNew: true, best: () => num("popLevel") > 1 ? "On level " + num("popLevel") : "",
+      art: '<g><circle cx="38" cy="34" r="13" fill="#FFB627"/><circle cx="64" cy="34" r="13" fill="#EE3A55"/><circle cx="90" cy="34" r="13" fill="#3FCB6A"/><circle cx="51" cy="56" r="13" fill="#3D8BFF"/><circle cx="77" cy="56" r="13" fill="#FFB627"/><circle cx="60" cy="88" r="13" fill="#A45CFF"/><path d="M60 88l-8-22" stroke="#FFF6E0" stroke-width="2" stroke-dasharray="3 4"/></g><g fill="#fff" opacity=".7"><ellipse cx="34" cy="29" rx="4" ry="2.4"/><ellipse cx="60" cy="29" rx="4" ry="2.4"/><ellipse cx="86" cy="29" rx="4" ry="2.4"/><ellipse cx="47" cy="51" rx="4" ry="2.4"/><ellipse cx="73" cy="51" rx="4" ry="2.4"/><ellipse cx="56" cy="83" rx="4" ry="2.4"/></g>' },
+    { href: "/merge.html", name: "Snack Merge", tag: "Drop bar snacks. Two the same make a bigger one.", accent: "#F2A23A", isNew: true, best: () => num("mergeBest") ? "Best " + num("mergeBest") : "",
+      art: '<path d="M30 18h60l-6 76H36z" fill="rgba(200,230,255,.12)" stroke="rgba(220,240,255,.6)" stroke-width="3"/><circle cx="50" cy="80" r="11" fill="#F2A23A"/><circle cx="72" cy="78" r="13" fill="#EDE6C8"/><circle cx="58" cy="58" r="9" fill="#B86A30"/><rect x="66" y="46" width="16" height="20" rx="3" fill="#2F6BEA"/><rect x="68" y="51" width="12" height="5" rx="1" fill="#FFD24A"/><circle cx="46" cy="62" r="6" fill="#D49A5A"/>' },
+    { href: "/crush.html", name: "Bar Crush", tag: "Swap drinks, match three, beat the target.", accent: "#A45CFF", isNew: true, best: () => num("crushLevel") > 1 ? "On level " + num("crushLevel") : "",
+      art: '<rect x="22" y="22" width="34" height="34" rx="8" fill="#FFB627"/><rect x="62" y="22" width="34" height="34" rx="8" fill="#A45CFF"/><rect x="22" y="62" width="34" height="34" rx="8" fill="#2EC4E0"/><rect x="62" y="62" width="34" height="34" rx="8" fill="#FFB627"/><path d="M33 31h12l-2 18h-8z" fill="#FFF6E0"/><path d="M73 72h12l-2 18h-8z" fill="#FFF6E0"/><path d="M70 30h18q0 12-9 12t-9-12zM79 42v8" stroke="#FFF6E0" stroke-width="2.5" fill="#FFF6E022"/><path d="M28 70h22l-11 11z" fill="#FFF6E0"/>' },
+    { href: "/barman.html", name: "Barman Rush", tag: "Four bars, one barman. Slide the pints.", accent: "#FF8A1F", isNew: true, best: () => num("barBest") ? "Best " + num("barBest") : "",
+      art: '<g fill="#8A5A32"><rect x="12" y="38" width="86" height="7" rx="2"/><rect x="12" y="64" width="86" height="7" rx="2"/><rect x="12" y="90" width="86" height="7" rx="2"/></g><path d="M58 22h10l-1 14h-8z" fill="#FFB627"/><circle cx="60" cy="21" r="3" fill="#FFF6E0"/><circle cx="65" cy="21" r="3" fill="#FFF6E0"/><path d="M40 22h6M30 26h6" stroke="#FFF6E0" stroke-width="2" stroke-linecap="round" opacity=".6"/><circle cx="104" cy="54" r="9" fill="#E8B48A"/><rect x="96" y="63" width="16" height="22" rx="5" fill="#F4F1EA"/><circle cx="20" cy="54" r="8" fill="#C68B5E"/><rect x="13" y="62" width="14" height="2" fill="#3D8BFF"/>' },
+    { href: "/stack.html", name: "Pint Stacker", tag: "Tap to stack drinks. One wobble and it's over.", accent: "#5FE3B0", isNew: true, best: () => num("stackBest") ? "Best height " + num("stackBest") : "",
+      art: '<rect x="28" y="96" width="64" height="6" rx="3" fill="#C8CCD8"/><path d="M44 72h32l-3 24H47z" fill="#FFB627"/><rect x="44" y="68" width="32" height="6" rx="3" fill="#FFF6E0"/><path d="M48 46h26l-2 22H50z" fill="#1B0F0B"/><rect x="48" y="42" width="26" height="5" rx="2" fill="#F3E6C8"/><path d="M52 24h20q0 14-10 14t-10-14zM62 38v4" stroke="rgba(220,235,255,.8)" stroke-width="2" fill="#9B1B3E"/>' },
+  ];
+  $("grid").innerHTML = GAMES.map((gm) => `<a class="game" href="${gm.href}" style="--accent:${gm.accent}">${gm.isNew ? '<span class="new">NEW</span>' : ""}<div class="art"><svg viewBox="0 0 120 112" aria-hidden="true">${gm.art}</svg></div><b>${gm.name}</b><span>${gm.tag}</span><span class="best">${gm.best() || "&nbsp;"}</span></a>`).join("");
+  if (store.get("lo18") !== "1") { $("gate").hidden = false; $("yes").addEventListener("click", () => { store.set("lo18", "1"); $("gate").hidden = true; }); $("no").addEventListener("click", () => { $("gateMsg").hidden = false; }); }
+  let deferred = null;
+  addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; $("install").hidden = false; $("installTip").hidden = true; });
+  $("install").addEventListener("click", async () => { if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; $("install").hidden = true; });
+  if (matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches) $("installTip").hidden = true;
 })();
 </script>
-
 </body>
 </html>
