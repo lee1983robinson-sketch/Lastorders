@@ -120,6 +120,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
       </div>
       <div class="medal" id="medal">Lightweight</div>
       <button class="btn" id="again" type="button">ANOTHER ROUND</button>
+      <button class="btn ghost" id="change" type="button">Change drink</button>
       <button class="btn ghost" id="share" type="button">Copy my score to send a mate</button>
       <p class="fine" id="shareMsg" hidden></p>
     </div>
@@ -148,17 +149,57 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
 
   // ---------- sound ----------
   let AC = null, muted = store.get("loMute") === "1";
+  let MASTER = null, MUSIC = null;
+  function ctx() {
+    if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); MASTER = AC.createGain(); MASTER.gain.value = muted ? 0 : 1; MASTER.connect(AC.destination); MUSIC = AC.createGain(); MUSIC.gain.value = 0.55; MUSIC.connect(MASTER); }
+    if (AC.state === "suspended") AC.resume();
+    return AC;
+  }
   function beep(f1, f2, dur, type = "square", vol = 0.06) {
-    if (muted) return;
     try {
-      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
-      const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
-      o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur);
-      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur);
+      const A = ctx(), o = A.createOscillator(), g = A.createGain(), t0 = A.currentTime;
+      o.type = type; o.frequency.setValueAtTime(f1, t0); o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+      g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g).connect(MASTER); o.start(t0); o.stop(t0 + dur);
     } catch (e) {}
   }
-  function setMute(m) { muted = m; store.set("loMute", m ? "1" : "0"); $("wave").style.display = m ? "none" : ""; $("mute").setAttribute("aria-label", m ? "Turn sound on" : "Turn sound off"); }
+  // a proper kebab burp: a wobbly low growl through a muffled filter
+  function burp() {
+    try {
+      const A = ctx(), t0 = A.currentTime, len = 0.55 + Math.random() * 0.35;
+      const o = A.createOscillator(), lfo = A.createOscillator(), lg = A.createGain(), am = A.createGain(), f = A.createBiquadFilter(), g = A.createGain();
+      o.type = "sawtooth"; o.frequency.setValueAtTime(95 + Math.random() * 25, t0); o.frequency.linearRampToValueAtTime(62, t0 + len);
+      lfo.type = "square"; lfo.frequency.setValueAtTime(26 + Math.random() * 10, t0); lg.gain.value = 0.5; am.gain.value = 0.5;
+      lfo.connect(lg).connect(am.gain);
+      f.type = "lowpass"; f.frequency.setValueAtTime(900, t0); f.frequency.linearRampToValueAtTime(380, t0 + len); f.Q.value = 6;
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.32, t0 + 0.05); g.gain.setValueAtTime(0.28, t0 + len * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
+      o.connect(am).connect(f).connect(g).connect(MASTER);
+      o.start(t0); lfo.start(t0); o.stop(t0 + len + 0.05); lfo.stop(t0 + len + 0.05);
+    } catch (e) {}
+  }
+  // background music: a bouncy pub-piano style loop, made up for this game
+  const N = (n) => 440 * Math.pow(2, (n - 69) / 12);
+  const CHORDS = [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55], [57, 60, 64], [53, 57, 60], [55, 59, 62], [55, 59, 62]];
+  const TUNE = [72, 0, 76, 79, 77, 0, 76, 74, 72, 0, 74, 76, 74, 0, 0, 0, 77, 0, 81, 79, 77, 0, 76, 74, 76, 0, 72, 74, 71, 0, 0, 0,
+                72, 0, 76, 79, 81, 0, 79, 77, 76, 0, 77, 79, 79, 0, 0, 0, 77, 76, 74, 72, 74, 0, 76, 74, 72, 0, 0, 0, 79, 0, 74, 0];
+  let step = 0, nextAt = 0, musicOn = false, musicTimer = null;
+  function note(freq, at, dur, type, vol) { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = freq; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + dur); o.connect(g).connect(MUSIC); o.start(at); o.stop(at + dur + 0.02); }
+  function schedule() {
+    const STEP = 60 / 138 / 2; // eighth notes at 138 bpm
+    while (nextAt < AC.currentTime + 0.25) {
+      const bar = Math.floor(step / 8) % 8, beat = step % 8, ch = CHORDS[bar];
+      if (beat % 4 === 0) note(N(ch[0] - 12), nextAt, STEP * 1.6, "triangle", 0.11);           // oom
+      if (beat % 4 === 2) note(N(ch[2] - 12), nextAt, STEP * 1.6, "triangle", 0.09);           // pah (bass)
+      if (beat % 2 === 1) for (const c of ch) note(N(c), nextAt, STEP * 0.7, "square", 0.012); // piano stab
+      const m = TUNE[step % 64]; if (m) note(N(m), nextAt, STEP * 0.9, "square", 0.022);
+      nextAt += STEP; step++;
+    }
+  }
+  function startMusic() {
+    try { ctx(); if (musicOn) return; musicOn = true; step = 0; nextAt = AC.currentTime + 0.05; schedule(); musicTimer = setInterval(schedule, 100); } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", () => { if (!AC) return; if (document.hidden) AC.suspend(); else AC.resume(); });
+  function setMute(m) { muted = m; store.set("loMute", m ? "1" : "0"); if (MASTER) MASTER.gain.value = m ? 0 : 1; $("wave").style.display = m ? "none" : ""; $("mute").setAttribute("aria-label", m ? "Turn sound on" : "Turn sound off"); }
   $("mute").addEventListener("click", (e) => { e.stopPropagation(); setMute(!muted); });
   setMute(muted);
 
@@ -206,19 +247,20 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
   let deadAt = 0;
   const canRestart = () => performance.now() - deadAt > 600;
   function show(id) { ["gate", "start", "over"].forEach((k) => ($(k).hidden = k !== id)); }
-  function begin() { reset(); state = "play"; show(null); $("score").hidden = false; flap(); }
+  function begin() { startMusic(); reset(); state = "play"; show(null); $("score").hidden = false; flap(); }
   function die() {
     if (state !== "play") return;
     state = "dead"; deadAt = performance.now(); shake = 0.35; beep(300, 60, 0.45, "sawtooth", 0.08);
     if (score > best) { best = score; store.set("loBest", String(best)); }
     $("roast").textContent = ROASTS[Math.floor(Math.random() * ROASTS.length)];
     $("final").textContent = score; $("best").textContent = best; $("bestStart").textContent = best;
-    $("medal").textContent = (score >= best && score > 0 ? "New best! " : "") + MEDALS.find(([n]) => score >= n)[1];
+    $("medal").textContent = (score >= best && score > 0 ? "New best! " : "") + MEDALS.find(([n]) => score >= n)[1] + " · " + D().short;
     $("shareMsg").hidden = true;
     setTimeout(() => { if (state === "dead") { show("over"); $("again").focus({ preventScroll: true }); } }, 650);
   }
   $("go").addEventListener("click", begin);
   $("again").addEventListener("click", () => { if (canRestart()) begin(); });
+  $("change").addEventListener("click", () => { state = "menu"; reset(); $("score").hidden = true; drawPicker(); show("start"); });
   $("yes").addEventListener("click", () => { store.set("lo18", "1"); show("start"); $("go").focus({ preventScroll: true }); });
   $("no").addEventListener("click", () => { $("gateMsg").hidden = false; });
   $("share").addEventListener("click", async () => {
@@ -245,7 +287,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
       if (!p.passed && p.x + p.w < 90) { p.passed = true; score++; $("score").textContent = score; beep(880, 1320, 0.08, "triangle", 0.05); if (score % 10 === 0) toast("BEER GOGGLES UP!"); }
       { const d = D(); if (90 + d.hw > p.x + 4 && 90 - d.hw < p.x + p.w - 4 && (y - d.hh < p.top || y + d.hh > p.bottom)) die(); }
     }
-    for (const k of kebabs) { k.x -= sp * dt; if (!k.got && Math.abs(k.x - 90) < 26 && Math.abs(k.y - y) < 28) { k.got = true; score += 3; $("score").textContent = score; toast("KEBAB! +3"); beep(660, 1760, 0.18, "triangle", 0.06); } }
+    for (const k of kebabs) { k.x -= sp * dt; if (!k.got && Math.abs(k.x - 90) < 26 && Math.abs(k.y - y) < 28) { k.got = true; score += 3; $("score").textContent = score; toast("KEBAB! +3"); burp(); } }
     pipes = pipes.filter((p) => p.x > -80); kebabs = kebabs.filter((k) => k.x > -40 && !k.got);
     if (y + D().hh + 2 > GROUND) { y = GROUND - D().hh - 2; die(); }
     if (y < -40) y = -40;
