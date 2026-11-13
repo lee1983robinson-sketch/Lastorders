@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Last Orders</title>
+<meta name="description" content="Flap a flying pint home past the pubs before the beer goggles get you. 18+.">
+<meta name="theme-color" content="#0A0E24">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta property="og:title" content="Last Orders">
+<meta property="og:description" content="Flap a flying pint home past the pubs. How far can you get? 18+">
+<meta property="og:image" content="/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<style>
+body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
+
+/* Layout: one full-height arcade screen; the game canvas is letterboxed in the middle, menus float over it. Single dark look by choice. */
+:root {
+  --night: #0A0E24;
+  --brick: #3A1F2B;
+  --lager: #FFB627;
+  --foam: #FFF6E0;
+  --neon: #FF3D7F;
+  --ink: #F4F1FF;
+  --muted: #B9B6D9;
+  --panel: rgba(12, 14, 38, .92);
+  --display: "Bungee", "Impact", "Arial Black", sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--night); color: var(--ink); font-family: var(--body); overflow: hidden; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+.stage { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding-left: max(0px, env(safe-area-inset-left, 0px)); padding-right: max(0px, env(safe-area-inset-right, 0px)); }
+canvas { display: block; background: var(--night); border-radius: 0; box-shadow: 0 0 0 1px #1C2150, 0 30px 80px #000a; touch-action: none; }
+.hud { position: absolute; top: 18px; left: 0; right: 0; display: flex; justify-content: center; pointer-events: none; }
+.score { font-family: var(--display); font-size: 56px; color: var(--foam); text-shadow: 0 4px 0 #000, 0 0 24px #FFB62788; font-variant-numeric: tabular-nums; }
+.mute { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); width: 44px; height: 44px; border-radius: 12px; border: 1px solid #2C2F66; background: #12163A; color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; }
+.card { pointer-events: auto; width: min(340px, 100%); background: var(--panel); border: 2px solid #2C2F66; border-radius: 22px; padding: 24px 22px; display: flex; flex-direction: column; gap: 14px; text-align: center; box-shadow: 0 20px 60px #000c; }
+h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 46px; line-height: .95; color: var(--lager); text-shadow: 0 0 18px #FFB62766, 3px 3px 0 #7A2E00; text-wrap: balance; }
+h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 30px; line-height: 1.05; color: var(--neon); text-shadow: 0 0 16px #FF3D7F66; text-wrap: balance; }
+p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
+.big { font-size: 17px; color: var(--ink); font-weight: 600; }
+.btn { min-height: 52px; border-radius: 14px; border: 0; background: var(--lager); color: #2A1400; font-family: var(--display); font-size: 20px; cursor: pointer; box-shadow: 0 4px 0 #A86A00; }
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #A86A00; }
+.btn.ghost { background: #1C2150; color: var(--ink); box-shadow: 0 4px 0 #0A0C26; font-family: var(--body); font-weight: 800; font-size: 15px; }
+.btn:focus-visible, .mute:focus-visible { outline: 3px solid var(--neon); outline-offset: 2px; }
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.stat { background: #161A44; border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+.stat b { font-family: var(--display); font-weight: 400; font-size: 32px; color: var(--foam); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+.medal { font-family: var(--display); font-size: 18px; color: var(--lager); padding: 8px 12px; border: 2px dashed #6B4A12; border-radius: 12px; }
+.fine { font-size: 12px; color: #8F8CB8; }
+.age { display: inline-block; align-self: center; font-family: var(--display); font-size: 14px; color: #2A1400; background: var(--neon); padding: 4px 10px; border-radius: 8px; }
+.toast { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); font-family: var(--display); font-size: 22px; color: var(--lager); text-shadow: 0 3px 0 #000; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.toast.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } }
+</style>
+</head>
+<body>
+
+
+<div class="stage" id="stage">
+  <canvas id="game" aria-label="Last Orders game. Tap or press space to flap." role="img"></canvas>
+  <div class="hud"><div class="score" id="score" aria-live="polite" hidden>0</div></div>
+  <div class="toast" id="toast" aria-hidden="true"></div>
+  <button class="mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+
+  <div class="overlay" id="gate" hidden>
+    <div class="card">
+      <span class="age">18+</span>
+      <h1>LAST ORDERS</h1>
+      <p class="big">This game is about booze and has some cheeky language.</p>
+      <p>Are you 18 or over?</p>
+      <div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div>
+      <p class="fine" id="gateMsg" hidden>Sorry, this one's for grown-ups. Come back when you're 18.</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="start" hidden>
+    <div class="card">
+      <h1>LAST ORDERS</h1>
+      <p class="big">You're a pint. It's chucking-out time. Flap your way home.</p>
+      <p>Tap, click or press space to flap. Dodge the pubs. Grab a kebab for 3 bonus points. The higher you score, the stronger the beer goggles.</p>
+      <button class="btn" id="go" type="button">START DRINKING</button>
+      <p class="fine">Best so far: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="over" hidden>
+    <div class="card">
+      <h2 id="roast">You're barred.</h2>
+      <div class="stats">
+        <div class="stat"><b id="final">0</b><span>Score</span></div>
+        <div class="stat"><b id="best">0</b><span>Best</span></div>
+      </div>
+      <div class="medal" id="medal">Lightweight</div>
+      <button class="btn" id="again" type="button">ANOTHER ROUND</button>
+      <button class="btn ghost" id="share" type="button">Copy my score to send a mate</button>
+      <p class="fine" id="shareMsg" hidden></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const W = 360, H = 640, GROUND = 584;
+  const cv = document.getElementById("game"), cx = cv.getContext("2d");
+  const $ = (id) => document.getElementById(id);
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- sizing: letterbox a 360x640 world ----------
+  let scale = 1;
+  function fit() {
+    const st = $("stage").getBoundingClientRect();
+    scale = Math.min(st.width / W, st.height / H);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    cv.style.width = Math.floor(W * scale) + "px"; cv.style.height = Math.floor(H * scale) + "px";
+    cv.width = Math.floor(W * scale * dpr); cv.height = Math.floor(H * scale * dpr);
+    cx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+  }
+  addEventListener("resize", fit);
+
+  // ---------- sound ----------
+  let AC = null, muted = store.get("loMute") === "1";
+  function beep(f1, f2, dur, type = "square", vol = 0.06) {
+    if (muted) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+      o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur);
+    } catch (e) {}
+  }
+  function setMute(m) { muted = m; store.set("loMute", m ? "1" : "0"); $("wave").style.display = m ? "none" : ""; $("mute").setAttribute("aria-label", m ? "Turn sound on" : "Turn sound off"); }
+  $("mute").addEventListener("click", (e) => { e.stopPropagation(); setMute(!muted); });
+  setMute(muted);
+
+  // ---------- world ----------
+  const PUBS = ["THE RED LION", "ROSE & CROWN", "THE DRUNKEN DUCK", "KEBAB & CALAMITY", "THE LOCK-IN", "THE LAST ORDERS", "THE KING'S HEAD", "THE WOBBLY GOOSE", "THE HAIR OF THE DOG", "THE DOG & DUCK", "THE BLACK BULL", "THE TIPSY TRAIN"];
+  const ROASTS = ["You're barred.", "Absolute shambles.", "Taxi for you, mate!", "Bouncer says no.", "Lightweight. Embarrassing.", "Kebab on the floor. So are you.", "That's your lot!", "Your mum's coming to get you.", "Face-planted like a Friday.", "Sober up and try again.", "Hit the deck, pal.", "Wet the bed, wet the pavement."];
+  const MEDALS = [[50, "Landlord"], [30, "Lock-In Regular"], [15, "Session Legend"], [5, "Two-Pint Wonder"], [0, "Lightweight"]];
+  let state = "menu", t = 0, score = 0, best = +(store.get("loBest") || 0);
+  let y, vy, rot, pipes, kebabs, sinceSpawn, scrollX, shake, flapT, ghosts;
+  const SKY = [];
+  for (let i = 0; i < 40; i++) SKY.push({ x: Math.random() * W, y: Math.random() * 300, r: Math.random() * 1.4 + 0.3, tw: Math.random() * 6 });
+  const SKYLINE = [];
+  { let x = 0; while (x < W * 2 + 80) { const w = 30 + Math.random() * 50, h = 80 + Math.random() * 140; const win = []; for (let wy = GROUND - h + 12; wy < GROUND - 16; wy += 18) for (let wx = x + 6; wx < x + w - 8; wx += 12) if (Math.random() < 0.35) win.push([wx, wy]); SKYLINE.push({ x, w, h, win }); x += w + 4; } }
+
+  function reset() { y = H * 0.42; vy = 0; rot = 0; pipes = []; kebabs = []; sinceSpawn = 999; scrollX = 0; score = 0; shake = 0; flapT = 0; ghosts = 0; $("score").textContent = "0"; }
+  const drunk = () => Math.min(score / 12, 1.6);
+  const speed = () => Math.min(150 + score * 3.2, 265);
+  const gapSize = () => Math.max(176 - score * 1.2, 138);
+
+  function spawn() {
+    const g = gapSize(), top = 70 + Math.random() * (GROUND - 140 - g);
+    const p = { x: W + 40, w: 64, top, bottom: top + g, name: PUBS[Math.floor(Math.random() * PUBS.length)], passed: false, hue: Math.random() < 0.5 ? "#FF3D7F" : "#3DE0FF" };
+    pipes.push(p);
+    if (Math.random() < 0.22) kebabs.push({ x: p.x + p.w + 70, y: top + g / 2, got: false });
+  }
+
+  function flap() {
+    if (state === "play") { vy = -430; flapT = 0.18; beep(520, 900, 0.09, "square", 0.05); }
+  }
+
+  // ---------- input ----------
+  function press(e) {
+    if (e && e.target && e.target.closest && e.target.closest("button")) return;
+    if (state === "play") { flap(); if (e) e.preventDefault(); }
+  }
+  cv.addEventListener("pointerdown", press);
+  $("stage").addEventListener("pointerdown", (e) => { if (e.target === $("stage")) press(e); });
+  addEventListener("keydown", (e) => {
+    if (e.code !== "Space" && e.code !== "ArrowUp") return;
+    e.preventDefault();
+    if (state === "play") flap(); else if (state === "menu" && !$("start").hidden) begin(); else if (state === "dead" && canRestart()) begin();
+  });
+
+  // ---------- screens ----------
+  let deadAt = 0;
+  const canRestart = () => performance.now() - deadAt > 600;
+  function show(id) { ["gate", "start", "over"].forEach((k) => ($(k).hidden = k !== id)); }
+  function begin() { reset(); state = "play"; show(null); $("score").hidden = false; flap(); }
+  function die() {
+    if (state !== "play") return;
+    state = "dead"; deadAt = performance.now(); shake = 0.35; beep(300, 60, 0.45, "sawtooth", 0.08);
+    if (score > best) { best = score; store.set("loBest", String(best)); }
+    $("roast").textContent = ROASTS[Math.floor(Math.random() * ROASTS.length)];
+    $("final").textContent = score; $("best").textContent = best; $("bestStart").textContent = best;
+    $("medal").textContent = (score >= best && score > 0 ? "New best! " : "") + MEDALS.find(([n]) => score >= n)[1];
+    $("shareMsg").hidden = true;
+    setTimeout(() => { if (state === "dead") { show("over"); $("again").focus({ preventScroll: true }); } }, 650);
+  }
+  $("go").addEventListener("click", begin);
+  $("again").addEventListener("click", () => { if (canRestart()) begin(); });
+  $("yes").addEventListener("click", () => { store.set("lo18", "1"); show("start"); $("go").focus({ preventScroll: true }); });
+  $("no").addEventListener("click", () => { $("gateMsg").hidden = false; });
+  $("share").addEventListener("click", async () => {
+    const txt = `I scored ${score} on Last Orders 🍺 (${MEDALS.find(([n]) => score >= n)[1]}). Beat that.`;
+    const m = $("shareMsg"); m.hidden = false;
+    try { await navigator.clipboard.writeText(txt); m.textContent = "Copied. Paste it to a mate."; }
+    catch (e) { m.textContent = txt; }
+  });
+  function toast(msg) { const el = $("toast"); el.textContent = msg; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 700); }
+
+  // ---------- update ----------
+  function update(dt) {
+    t += dt;
+    if (state === "menu") { y = H * 0.42 + Math.sin(t * 3) * 10; scrollX += 60 * dt; return; }
+    if (state === "dead") { vy += 1500 * dt; y = Math.min(y + vy * dt, GROUND - 16); rot = Math.min(rot + 6 * dt, 1.6); shake = Math.max(0, shake - dt); return; }
+    const sp = speed();
+    scrollX += sp * dt;
+    vy += 1500 * dt; y += vy * dt; flapT = Math.max(0, flapT - dt);
+    rot = Math.max(-0.45, Math.min(1.3, vy / 600));
+    sinceSpawn += sp * dt;
+    if (sinceSpawn > 205) { spawn(); sinceSpawn = 0; }
+    for (const p of pipes) {
+      p.x -= sp * dt;
+      if (!p.passed && p.x + p.w < 90) { p.passed = true; score++; $("score").textContent = score; beep(880, 1320, 0.08, "triangle", 0.05); if (score % 10 === 0) toast("BEER GOGGLES UP!"); }
+      if (90 + 15 > p.x + 4 && 90 - 15 < p.x + p.w - 4 && (y - 14 < p.top || y + 14 > p.bottom)) die();
+    }
+    for (const k of kebabs) { k.x -= sp * dt; if (!k.got && Math.abs(k.x - 90) < 26 && Math.abs(k.y - y) < 28) { k.got = true; score += 3; $("score").textContent = score; toast("KEBAB! +3"); beep(660, 1760, 0.18, "triangle", 0.06); } }
+    pipes = pipes.filter((p) => p.x > -80); kebabs = kebabs.filter((k) => k.x > -40 && !k.got);
+    if (y + 16 > GROUND) { y = GROUND - 16; die(); }
+    if (y < -40) y = -40;
+  }
+
+  // ---------- draw ----------
+  function rr(x, y, w, h, r) { cx.beginPath(); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r); cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath(); }
+  function bricks(x, y0, w, h) {
+    cx.fillStyle = "#3A1F2B"; cx.fillRect(x, y0, w, h);
+    cx.fillStyle = "#4A2836";
+    for (let by = y0, row = 0; by < y0 + h; by += 12, row++) for (let bx = x + (row % 2 ? -10 : 0); bx < x + w; bx += 20) cx.fillRect(Math.max(x, bx + 1), by + 1, Math.min(18, x + w - Math.max(x, bx + 1)), 10);
+    cx.fillStyle = "#00000055"; cx.fillRect(x + w - 8, y0, 8, h);
+  }
+  function drawPipe(p, ox) {
+    const x = p.x + ox;
+    // top: pub wall coming down, sign hanging off the bottom
+    bricks(x, -10, p.w, p.top + 10);
+    cx.fillStyle = "#24131B"; cx.fillRect(x - 6, p.top - 16, p.w + 12, 16);
+    // neon sign
+    cx.save(); cx.shadowColor = p.hue; cx.shadowBlur = 14;
+    rr(x - 14, p.top - 54, p.w + 28, 30, 6); cx.fillStyle = "#12091A"; cx.fill(); cx.lineWidth = 2.5; cx.strokeStyle = p.hue; cx.stroke(); cx.restore();
+    cx.fillStyle = "#FFF6E0"; cx.textAlign = "center"; cx.textBaseline = "middle";
+    let fs = 11; cx.font = `${fs}px Bungee, Impact, sans-serif`; while (cx.measureText(p.name).width > p.w + 20 && fs > 6) { fs -= 0.5; cx.font = `${fs}px Bungee, Impact, sans-serif`; }
+    cx.fillText(p.name, x + p.w / 2, p.top - 39);
+    // bottom: wall going up, lamp on top
+    bricks(x, p.bottom, p.w, GROUND - p.bottom);
+    cx.fillStyle = "#24131B"; cx.fillRect(x - 6, p.bottom, p.w + 12, 14);
+    cx.save(); cx.shadowColor = "#FFD27A"; cx.shadowBlur = 18; cx.fillStyle = "#FFD27A"; cx.beginPath(); cx.arc(x + p.w / 2, p.bottom + 7, 4, 0, 7); cx.fill(); cx.restore();
+  }
+  function drawKebab(k) {
+    cx.save(); cx.translate(k.x, k.y + Math.sin(t * 5 + k.x) * 4);
+    cx.shadowColor = "#FFB627"; cx.shadowBlur = 16;
+    cx.fillStyle = "#E8C38A"; cx.beginPath(); cx.moveTo(-16, -6); cx.quadraticCurveTo(0, -24, 16, -6); cx.lineTo(10, 14); cx.lineTo(-10, 14); cx.closePath(); cx.fill();
+    cx.shadowBlur = 0; cx.fillStyle = "#8A4A26"; cx.fillRect(-9, -8, 18, 9);
+    cx.fillStyle = "#5FBF5A"; cx.fillRect(-8, -10, 5, 3); cx.fillRect(2, -11, 6, 3);
+    cx.fillStyle = "#E4473A"; cx.fillRect(-2, -10, 4, 3);
+    cx.restore();
+  }
+  function drawPint(px, py, r) {
+    cx.save(); cx.translate(px, py); cx.rotate(r);
+    // wings
+    const flapA = flapT > 0 ? -0.9 : Math.sin(t * 14) * 0.35;
+    for (const side of [-1, 1]) {
+      cx.save(); cx.translate(side * 13, -2); cx.rotate(side * (0.5 + flapA * side * -1));
+      cx.fillStyle = "#FFFFFF"; cx.beginPath(); cx.ellipse(side * 9, -4, 11, 6, side * -0.4, 0, 7); cx.fill();
+      cx.fillStyle = "#D9D6F0"; cx.beginPath(); cx.ellipse(side * 11, -2, 7, 3, side * -0.4, 0, 7); cx.fill();
+      cx.restore();
+    }
+    // glass
+    cx.fillStyle = "#FFB627"; cx.beginPath(); cx.moveTo(-13, -12); cx.lineTo(13, -12); cx.lineTo(10, 18); cx.lineTo(-10, 18); cx.closePath(); cx.fill();
+    cx.fillStyle = "#FFCE5C"; cx.fillRect(-9, -8, 4, 22);
+    cx.fillStyle = "#FFFFFF66"; for (let i = 0; i < 4; i++) { cx.beginPath(); cx.arc(-3 + i * 4, 10 - ((t * 30 + i * 9) % 22), 1.3, 0, 7); cx.fill(); }
+    // foam
+    cx.fillStyle = "#FFF6E0"; cx.beginPath(); cx.arc(-8, -13, 6, 0, 7); cx.arc(0, -16, 7, 0, 7); cx.arc(8, -13, 6, 0, 7); cx.fill();
+    // face
+    cx.fillStyle = "#2A1400";
+    if (state === "dead") { cx.lineWidth = 2; cx.strokeStyle = "#2A1400"; for (const ex of [-5, 5]) { cx.beginPath(); cx.moveTo(ex - 3, -1); cx.lineTo(ex + 3, 5); cx.moveTo(ex + 3, -1); cx.lineTo(ex - 3, 5); cx.stroke(); } }
+    else { cx.beginPath(); cx.arc(-5, 2, 2.2, 0, 7); cx.arc(5, 2, 2.2, 0, 7); cx.fill(); if (drunk() > 0.6) { cx.fillStyle = "#FF6B8A88"; cx.beginPath(); cx.arc(-8, 7, 3, 0, 7); cx.arc(8, 7, 3, 0, 7); cx.fill(); } }
+    cx.fillStyle = "#2A1400"; cx.beginPath(); cx.arc(0, 9, 3, 0, Math.PI); cx.fill();
+    cx.restore();
+  }
+  function draw() {
+    cx.save();
+    if (shake > 0) cx.translate((Math.random() - 0.5) * 12 * shake, (Math.random() - 0.5) * 12 * shake);
+    const d = REDUCED ? 0 : drunk();
+    if (d > 0 && state === "play") { cx.translate(W / 2, H / 2); cx.rotate(Math.sin(t * 1.6) * 0.035 * d); cx.translate(-W / 2, -H / 2); }
+    // sky
+    const g = cx.createLinearGradient(0, 0, 0, GROUND); g.addColorStop(0, "#0A0E24"); g.addColorStop(1, "#2A1840"); cx.fillStyle = g; cx.fillRect(-20, -20, W + 40, H + 40);
+    for (const s of SKY) { cx.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(t + s.tw)); cx.fillStyle = "#FFF"; cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 7); cx.fill(); }
+    cx.globalAlpha = 1;
+    cx.fillStyle = "#FFE7A8"; cx.beginPath(); cx.arc(286, 92, 26, 0, 7); cx.fill(); cx.fillStyle = "#0A0E24"; cx.beginPath(); cx.arc(275, 85, 24, 0, 7); cx.fill();
+    // skyline parallax
+    const off = -(scrollX * 0.25) % (W * 2);
+    for (const rep of [0, W * 2]) for (const b of SKYLINE) {
+      const bx = b.x + off + rep; if (bx > W || bx + b.w < 0) continue;
+      cx.fillStyle = "#151034"; cx.fillRect(bx, GROUND - b.h, b.w, b.h);
+      cx.fillStyle = "#FFD27A55"; for (const [wx, wy] of b.win) cx.fillRect(wx + off + rep, wy, 5, 7);
+    }
+    // obstacles (with beer-goggle double vision)
+    if (d > 0.35 && state !== "menu") { cx.globalAlpha = Math.min(0.28, (d - 0.35) * 0.3); for (const p of pipes) drawPipe(p, 7 + Math.sin(t * 2) * 4 * d); cx.globalAlpha = 1; }
+    for (const p of pipes) drawPipe(p, 0);
+    for (const k of kebabs) drawKebab(k);
+    // street
+    cx.fillStyle = "#1B1830"; cx.fillRect(-20, GROUND, W + 40, H - GROUND + 20);
+    cx.fillStyle = "#2A2650"; cx.fillRect(-20, GROUND, W + 40, 8);
+    cx.fillStyle = "#FFD27A"; const dash = scrollX % 48; for (let x = -dash; x < W + 20; x += 48) cx.fillRect(x, GROUND + 30, 24, 4);
+    drawPint(90, y, state === "menu" ? Math.sin(t * 3) * 0.1 : rot);
+    cx.restore();
+  }
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function loop(now) { const dt = Math.min(0.033, (now - last) / 1000); last = now; update(dt); draw(); requestAnimationFrame(loop); }
+
+  fit(); reset();
+  $("bestStart").textContent = best;
+  show(store.get("lo18") === "1" ? "start" : "gate");
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => {});
+  requestAnimationFrame(loop);
+  if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+})();
+</script>
+
+</body>
+</html>
