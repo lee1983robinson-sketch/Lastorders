@@ -52,6 +52,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
 .big { font-size: 17px; color: var(--ink); font-weight: 600; }
 .btn { min-height: 52px; border-radius: 14px; border: 0; background: var(--lager); color: #2A1400; font-family: var(--display); font-size: 20px; cursor: pointer; box-shadow: 0 4px 0 #A86A00; }
 .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #A86A00; }
+a.btn { display: flex; align-items: center; justify-content: center; text-decoration: none; }
 .btn.ghost { background: #1C2150; color: var(--ink); box-shadow: 0 4px 0 #0A0C26; font-family: var(--body); font-weight: 800; font-size: 15px; }
 .btn:focus-visible, .mute:focus-visible { outline: 3px solid var(--neon); outline-offset: 2px; }
 .row { display: flex; gap: 10px; }
@@ -107,6 +108,7 @@ p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
       </div>
       <p class="fine" id="drinkHint" aria-live="polite"></p>
       <button class="btn" id="go" type="button">START DRINKING</button>
+      <a class="btn ghost" href="/run.html">NEW: Beer Goggles, the running game</a>
       <p class="fine">Best so far: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk</p>
     </div>
   </div>
