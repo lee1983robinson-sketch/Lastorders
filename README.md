@@ -2,7 +2,7 @@
 
 By **Robbo's Game Lab**. Logo files: `lab-badge.svg`, `lab-logo.png`.
 
-Last Orders: sixteen 18+ pub games in one place (including a free-play fruit machine), with a home screen at `/`.
+Last Orders: seventeen 18+ pub games in one place (including two free-play fruit machines), with a home screen at `/`.
 
 It's a static website (no server, no database), so it can go on Render as a free **Static Site**, which never goes to sleep and doesn't use your free web-service hours.
 
@@ -76,3 +76,9 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - slots.html / slots.js: a British pub fruit machine. Three reels, one win line, random holds (never twice running, two reels at most) and nudges, Hi-Lo gamble ladder (up to five doubles), and a "Pub Crawl" pick-a-pint bonus for three pints anywhere.
 - Reel maths tuned by simulating a million spins: about a 21% hit rate and 87% return before holds and nudges.
 - Free play only: credits are pretend, can't be bought and can't be cashed out. A free 500-credit "lock-in" top-up appears when you run dry. Leaderboard key "slots" records the biggest single collected win (API cap 2,000,000).
+
+## Version 3.9: two machines
+
+- Club Fruitie (slots.html, leaderboard key "slots"): old-school pub fruitie. Numbers on the win line climb a 30-step trail; a full trail puts you on the 14-box feature board, where a chasing light lands on cash (3x to 20x), the cash ladder (gamble up to 150x), a streak (5 free spins, wins x2), 6 nudges, go again or the 200x jackpot. Plus random holds and nudges, Hi-Lo gamble and the pick-a-pint bonus. Simulated: board about every 23 spins, ~85% return with holds and nudges.
+- Golden Pints (goldpints.html, key "mega"): modern 5-reel, 20-line slot with real drink photos, the Cool Pint wild (reels 2-4), Bonus Bell free spins (10/15/20, wins x3, retrigger), anticipation slow-down, payline display, big/mega/epic win celebrations, auto (25) and turbo, a level bar with bonus credits and a once-a-day bonus wheel. Simulated: ~29% of spins win, free spins about 1 in 220, ~87% return.
+- Both share one free-play credit balance and the 500-credit lock-in top-up.

@@ -1,42 +1,56 @@
-// Fruit Machine: a British pub fruitie with holds, nudges, a Hi-Lo gamble and a pick-a-pint bonus.
+// Club Fruitie: an old-school British pub fruit machine. Number reels climb the trail, the trail puts you on the
+// feature board (cash, cash ladder, streak, nudges, again, jackpot), plus holds, nudges, a Hi-Lo gamble and a pick-a-pint bonus.
 // Free play only: credits are pretend, can't be bought and can't be cashed out. World 360 x 640.
 (() => {
   "use strict";
-  const { $, store, REDUCED, beep, noise, thud, cheer, fanfare, sad, wireMute, fit, show, gate, toast, share, rr, particles } = PUB;
+  const { $, store, REDUCED, beep, noise, cheer, fanfare, sad, wireMute, fit, show, gate, toast, rr, particles } = PUB;
   const W = 360, H = 640;
   let g = null; fit($("game"), W, H, (o) => { g = o.g; });
   const FX = particles();
 
-  // ---------- the maths (tuned by simulating a million spins: ~21% hit rate, ~87% return before holds and nudges) ----------
+  // ---------- the maths (simulated: ~21% hit rate, feature board about every 23 spins, ~85% return with holds and nudges) ----------
   const STRIPS = [
     "CH LE OR PL CH ME LE BE OR BAR CH PL LE 7 OR ME CH BE LE PINT PL OR".split(" "),
     "LE OR CH PL ME LE BE OR BAR PL CH LE 7 OR ME BE LE PINT PL OR CH LE".split(" "),
     "OR LE PL ME CH BE LE OR BAR PL LE 7 OR LE BE LE PINT PL OR CH OR LE".split(" "),
   ];
-  const PAY3 = { LE: 10, OR: 12, PL: 15, ME: 20, BE: 40, BAR: 75, "7": 150, PINT: 300, CH: 25 };
+  const NUMS = [0, 1, 0, 0, 2, 0, 0, 1, 0, 0, 0, 3, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0];
+  const NUMR = [NUMS, NUMS.slice(7).concat(NUMS.slice(0, 7)), NUMS.slice(13).concat(NUMS.slice(0, 13))];
+  const TRAIL = 30;
+  const PAY3 = { LE: 6, OR: 8, PL: 10, ME: 13, BE: 25, BAR: 50, "7": 100, PINT: 200, CH: 16 };
   const NAMES = { CH: "Cherries", LE: "Lemons", OR: "Oranges", PL: "Plums", ME: "Melons", BE: "Bells", BAR: "BARs", "7": "Sevens", PINT: "Pints" };
   const STAKES = [10, 20, 50, 100];
   function linePay(l) {
     const [a, b, c] = l;
     if (a === b && b === c) return PAY3[a];
-    if (a === "CH" && b === "CH") return 5;
-    if (a === "CH") return 2;
+    if (a === "CH" && b === "CH") return 3;
+    if (a === "CH") return 1;
     return 0;
   }
+  // feature board, clockwise from top left. [kind, value, label, weight]
+  const BOARD = [["C", 3, "3×", 18], ["C", 5, "5×", 14], ["N", 6, "NUDGE ×6", 8], ["C", 8, "8×", 9], ["L", 0, "LADDER", 5], ["C", 3, "3×", 18], ["S", 5, "STREAK", 5],
+    ["C", 10, "10×", 6], ["A", 0, "AGAIN", 5], ["C", 20, "20×", 3], ["L", 0, "LADDER", 5], ["C", 5, "5×", 14], ["J", 200, "JACKPOT", 1], ["C", 4, "4×", 14]];
+  const LADDER = [5, 10, 20, 40, 80, 150];
 
   // ---------- layout ----------
-  const RX = [78, 180, 282], RW = 92, RH = 70, WY = 176, WH = RH * 3, LINE_Y = WY + RH * 1.5;
-  const SYM_SIZE = 58;
+  const RX = [78, 180, 282], RW = 92, RH = 56, WY = 266, WH = RH * 3, LINE_Y = WY + RH * 1.5;
+  const SYM_SIZE = 58, SYM_K = 0.84;
+  const BOX_W = 56, BOX_H = 30, BX = [26, 89, 152, 215, 278];
+  const BOXES = [...BX.map((x) => [x, 22]), [278, 66], [278, 112], ...BX.slice().reverse().map((x) => [x, 158]), [26, 112], [26, 66]];
 
   // ---------- state ----------
   let credits = Math.max(0, +(store.get("slotCredits") || 1000)), stakeI = Math.min(3, Math.max(0, +(store.get("slotStake") || 0)));
+  let trail = Math.min(TRAIL - 1, Math.max(0, +(store.get("slotTrail") || 0)));
   let win = 0, shownCredits = credits, state = "menu", t = 0, nudges = 0, holdsLit = false, heldSpin = false, lineFlash = 0, bigGlow = 0, msgI = 0;
-  const reels = STRIPS.map((strip, i) => ({ strip, pos: Math.floor(Math.random() * strip.length), held: false, phase: "idle", speed: 0, from: 0, to: 0, lt: 0, ldur: 0.45, tStop: 0, lastTick: 0 }));
-  const save = () => { store.set("slotCredits", String(credits)); store.set("slotStake", String(stakeI)); };
+  let freeSpins = 0, streakMult = 1, boardDue = false, lit = -1, chase = null, ladderI = 0, pendingLine = 0, trailFlash = 0, freeSpin = false;
+  const reels = STRIPS.map((strip, i) => ({ i, strip, pos: Math.floor(Math.random() * strip.length), held: false, phase: "idle", speed: 0, from: 0, to: 0, lt: 0, ldur: 0.45, tStop: 0, lastTick: 0, jolt: 0 }));
+  const save = () => { store.set("slotCredits", String(credits)); store.set("slotStake", String(stakeI)); store.set("slotTrail", String(trail)); };
   const stake = () => STAKES[stakeI];
   const mod = (a, n) => ((a % n) + n) % n;
-  const symAt = (r, k) => r.strip[mod(Math.round(r.pos) + k, r.strip.length)];
+  const idxAt = (r, k) => mod(Math.round(r.pos) + k, r.strip.length);
+  const symAt = (r, k) => r.strip[idxAt(r, k)];
   const line = () => reels.map((r) => symAt(r, 0));
+  const lineNums = () => reels.reduce((s, r) => s + NUMR[r.i][idxAt(r, 0)], 0);
   const window9 = () => reels.flatMap((r) => [symAt(r, -1), symAt(r, 0), symAt(r, 1)]);
 
   // ---------- sound: a real machine is all clicks, clunks and coins ----------
@@ -44,8 +58,8 @@
   const clunk = () => { beep(220, 80, 0.09, "sine", 0.14); noise(0.05, 0.08, 900); };
   const coin = (d = 0) => { beep(2600, 2400, 0.05, "triangle", 0.045, d); beep(3900, 3600, 0.04, "sine", 0.02, d + 0.01); };
   const lampOn = () => beep(880, 1320, 0.08, "triangle", 0.05);
-  let motor = null;
-  function motorOn() { try { PUB.ctx && PUB.ctx(); } catch (e) {} noise(1.6, 0.03, 380, 0, 2); }
+  const stepSound = (n) => beep(500 + n * 25, 520 + n * 25, 0.05, "square", 0.04);
+  const motorOn = () => noise(1.6, 0.03, 380, 0, 2);
 
   // ---------- symbols, drawn once at 3x and reused ----------
   const SYMS = {};
@@ -99,22 +113,25 @@
   }
 
   // ---------- spinning ----------
-  function spin() {
+  function press() {
     if (state === "won") return collect();
+    if (state === "board") return startChase();
+    spin();
+  }
+  function spin() {
     if (state !== "ready" && state !== "nudge") return;
-    if (credits < stake()) { if (credits < STAKES[0]) return show("over"); toast("Lower your stake", 900); return; }
-    PUB.ctx && PUB.ctx();
-    credits -= stake(); shownCredits = credits; save();
+    freeSpin = freeSpins > 0;
+    if (!freeSpin) {
+      if (credits < stake()) { if (credits < STAKES[0]) return show("over"); toast("Lower your stake", 900); return; }
+      credits -= stake(); shownCredits = credits;
+    } else freeSpins--;
+    save(); PUB.ctx && PUB.ctx();
     nudges = 0; win = 0; lineFlash = 0;
-    const anyHeld = reels.some((r) => r.held); heldSpin = anyHeld;
+    heldSpin = reels.some((r) => r.held);
     state = "spinning"; holdsLit = false; motorOn(); clunk();   // held reels keep their hold for this spin
     const stagger = REDUCED ? [0.35, 0.5, 0.65] : [0.75, 1.1, 1.45];
     let k = 0;
-    for (const r of reels) {
-      if (r.held) { r.phase = "idle"; continue; }
-      r.phase = "spin"; r.speed = 0; r.tStop = t + stagger[k++] + Math.random() * 0.08;
-    }
-    if (reels.every((r) => r.held)) { finish(); return; }
+    for (const r of reels) { if (r.held) { r.phase = "idle"; continue; } r.phase = "spin"; r.speed = 0; r.tStop = t + stagger[k++] + Math.random() * 0.08; }
     ui();
   }
   const backOut = (k) => { const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
@@ -124,14 +141,14 @@
       if (r.phase === "spin") {
         busy = true; r.speed = Math.min(22, r.speed + 90 * dt); r.pos -= r.speed * dt;
         if (Math.floor(r.pos) !== r.lastTick) { r.lastTick = Math.floor(r.pos); if (Math.random() < 0.5) click(0.9 + Math.random() * 0.2); }
-        if (t >= r.tStop) { // land on a random stop: 2 to 3 symbols further on, with a little bounce
+        if (t >= r.tStop) { // land on a random stop 2 to 3 symbols further on, with a little bounce
           const target = Math.floor(Math.random() * r.strip.length), n = r.strip.length; let d = mod(r.pos - target, n); if (d < 2) d += n;
           r.phase = "land"; r.from = r.pos; r.to = r.pos - d; r.lt = 0; r.ldur = REDUCED ? 0.25 : 0.42 + d * 0.012;
         }
       } else if (r.phase === "land") {
         busy = true; r.lt += dt; const k = Math.min(1, r.lt / r.ldur); r.pos = r.from + (r.to - r.from) * (REDUCED ? k : backOut(k));
         if (Math.floor(r.pos) !== r.lastTick) { r.lastTick = Math.floor(r.pos); click(); }
-        if (k >= 1) { r.pos = mod(Math.round(r.to), r.strip.length); r.phase = "idle"; clunk(); if (!REDUCED) shakeReel(r); }
+        if (k >= 1) { r.pos = mod(Math.round(r.to), r.strip.length); r.phase = "idle"; clunk(); if (!REDUCED) r.jolt = 1; }
       } else if (r.phase === "nudge") {
         busy = true; r.lt += dt; const k = Math.min(1, r.lt / 0.2); r.pos = r.from + (r.to - r.from) * backOut(k);
         if (k >= 1) { r.pos = mod(Math.round(r.to), r.strip.length); r.phase = "idle"; afterNudge(); }
@@ -139,25 +156,33 @@
     }
     if (state === "spinning" && !busy) finish();
   }
-  function shakeReel(r) { r.jolt = 1; }
 
   // ---------- after the reels stop ----------
+  function climb(n) { // numbers on the win line move you up the trail
+    if (n <= 0) return;
+    const before = trail; trail = Math.min(TRAIL, trail + n); trailFlash = 1.2; save();
+    for (let i = 0; i < trail - before; i++) setTimeout(() => stepSound(before + i), i * 90);
+    if (trail >= TRAIL) boardDue = true;
+  }
   function finish() {
     for (const r of reels) r.held = false;
+    climb(lineNums());
     const pints = window9().filter((s) => s === "PINT").length;
-    const pay = linePay(line()) * stake();
+    const pay = linePay(line()) * stake() * (freeSpin ? streakMult : 1);
+    if (freeSpins === 0 && freeSpin) streakMult = 1;
     if (pints >= 3) { state = "bonus"; pendingLine = pay; setTimeout(startBonus, 600); ui(); return; }
     if (pay > 0) return awardWin(pay);
-    // no win: maybe light up nudges or holds (never both, never holds twice running)
+    if (boardDue) return enterBoard();
     state = "ready";
-    if (Math.random() < 0.2) { nudges = 1 + Math.floor(Math.random() * 3); state = "nudge"; lampOn(); toast(`${nudges} NUDGE${nudges > 1 ? "S" : ""}!`, 1100); }
-    else if (!heldSpin && Math.random() < 0.3) { setHoldsLit(true); lampOn(); toast("HOLDS ON!", 900); }
-    if (credits < STAKES[0]) setTimeout(() => { if (state === "ready" && credits < STAKES[0]) show("over"); }, 900);
+    if (freeSpins === 0) {
+      if (Math.random() < 0.18) { nudges = 1 + Math.floor(Math.random() * 3); state = "nudge"; lampOn(); toast(`${nudges} NUDGE${nudges > 1 ? "S" : ""}!`, 1100); }
+      else if (!heldSpin && Math.random() < 0.28) { holdsLit = true; lampOn(); toast("HOLDS ON!", 900); }
+    }
+    if (credits < STAKES[0] && freeSpins === 0) setTimeout(() => { if (state === "ready" && credits < STAKES[0]) show("over"); }, 900);
     ui();
   }
-  let pendingLine = 0;
   function awardWin(amount) {
-    win = amount; state = "won"; lineFlash = 2.4; nudges = 0; setHoldsLit(false);
+    win = amount; state = "won"; lineFlash = 2.4; nudges = 0; holdsLit = false;
     const mult = amount / stake();
     if (mult >= 75) { bigGlow = 2.5; fanfare(); cheer(true); FX.burst(W / 2, LINE_Y, "#FFD45C", 40, 260, 4); toast(`BIG WIN!<br>${amount.toLocaleString()}`, 1800); }
     else if (mult >= 15) { bigGlow = 1.2; cheer(false); FX.burst(W / 2, LINE_Y, "#FFB627", 24, 200, 3.5); toast(`WINNER!<br>${amount.toLocaleString()}`, 1300); }
@@ -166,16 +191,70 @@
   }
   function collect() {
     if (state !== "won" || win <= 0) return;
-    const amount = win; win = 0; credits += amount; save(); state = "ready"; lineFlash = 0;
-    const b = PUB.best("slotBest", amount); if (amount >= b && amount > 0) {} PUB.submit("slots", amount);
-    // coins count up into the credit meter
+    const amount = win; win = 0; credits += amount; save(); lineFlash = 0;
+    PUB.best("slotBest", amount); PUB.submit("slots", amount);
     const steps = Math.min(30, Math.max(4, Math.round(Math.log2(amount + 1) * 3)));
     for (let i = 0; i < steps; i++) coin(i * 0.045);
-    ui();
+    if (boardDue) { state = "ready"; setTimeout(enterBoard, 500); ui(); return; }
+    state = "ready"; ui();
   }
 
+  // ---------- the feature board ----------
+  function enterBoard() {
+    boardDue = false; trail = 0; save(); state = "board"; lit = -1; holdsLit = false; nudges = 0;
+    fanfare(); toast("ON THE BOARD!", 1300); bigGlow = 0.8; ui();
+  }
+  function startChase() {
+    if (state !== "board") return;
+    // the landing box is chosen fairly by weight; the light then runs round to it
+    let r = Math.random() * BOARD.reduce((s, b) => s + b[3], 0), target = 0;
+    for (let i = 0; i < BOARD.length; i++) { r -= BOARD[i][3]; if (r <= 0) { target = i; break; } }
+    const from = lit < 0 ? 0 : lit, laps = REDUCED ? 1 : 2 + Math.floor(Math.random() * 2);
+    const total = laps * BOARD.length + mod(target - from, BOARD.length);
+    chase = { k: 0, total, from, next: t, target };
+    state = "chase"; ui();
+  }
+  function updateChase() {
+    if (!chase || t < chase.next) return;
+    chase.k++; lit = mod(chase.from + chase.k, BOARD.length);
+    const p = chase.k / chase.total; beep(900 + p * 600, 900 + p * 600, 0.03, "square", 0.035);
+    chase.next = t + 0.035 + 0.32 * Math.pow(p, 3);
+    if (chase.k >= chase.total) { chase = null; setTimeout(() => landBoard(lit), 350); }
+  }
+  function landBoard(i) {
+    const [kind, v, label] = BOARD[i];
+    FX.burst(BOXES[i][0] + BOX_W / 2, BOXES[i][1] + BOX_H / 2, "#FFD45C", 18, 160, 3);
+    if (kind === "C") { toast(`${label} STAKE!`, 1000); return awardWin(v * stake()); }
+    if (kind === "J") { toast("JACKPOT!!!", 2200); try { PUB.confetti(200, ["#FFD45C", "#FFB627", "#FFF6C4", "#FF3D7F"]); } catch (e) {} return awardWin(v * stake()); }
+    if (kind === "A") { toast("GO AGAIN!", 1000); lampOn(); state = "board"; ui(); return; }
+    if (kind === "N") { state = "nudge"; nudges = v; lampOn(); toast("6 NUDGES!<br>FIND A WIN", 1400); ui(); return; }
+    if (kind === "S") { freeSpins = v; streakMult = 2; state = "ready"; lampOn(); toast("STREAK!<br>5 FREE SPINS, WINS ×2", 1600); ui(); return; }
+    if (kind === "L") { openLadder(); }
+  }
+  // cash ladder: gamble up a rung (50/50) or take it. Lose and you drop two rungs.
+  function openLadder() {
+    ladderI = 0; state = "ladder"; $("ladder").hidden = false; drawLadder(); lampOn(); ui();
+  }
+  function drawLadder() {
+    $("lRungs").innerHTML = LADDER.slice().reverse().map((m, j) => { const i = LADDER.length - 1 - j; return `<span class="${i === ladderI ? "on" : i < ladderI ? "past" : ""}">${(m * stake()).toLocaleString()}</span>`; }).join("");
+    $("lUp").disabled = ladderI >= LADDER.length - 1;
+  }
+  function ladderUp() {
+    if (state !== "ladder") return; $("lUp").disabled = $("lTake").disabled = true;
+    let n = 0; const flick = setInterval(() => { n++; ladderI += n % 2 ? 1 : -1; drawLadder(); beep(700 + (n % 2) * 300, 700 + (n % 2) * 300, 0.04, "square", 0.04); }, 90);
+    const startI = ladderI;
+    setTimeout(() => {
+      clearInterval(flick); ladderI = startI;
+      if (Math.random() < 0.5) { ladderI++; [0, 0.07].forEach((d, i) => beep([988, 1319][i], [988, 1319][i], 0.1, "triangle", 0.06, d)); }
+      else { ladderI -= 2; sad(); }
+      $("lTake").disabled = false;
+      if (ladderI < 0) { toast("OFF THE LADDER!", 1100); $("ladder").hidden = true; state = "ready"; ui(); return; }
+      drawLadder(); if (ladderI >= LADDER.length - 1) { toast("TOP OF THE LADDER!", 1100); setTimeout(ladderTake, 900); }
+    }, REDUCED ? 300 : 900);
+  }
+  function ladderTake() { if (state !== "ladder") return; $("ladder").hidden = true; const amount = LADDER[ladderI] * stake(); state = "won"; win = amount; collect(); toast(`LADDER PAYS ${amount.toLocaleString()}`, 1200); }
+
   // ---------- holds and nudges ----------
-  function setHoldsLit(on) { holdsLit = on; if (!on) for (const r of reels) r.held = false; }
   function holdOrNudge(i) {
     const r = reels[i];
     if (state === "nudge" && nudges > 0 && r.phase === "idle") {
@@ -189,7 +268,7 @@
   function afterNudge() {
     const pay = linePay(line()) * stake();
     if (pay > 0) { nudges = 0; return awardWin(pay); }
-    if (nudges <= 0) state = "ready";
+    if (nudges <= 0) { state = "ready"; if (boardDue) return enterBoard(); }
     ui();
   }
 
@@ -215,7 +294,7 @@
       const right = up ? next > gNum : next < gNum; gNum = next;
       if (right) { win *= 2; gRounds++; [0, 0.07].forEach((d, i) => beep([988, 1319][i], [988, 1319][i], 0.1, "triangle", 0.06, d)); FX.burst(W / 2, 300, "#5FE3B0", 18, 200, 3); gambleText();
         if (gRounds >= TRAIL_MAX) { toast("TOP OF THE LADDER!", 1100); setTimeout(takeGamble, 900); } }
-      else { sad(); win = 0; toast("UNLUCKY!", 1000); setTimeout(() => { $("gamble").hidden = true; state = "ready"; ui(); }, 900); }
+      else { sad(); win = 0; toast("UNLUCKY!", 1000); setTimeout(() => { $("gamble").hidden = true; state = "ready"; if (boardDue) enterBoard(); ui(); }, 900); }
     }, 260);
   }
   function takeGamble() { if (state !== "gamble") return; $("gamble").hidden = true; state = "won"; collect(); }
@@ -223,7 +302,7 @@
   // ---------- Pub Crawl bonus: pick a pint ----------
   function startBonus() {
     $("bonus").hidden = false; [0, 0.1, 0.2, 0.3].forEach((d, i) => beep([1319, 1568, 1976, 2637][i], [1319, 1568, 1976, 2637][i], 0.22, "sine", 0.05, d));
-    const prizes = [10, 20, 50].sort(() => Math.random() - 0.5);
+    const prizes = [5, 10, 20].sort(() => Math.random() - 0.5);
     const btns = [...$("pints").querySelectorAll("button")]; btns.forEach((b) => { b.className = ""; b.innerHTML = ""; b.disabled = false; });
     btns.forEach((b, i) => { b.onclick = () => {
       btns.forEach((x) => (x.disabled = true));
@@ -235,20 +314,22 @@
   }
 
   // ---------- buttons ----------
-  $("spin").addEventListener("click", spin);
+  $("spin").addEventListener("click", press);
   $("holds").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => holdOrNudge(+b.dataset.r)));
-  $("stake").addEventListener("click", () => { if (state !== "ready" && state !== "nudge") return; stakeI = (stakeI + 1) % STAKES.length; save(); beep(600 + stakeI * 120, 900 + stakeI * 120, 0.06, "square", 0.04); ui(); });
-  $("pays").addEventListener("click", () => { if (state === "won") return openGamble(); if (state === "ready" || state === "nudge") { $("payPanel").hidden = false; } });
+  $("stake").addEventListener("click", () => { if ((state !== "ready" && state !== "nudge") || freeSpins > 0) return; stakeI = (stakeI + 1) % STAKES.length; save(); beep(600 + stakeI * 120, 900 + stakeI * 120, 0.06, "square", 0.04); ui(); });
+  $("pays").addEventListener("click", () => { if (state === "won") return openGamble(); if (state === "ready" || state === "nudge" || state === "board") { $("payPanel").hidden = false; } });
   $("payClose").addEventListener("click", () => ($("payPanel").hidden = true));
   $("gHi").addEventListener("click", () => guess(true)); $("gLo").addEventListener("click", () => guess(false)); $("gTake").addEventListener("click", takeGamble);
+  $("lUp").addEventListener("click", ladderUp); $("lTake").addEventListener("click", ladderTake);
   $("topup").addEventListener("click", () => { credits += 500; shownCredits = credits; save(); show(null); state = "ready"; for (let i = 0; i < 12; i++) coin(i * 0.05); ui(); });
   $("go").addEventListener("click", () => { show(null); state = "ready"; PUB.ctx && PUB.ctx(); if (credits < STAKES[0]) show("over"); ui(); });
   addEventListener("keydown", (e) => {
-    if (e.code === "Space" || e.code === "Enter") { if (state === "gamble" || !$("bonus").hidden) return; e.preventDefault(); spin(); }
+    if (e.code === "Space" || e.code === "Enter") { if (state === "gamble" || state === "ladder" || !$("bonus").hidden) return; e.preventDefault(); press(); }
     if (e.code === "Digit1" || e.code === "Digit2" || e.code === "Digit3") holdOrNudge(+e.code.slice(-1) - 1);
     if (e.code === "KeyG") openGamble();
   });
-  $("paytable").innerHTML = ["PINT", "7", "BAR", "BE", "CH", "ME", "PL", "OR", "LE"].map((k) => `<span>3 × ${NAMES[k]}</span><b>${PAY3[k]}×</b>`).join("") + `<span>2 Cherries (reels 1 and 2)</span><b>5×</b><span>1 Cherry (reel 1)</span><b>2×</b><span>3 Pints anywhere</span><b>BONUS</b>`;
+  $("paytable").innerHTML = ["PINT", "7", "BAR", "BE", "CH", "ME", "PL", "OR", "LE"].map((k) => `<span>3 × ${NAMES[k]}</span><b>${PAY3[k]}×</b>`).join("") +
+    `<span>2 Cherries (reels 1 and 2)</span><b>3×</b><span>1 Cherry (reel 1)</span><b>1×</b><span>3 Pints anywhere</span><b>BONUS</b><span>Numbers on the win line</span><b>TRAIL</b>`;
 
   function ui() {
     const hb = $("holds").querySelectorAll("button");
@@ -258,72 +339,87 @@
       else if (holdsLit && state === "ready") { b.textContent = r.held ? "HELD" : "HOLD"; b.classList.add(r.held ? "on" : "lit"); b.disabled = false; }
       else { b.textContent = "HOLD"; b.disabled = true; }
     });
-    const sp = $("spin"); sp.classList.toggle("collect", state === "won"); sp.textContent = state === "won" ? "COLLECT" : "SPIN";
-    sp.disabled = !(state === "ready" || state === "nudge" || state === "won");
-    $("stakeVal").textContent = stake(); $("stake").disabled = !(state === "ready" || state === "nudge");
-    const pb = $("pays"); pb.classList.toggle("gamble", state === "won"); pb.innerHTML = state === "won" ? "GAMBLE<br>IT?" : "PAYS<br>&amp; RULES"; pb.disabled = !(state === "ready" || state === "nudge" || state === "won");
+    const sp = $("spin"); sp.classList.toggle("collect", state === "won"); sp.classList.toggle("board", state === "board");
+    sp.textContent = state === "won" ? "COLLECT" : state === "board" ? "START" : freeSpins > 0 ? `FREE ×${freeSpins}` : "SPIN";
+    sp.disabled = !(state === "ready" || state === "nudge" || state === "won" || state === "board");
+    $("stakeVal").textContent = stake(); $("stake").disabled = !(state === "ready" || state === "nudge") || freeSpins > 0;
+    const pb = $("pays"); pb.classList.toggle("gamble", state === "won"); pb.innerHTML = state === "won" ? "GAMBLE<br>IT?" : "PAYS<br>&amp; RULES";
+    pb.disabled = !(state === "ready" || state === "nudge" || state === "won" || state === "board");
   }
 
   // ---------- drawing the cabinet ----------
-  const MSGS = ["FEED ME", "HOLDS AND NUDGES LIGHT UP AT RANDOM", "3 PINTS ANYWHERE = PUB CRAWL BONUS", "GAMBLE ANY WIN ON HIGHER OR LOWER", "THREE SEVENS PAY 150 x STAKE", "FREE PLAY ONLY - CREDITS AREN'T MONEY"];
+  const MSGS = ["FEED ME", "NUMBERS ON THE WIN LINE CLIMB THE TRAIL", "FILL THE TRAIL TO GET ON THE BOARD", "LADDER, STREAK, NUDGES OR THE JACKPOT", "HOLDS AND NUDGES LIGHT UP AT RANDOM", "3 PINTS ANYWHERE = PUB CRAWL BONUS", "FREE PLAY ONLY - CREDITS AREN'T MONEY"];
   function ledText(txt, x, y, col, size = 13, align = "left") { g.font = `${size}px Bungee, Impact, sans-serif`; g.textAlign = align; g.textBaseline = "middle"; g.fillStyle = col; g.fillText(txt, x, y); }
-  function bulbs(x0, y0, x1, y1, n, phase) {
-    const per = 2 * ((x1 - x0) + (y1 - y0)); const pts = [];
-    for (let i = 0; i < n; i++) { let d = (i / n) * per, x, y; if (d < x1 - x0) { x = x0 + d; y = y0; } else if ((d -= x1 - x0) < y1 - y0) { x = x1; y = y0 + d; } else if ((d -= y1 - y0) < x1 - x0) { x = x1 - d; y = y1; } else { d -= x1 - x0; x = x0; y = y1 - d; } pts.push([x, y]); }
-    pts.forEach(([x, y], i) => { const on = (i + Math.floor(phase)) % 3 === 0; g.fillStyle = on ? "#FFF3B0" : "#7A4A10"; g.beginPath(); g.arc(x, y, on ? 3.2 : 2.6, 0, 7); g.fill(); if (on) { g.fillStyle = "rgba(255,210,100,.25)"; g.beginPath(); g.arc(x, y, 7, 0, 7); g.fill(); } });
+  function drawBoard() {
+    const top = g.createLinearGradient(0, 16, 0, 196); top.addColorStop(0, "#1A0A3A"); top.addColorStop(1, "#2A0A2A"); g.fillStyle = top; rr(g, 20, 16, W - 40, 180, 14); g.fill();
+    const onBoard = state === "board" || state === "chase";
+    BOARD.forEach(([kind, , label], i) => {
+      const [x, y] = BOXES[i];
+      const isLit = i === lit && (onBoard || state === "won" || state === "ladder" || state === "nudge");
+      const twinkle = !onBoard && Math.sin(t * 2.2 + i * 1.7) > 0.93;
+      const base = kind === "J" ? ["#FFD45C", "#5A3A00"] : kind === "C" ? ["#FFB627", "#3A2410"] : kind === "A" ? ["#5FE3B0", "#0A3A2A"] : ["#3DE0FF", "#0A2A3A"];
+      const bright = isLit || twinkle || (onBoard && Math.sin(t * 6 + i) > 0.6 && state === "board");
+      g.fillStyle = bright ? base[0] : base[1]; rr(g, x, y, BOX_W, BOX_H, 7); g.fill();
+      if (isLit) { g.fillStyle = "rgba(255,255,255,.35)"; rr(g, x - 3, y - 3, BOX_W + 6, BOX_H + 6, 9); g.fill(); g.fillStyle = base[0]; rr(g, x, y, BOX_W, BOX_H, 7); g.fill(); }
+      g.strokeStyle = bright ? "#FFF6E0" : "rgba(255,255,255,.18)"; g.lineWidth = 1.5; rr(g, x, y, BOX_W, BOX_H, 7); g.stroke();
+      const fs = label.length > 6 ? 9 : label.length > 4 ? 10.5 : 14;
+      ledText(label, x + BOX_W / 2, y + BOX_H / 2 + 1, bright ? "#1A0A00" : base[0] + "AA", fs, "center");
+    });
+    // centre: the name and the number trail
+    g.save(); g.textAlign = "center"; g.textBaseline = "middle";
+    g.font = "10px Bungee, Impact, sans-serif"; g.fillStyle = `rgba(61,224,255,${0.7 + Math.sin(t * 3) * 0.3})`; g.fillText(onBoard ? "ON THE BOARD!" : "CLUB FRUITIE", W / 2, 66);
+    g.font = "21px Bungee, Impact, sans-serif"; g.lineWidth = 5; g.strokeStyle = "#5A1A00"; g.strokeText("LAST ORDERS", W / 2, 86);
+    const tg = g.createLinearGradient(0, 76, 0, 96); tg.addColorStop(0, "#FFF6C4"); tg.addColorStop(0.5, "#FFC53D"); tg.addColorStop(1, "#E07A00"); g.fillStyle = tg; g.fillText("LAST ORDERS", W / 2, 86); g.restore();
+    const cols = 10, lw = 15, gap = 2, x0 = W / 2 - (cols * (lw + gap) - gap) / 2;
+    for (let i = 0; i < TRAIL; i++) {
+      const cx = x0 + (i % cols) * (lw + gap), cy = 104 + Math.floor(i / cols) * 16, on = i < trail, fresh = on && trailFlash > 0 && i >= trail - 4;
+      g.fillStyle = on ? (fresh && Math.sin(t * 20) > 0 ? "#FFFFFF" : i === TRAIL - 1 ? "#FF3D7F" : "#FFB627") : "#2A1A30"; rr(g, cx, cy, lw, 13, 3); g.fill();
+      ledText(i === TRAIL - 1 ? "F" : String(i + 1), cx + lw / 2, cy + 7, on ? "#2A1400" : "#5A4A5A", 7.5, "center");
+    }
   }
   function draw(dt) {
     g.fillStyle = "#0A0814"; g.fillRect(0, 0, W, H); PUB.backdrop(g, W, H, 0.7);
-    // cabinet body
     const body = g.createLinearGradient(0, 0, W, 0); body.addColorStop(0, "#3A0612"); body.addColorStop(0.5, "#7A0E24"); body.addColorStop(1, "#3A0612");
-    g.fillStyle = "rgba(0,0,0,.5)"; rr(g, 14, 14, W - 20, H - 70, 22); g.fill();
-    g.fillStyle = body; rr(g, 10, 8, W - 20, H - 72, 22); g.fill();
-    const chrome = g.createLinearGradient(0, 8, 0, H - 64); chrome.addColorStop(0, "#F4F4FF"); chrome.addColorStop(0.3, "#8A8AA0"); chrome.addColorStop(0.6, "#E0E0F0"); chrome.addColorStop(1, "#5A5A70");
-    g.strokeStyle = chrome; g.lineWidth = 4; rr(g, 10, 8, W - 20, H - 72, 22); g.stroke();
-    // topper with chasing bulbs
-    const top = g.createLinearGradient(0, 18, 0, 110); top.addColorStop(0, "#1A0A3A"); top.addColorStop(1, "#3A0A2A"); g.fillStyle = top; rr(g, 22, 18, W - 44, 92, 14); g.fill();
-    bulbs(26, 22, W - 26, 106, 34, t * 7);
-    const pulse = 0.75 + Math.sin(t * 3) * 0.25;
-    g.save(); g.textAlign = "center"; g.textBaseline = "middle"; g.font = "15px Bungee, Impact, sans-serif"; g.fillStyle = `rgba(61,224,255,${pulse})`; g.fillText("LUCKY", W / 2, 44);
-    g.font = "33px Bungee, Impact, sans-serif"; g.lineWidth = 6; g.strokeStyle = "#5A1A00"; g.strokeText("LAST ORDERS", W / 2, 76);
-    const tg = g.createLinearGradient(0, 60, 0, 92); tg.addColorStop(0, "#FFF6C4"); tg.addColorStop(0.5, "#FFC53D"); tg.addColorStop(1, "#E07A00"); g.fillStyle = tg; g.fillText("LAST ORDERS", W / 2, 76); g.restore();
+    g.fillStyle = "rgba(0,0,0,.5)"; rr(g, 14, 12, W - 20, 584, 22); g.fill();
+    g.fillStyle = body; rr(g, 10, 8, W - 20, 584, 22); g.fill();
+    const chrome = g.createLinearGradient(0, 8, 0, 592); chrome.addColorStop(0, "#F4F4FF"); chrome.addColorStop(0.3, "#8A8AA0"); chrome.addColorStop(0.6, "#E0E0F0"); chrome.addColorStop(1, "#5A5A70");
+    g.strokeStyle = chrome; g.lineWidth = 4; rr(g, 10, 8, W - 20, 584, 22); g.stroke();
+    drawBoard(); if (trailFlash > 0) trailFlash -= dt;
     // feature lamps
-    const lamps = [["HOLD", holdsLit && state === "ready"], ["NUDGE", state === "nudge"], ["BONUS", state === "bonus"], ["GAMBLE", state === "won" || state === "gamble"]];
-    lamps.forEach(([txt, on], i) => { const x = 30 + i * 76, flick = on && Math.sin(t * 12) > -0.3; g.fillStyle = flick ? "#FFB627" : "#2A1A20"; rr(g, x, 118, 70, 22, 8); g.fill();
-      if (flick) { g.fillStyle = "rgba(255,182,39,.25)"; rr(g, x - 3, 115, 76, 28, 10); g.fill(); } ledText(txt, x + 35, 129.5, flick ? "#2A1400" : "#6A4A40", 11, "center"); });
+    const lamps = [["HOLD", holdsLit && state === "ready"], ["NUDGE", state === "nudge"], [freeSpins > 0 ? `STREAK ${freeSpins}` : "STREAK", freeSpins > 0], ["GAMBLE", state === "won" || state === "gamble" || state === "ladder"]];
+    lamps.forEach(([txt, on], i) => { const x = 24 + i * 79, flick = on && Math.sin(t * 12) > -0.3; g.fillStyle = flick ? "#FFB627" : "#2A1A20"; rr(g, x, 204, 75, 22, 8); g.fill();
+      ledText(txt, x + 37.5, 215.5, flick ? "#2A1400" : "#6A4A40", 10.5, "center"); });
     // scrolling LED message
-    g.fillStyle = "#0A0204"; rr(g, 24, 146, W - 48, 24, 6); g.fill();
-    g.save(); rr(g, 26, 148, W - 52, 20, 5); g.clip();
-    const msg = state === "won" ? `WIN ${win.toLocaleString()}   COLLECT OR GAMBLE IT   ` : state === "nudge" ? `${nudges} NUDGE${nudges === 1 ? "" : "S"} LEFT - PICK A REEL   ` : MSGS[msgI % MSGS.length] + "      ";
+    g.fillStyle = "#0A0204"; rr(g, 24, 232, W - 48, 24, 6); g.fill();
+    g.save(); rr(g, 26, 234, W - 52, 20, 5); g.clip();
+    const fixed = state === "won" ? `WIN ${win.toLocaleString()}   COLLECT OR GAMBLE IT   ` : state === "nudge" ? `${nudges} NUDGE${nudges === 1 ? "" : "S"} LEFT - PICK A REEL   ` : state === "board" ? "ON THE BOARD - PRESS START   " : freeSpins > 0 ? `STREAK - ${freeSpins} FREE SPINS - WINS PAY DOUBLE   ` : null;
+    const msg = fixed || MSGS[msgI % MSGS.length] + "      ";
     g.font = "13px Bungee, Impact, sans-serif"; const mw = g.measureText(msg).width; const off = (t * 55) % (mw + W);
-    if (state !== "won" && state !== "nudge" && off > mw + W - 2) msgI++;
-    g.fillStyle = "#FF5A3A"; g.textBaseline = "middle"; g.textAlign = "left"; g.fillText(msg, W - 24 - off, 158.5); if (state === "won" || state === "nudge") g.fillText(msg, W - 24 - off + mw, 158.5); g.restore();
+    if (!fixed && off > mw + W - 2) msgI++;
+    g.fillStyle = "#FF5A3A"; g.textBaseline = "middle"; g.textAlign = "left"; g.fillText(msg, W - 24 - off, 244.5); if (fixed) g.fillText(msg, W - 24 - off + mw, 244.5); g.restore();
     // reel window
     g.fillStyle = "#000"; rr(g, 24, WY - 6, W - 48, WH + 12, 10); g.fill();
     for (let i = 0; i < 3; i++) drawReel(reels[i], RX[i]);
-    // glass: curved shading and a reflection
     const sh = g.createLinearGradient(0, WY, 0, WY + WH); sh.addColorStop(0, "rgba(0,0,0,.75)"); sh.addColorStop(0.22, "rgba(0,0,0,0)"); sh.addColorStop(0.78, "rgba(0,0,0,0)"); sh.addColorStop(1, "rgba(0,0,0,.75)");
     g.fillStyle = sh; g.fillRect(28, WY, W - 56, WH);
     g.fillStyle = "rgba(255,255,255,.06)"; g.beginPath(); g.moveTo(40, WY); g.lineTo(130, WY); g.lineTo(70, WY + WH); g.lineTo(28, WY + WH); g.closePath(); g.fill();
-    // win line and arrows
     const lf = lineFlash > 0 ? (Math.sin(t * 18) > 0 ? 1 : 0.35) : 0.55;
     g.strokeStyle = `rgba(255,61,127,${lf})`; g.lineWidth = lineFlash > 0 ? 3 : 2; g.beginPath(); g.moveTo(26, LINE_Y); g.lineTo(W - 26, LINE_Y); g.stroke();
     g.fillStyle = "#FF3D7F"; for (const [x, d] of [[22, 1], [W - 22, -1]]) { g.beginPath(); g.moveTo(x, LINE_Y - 9); g.lineTo(x + d * 11, LINE_Y); g.lineTo(x, LINE_Y + 9); g.closePath(); g.fill(); }
-    if (lineFlash > 0) { lineFlash = Math.max(0.6, lineFlash - dt); for (let i = 0; i < 3; i++) { g.strokeStyle = `rgba(255,214,92,${0.5 + Math.sin(t * 10) * 0.4})`; g.lineWidth = 3; rr(g, RX[i] - RW / 2 + 3, LINE_Y - RH / 2 + 3, RW - 6, RH - 6, 8); g.stroke(); } }
+    if (lineFlash > 0) { lineFlash = Math.max(0.6, lineFlash - dt); for (let i = 0; i < 3; i++) { g.strokeStyle = `rgba(255,214,92,${0.5 + Math.sin(t * 10) * 0.4})`; g.lineWidth = 3; rr(g, RX[i] - RW / 2 + 3, LINE_Y - RH / 2 + 2, RW - 6, RH - 4, 8); g.stroke(); } }
     g.strokeStyle = chrome; g.lineWidth = 3; rr(g, 24, WY - 6, W - 48, WH + 12, 10); g.stroke();
     // meters
     shownCredits += (credits - shownCredits) * Math.min(1, dt * 6); if (Math.abs(credits - shownCredits) < 0.5) shownCredits = credits;
-    meter(24, 396, 176, "CREDIT", Math.round(shownCredits).toLocaleString(), "#FF5A3A");
-    meter(208, 396, 128, "WIN", win > 0 ? win.toLocaleString() : "0", win > 0 && Math.sin(t * 10) > -0.5 ? "#5FE3B0" : "#3A6A5A");
+    meter(24, 446, 176, "CREDIT", Math.round(shownCredits).toLocaleString(), "#FF5A3A");
+    meter(208, 446, 128, "WIN", win > 0 ? win.toLocaleString() : "0", win > 0 && Math.sin(t * 10) > -0.5 ? "#5FE3B0" : "#3A6A5A");
     // button deck
-    const deck = g.createLinearGradient(0, 462, 0, 572); deck.addColorStop(0, "#2A0A12"); deck.addColorStop(1, "#14040A"); g.fillStyle = deck; rr(g, 20, 462, W - 40, 110, 14); g.fill();
-    // big win glow
+    const deck = g.createLinearGradient(0, 494, 0, 588); deck.addColorStop(0, "#2A0A12"); deck.addColorStop(1, "#14040A"); g.fillStyle = deck; rr(g, 20, 494, W - 40, 92, 14); g.fill();
     if (bigGlow > 0) { bigGlow = Math.max(0, bigGlow - dt); const e = g.createRadialGradient(W / 2, H / 2, H * 0.25, W / 2, H / 2, H * 0.7); e.addColorStop(0, "rgba(255,212,92,0)"); e.addColorStop(1, `rgba(255,212,92,${Math.min(0.5, bigGlow * 0.3)})`); g.fillStyle = e; g.fillRect(0, 0, W, H); }
     FX.step(dt); FX.draw(g);
   }
   function meter(x, y, w, label, val, col) {
-    g.fillStyle = "#0A0204"; rr(g, x, y, w, 56, 8); g.fill(); g.strokeStyle = "#3A2A30"; g.lineWidth = 2; rr(g, x, y, w, 56, 8); g.stroke();
-    ledText(label, x + 10, y + 13, "#8A6A60", 10); ledText(val, x + w - 10, y + 36, col, 22, "right");
+    g.fillStyle = "#0A0204"; rr(g, x, y, w, 42, 8); g.fill(); g.strokeStyle = "#3A2A30"; g.lineWidth = 2; rr(g, x, y, w, 42, 8); g.stroke();
+    ledText(label, x + 10, y + 11, "#8A6A60", 9); ledText(val, x + w - 10, y + 27, col, 19, "right");
   }
   function drawReel(r, cx) {
     const x0 = cx - RW / 2;
@@ -335,19 +431,22 @@
     for (let k = -3; k <= 3; k++) {
       const dy = (k - frac) * RH, ang = dy / R; if (Math.abs(ang) > 1.45) continue;
       const y = LINE_Y + Math.sin(ang) * R + jolt, sy = Math.max(0.05, Math.cos(ang));
-      const id = r.strip[mod(base + k, r.strip.length)];
-      if (fast) { drawSym(id, cx, y, 1, sy * 1.35, 0.55); drawSym(id, cx, y - 14, 1, sy * 1.2, 0.25); }
-      else drawSym(id, cx, y, 1, sy);
+      const idx = mod(base + k, r.strip.length), id = r.strip[idx];
+      if (fast) { drawSym(id, cx - 8, y, SYM_K, sy * SYM_K * 1.35, 0.55); drawSym(id, cx - 8, y - 12, SYM_K, sy * SYM_K * 1.2, 0.25); }
+      else drawSym(id, cx - 8, y, SYM_K, sy * SYM_K);
+      // the number for the trail, if this symbol carries one
+      const num = NUMR[r.i][idx];
+      if (num && !fast) { const onLine = Math.abs(dy) < RH * 0.4 && r.phase === "idle"; g.fillStyle = onLine && Math.sin(t * 10) > -0.4 ? "#FF3D7F" : "#1A0A3A"; g.beginPath(); g.arc(cx + RW / 2 - 15, y, 10 * sy, 0, 7); g.fill();
+        g.fillStyle = "#FFF6E0"; g.font = `${Math.max(1, 12 * sy)}px Bungee, Impact, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(num, cx + RW / 2 - 15, y + 1); }
       g.strokeStyle = "rgba(0,0,0,.06)"; g.lineWidth = 1; g.beginPath(); g.moveTo(x0, y + RH * sy / 2); g.lineTo(x0 + RW, y + RH * sy / 2); g.stroke();
     }
     g.restore();
-    if (r.held) { g.fillStyle = "rgba(255,61,127,.18)"; g.fillRect(x0, WY, RW, WH); ledText("HELD", cx, WY + 12, "#FF3D7F", 11, "center"); }
-    // chrome divider
+    if (r.held) { g.fillStyle = "rgba(255,61,127,.18)"; g.fillRect(x0, WY, RW, WH); ledText("HELD", cx, WY + 10, "#FF3D7F", 10, "center"); }
     g.fillStyle = "#3A3A4A"; g.fillRect(x0 + RW, WY, 2, WH);
   }
 
   let last = performance.now();
-  function loop(now) { const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt; updateReels(dt); if (g) draw(dt); requestAnimationFrame(loop); }
+  function loop(now) { const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt; updateReels(dt); if (state === "chase") updateChase(); if (g) draw(dt); requestAnimationFrame(loop); }
   wireMute(); ui();
   gate(() => show("start"));
   requestAnimationFrame(loop);

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Golden Pints</title>
+<meta name="description" content="A modern 5-reel slot with wilds, free spins, big wins, levels and a daily bonus wheel. Free play, no real money. 18+.">
+<meta name="theme-color" content="#0A0E24">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Golden Pints">
+<meta property="og:description" content="5 reels, 20 lines, wilds, free spins and a daily bonus wheel. Free play. 18+.">
+<meta property="og:image" content="/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
+<style>
+.ctrl { position: absolute; left: 0; right: 0; top: 70.6%; height: 15.6%; display: grid; grid-template-columns: 1fr 1fr auto 1fr 1fr; align-items: center; gap: 2%; padding: 0 4%; pointer-events: none; }
+.ctrl button { pointer-events: auto; cursor: pointer; border: 0; font-family: var(--display); }
+.small { min-height: 46px; border-radius: 14px; background: linear-gradient(180deg, #2C2F66, #1C2150); color: #F4F1FF; box-shadow: 0 4px 0 #0A0C26, inset 0 1px 0 #FFFFFF22; font-size: 12px; line-height: 1.1; }
+.small.on { background: linear-gradient(180deg, #FFE08A, #FFB627); color: #2A1400; box-shadow: 0 4px 0 #8A5200, 0 0 16px #FFB62788; }
+.small:disabled { opacity: .45; }
+.bet { font-size: 22px; }
+#spin { width: 23vmin; height: 23vmin; max-width: 92px; max-height: 92px; min-width: 70px; min-height: 70px; border-radius: 50%; font-size: 15px; color: #2A1400;
+  background: radial-gradient(circle at 50% 30%, #FFF6C4, #FFC53D 50%, #D97A00); box-shadow: 0 6px 0 #8A5200, 0 0 0 4px #5A3A10, 0 0 30px #FFB62788, inset 0 3px 0 #FFFFFFAA; transition: transform .1s, filter .2s; }
+#spin:active { transform: translateY(3px) scale(.97); }
+#spin .ring { display: block; font-size: 30px; line-height: 1; }
+#spin.busy { filter: brightness(.85); }
+#spin.free { background: radial-gradient(circle at 50% 30%, #D8FFE8, #5FE3B0 55%, #12A86A); box-shadow: 0 6px 0 #0A6A40, 0 0 0 4px #0A3A2A, 0 0 30px #5FE3B088; color: #032A16; }
+#gift { position: absolute; top: 1.4%; right: 3%; width: 44px; height: 44px; border-radius: 14px; border: 0; cursor: pointer; font-size: 22px; background: linear-gradient(180deg, #FF6A9A, #FF3D7F 55%, #B0144A); box-shadow: 0 3px 0 #6A0A2A, 0 0 18px #FF3D7F88; }
+#gift.ready { animation: wob 1.2s ease-in-out infinite; }
+#gift:disabled { filter: grayscale(.8) brightness(.6); animation: none; }
+@keyframes wob { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-12deg) scale(1.08); } 40% { transform: rotate(10deg) scale(1.08); } 60% { transform: none; } }
+#info { position: absolute; top: 1.4%; left: 3%; width: 44px; height: 44px; border-radius: 14px; border: 1px solid #2C2F66; background: #12163Acc; color: #F4F1FF; font: 400 18px var(--display); cursor: pointer; }
+.panel { position: absolute; left: 5%; right: 5%; top: 14%; background: linear-gradient(160deg, rgba(40,20,70,.97), rgba(10,8,30,.98)); border: 2px solid #FFB627; border-radius: 22px;
+  padding: 16px; text-align: center; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 20px 60px #000d, 0 0 40px #FFB62744; animation: cardIn .4s cubic-bezier(.2,1.25,.4,1) both; z-index: 6; max-height: 80%; overflow-y: auto; }
+.panel h2 { color: #FFB627; font-size: 26px; }
+#wheelC { width: min(260px, 70vw); height: min(260px, 70vw); align-self: center; }
+.paytable { display: grid; grid-template-columns: 1fr auto auto auto; gap: 3px 10px; font-size: 13px; text-align: left; }
+.paytable b { font-family: var(--display); font-weight: 400; color: #FFB627; text-align: right; }
+.paytable .h { color: #8F8CB8; font-size: 11px; text-align: right; }
+.big-win { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 7; background: radial-gradient(circle, #2A1400cc, #000000ee); cursor: pointer; animation: fadeIn .2s; }
+.big-win h2 { font-size: 46px; line-height: .95; background: linear-gradient(180deg, #FFF6C4, #FFC53D 50%, #E07A00); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 0 #5A2E00) drop-shadow(0 0 20px #FFB627AA); animation: bwPop .6s cubic-bezier(.2,1.6,.4,1) both; text-align: center; }
+.big-win b { font: 400 40px var(--display); color: #FFF6E0; text-shadow: 0 3px 0 #000, 0 0 18px #FFB627; font-variant-numeric: tabular-nums; }
+.big-win p { color: #B9B6D9; font-size: 13px; }
+@keyframes bwPop { from { transform: scale(.3) rotate(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.toast { top: 46%; }
+</style>
+</head>
+<body class="game">
+<div class="stage">
+  <div class="screen">
+    <canvas id="game" aria-label="Golden Pints slot machine" role="img"></canvas>
+    <button type="button" id="info" aria-label="Pays and rules">i</button>
+    <button type="button" id="gift" aria-label="Daily bonus wheel">🎁</button>
+    <div class="ctrl">
+      <button type="button" class="small" id="auto">AUTO</button>
+      <button type="button" class="small bet" id="betDown" aria-label="Lower bet">−</button>
+      <button type="button" id="spin" aria-label="Spin"><span class="ring">↻</span>SPIN</button>
+      <button type="button" class="small bet" id="betUp" aria-label="Raise bet">+</button>
+      <button type="button" class="small" id="turbo">TURBO</button>
+    </div>
+
+    <div class="panel" id="wheelPanel" hidden role="dialog" aria-label="Daily bonus wheel">
+      <h2>DAILY BONUS</h2><p class="big" id="wheelText">One free spin of the wheel every day.</p>
+      <canvas id="wheelC" width="520" height="520"></canvas>
+      <button class="btn" id="wheelGo" type="button">SPIN THE WHEEL</button>
+    </div>
+    <div class="panel" id="fsPanel" hidden role="dialog" aria-label="Free spins">
+      <h2 id="fsTitle">FREE SPINS!</h2><p class="big" id="fsText"></p>
+      <button class="btn" id="fsGo" type="button">LET'S GO</button>
+    </div>
+    <div class="panel" id="payPanel" hidden role="dialog" aria-label="Pays and rules">
+      <h2>PAYS</h2>
+      <div class="paytable" id="paytable"></div>
+      <p class="fine">20 lines, paying left to right. Pays are for each line, times your line bet (your total bet ÷ 20). The Cool Pint is wild on reels 2, 3 and 4. Three or more Bonus Bells anywhere give 10, 15 or 20 free spins where every win pays ×3, and they can retrigger. Level up as you play for bonus credits, and spin the wheel once a day.</p>
+      <button class="btn" id="payClose" type="button">BACK TO IT</button>
+    </div>
+    <div class="big-win" id="bigWin" hidden><h2 id="bwTitle">BIG WIN!</h2><b id="bwVal">0</b><p>Tap to collect</p></div>
+
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <button class="iconbtn mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+    <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+    <div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>GOLDEN PINTS</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+    <div class="overlay" id="start" hidden><div class="card"><h1>GOLDEN PINTS</h1><p class="big">5 reels, 20 lines, a Cool Pint wild and free spins that pay triple.</p>
+<p>Land three Bonus Bells for free spins. Level up as you play, and spin the daily bonus wheel. Biggest win goes on the leaderboard.</p>
+<button class="btn" id="go" type="button">LET'S SPIN</button>
+<button class="btn ghost lb-btn" type="button" data-lb="mega">Leaderboard</button><a class="btn ghost" href="/">All pub games</a>
+<p class="fine"><b>Free play only.</b> Credits aren't money: you can't buy them or cash them out. Shared with Club Fruitie. If real gambling ever stops being fun, visit begambleaware.org</p></div></div>
+    <div class="overlay" id="over" hidden><div class="card"><h2>LANDLORD'S LOCK-IN</h2><p class="big">You're out of credits. The landlord's slipped you a few more.</p>
+<button class="btn" id="topup" type="button">TAKE 500 CREDITS</button><a class="btn ghost" href="/">All pub games</a>
+<p class="fine">Free play only. Credits aren't money.</p></div></div>
+  </div>
+</div>
+<script src="/common.js"></script>
+<script src="/goldpints.js"></script>
+</body>
+</html>
