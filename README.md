@@ -45,3 +45,12 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 
 - Flying Pint gets particle bursts, a score pop, glowing pub signs, twinkling windows, moonlight, drifting cloud and a richer street.
 - Glow effects use gradients rather than per-frame canvas blur so it stays smooth on mid-range phones.
+
+## Flying Pint 3.4 Signature Edition
+
+- Original soundtrack "Chucking-Out Time": honky-tonk pub piano melody, plucked bass, kick/snare/hi-hat, glass clinks and an organ pad. The band builds up as your score climbs (5, 10, 20).
+- Separate music and sound-effect channels; music stops on a crash, never runs two loops, and shuts down when you leave the page.
+- Expressive drinks: blinking, eyebrows, happy when scoring, surprised on a close shave ("PHEW!"), disappointed on a crash, beaming on a new best.
+- Milestones at 5, 10, 20, 30 and 50 with their own banner, colour flash, particles and musical sting.
+- New personal best (only when an earlier best is genuinely beaten): big animated banner with trophy and light rays, gold confetti, a crown for the rest of the run, a fanfare, and a gold record-breaking game-over card.
+- Gameplay, collisions, scoring, kebab bonus, drinks, controls, medals, sharing and the "flying" leaderboard are unchanged.

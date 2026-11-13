@@ -76,6 +76,22 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
 .toast { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); font-family: var(--display); font-size: 22px; color: var(--lager); text-shadow: 0 3px 0 #000; pointer-events: none; opacity: 0; transition: opacity .2s; }
 .toast.on { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } }
+/* ---------- 3.4 Signature Edition ---------- */
+.score.mile { animation: scoreMile .62s cubic-bezier(.2,1.6,.4,1); }
+@keyframes scoreMile { 0% { transform: scale(1); } 35% { transform: scale(1.55) rotate(-5deg); color: #FFE27A; } 100% { transform: scale(1); } }
+.score.crowned { color: #FFE27A; -webkit-text-stroke: 1px #8A5A00; text-shadow: 0 4px 0 #000, 0 0 16px #FFD45CEE, 0 0 40px #FFB627AA; }
+.record-banner { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.record-banner svg { width: 66px; height: 66px; filter: drop-shadow(0 0 12px #FFB627AA); animation: trophyIn .7s cubic-bezier(.2,1.6,.4,1) both, trophyBob 2.2s ease-in-out .7s infinite; }
+.record-title { font-family: var(--display); font-size: 27px; line-height: 1; background: linear-gradient(180deg, #FFF6C4, #FFC53D 55%, #E08A00); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 0 #5A2E00); }
+.record-sub { font-size: 13px; color: #FFE6A6; font-weight: 800; letter-spacing: .4px; }
+#over .card.record { border-color: #FFD45C; animation: recordGlow 1.8s ease-in-out infinite; }
+@keyframes recordGlow { 0%, 100% { box-shadow: 0 24px 80px #000e, 0 0 0 2px #FFD45C55, 0 0 50px #FFB62744; } 50% { box-shadow: 0 24px 80px #000e, 0 0 0 2px #FFD45CAA, 0 0 90px #FFB62788; } }
+#over .card.record .stat:first-child { border-color: #FFD45C88; background: linear-gradient(145deg, #4A3A10, #221A08); }
+#over .card.record .stat:first-child b { color: #FFE27A; }
+#over .card.record .medal { border-color: #FFD45C; color: #FFE27A; }
+@keyframes trophyIn { from { transform: scale(.2) rotate(-25deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes trophyBob { 50% { transform: translateY(-4px) rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { .score.mile, .record-banner svg, #over .card.record { animation: none; } }
 </style>
 </head>
 <body>
@@ -115,12 +131,17 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
       <button class="btn" id="go" type="button">START DRINKING</button>
       <button class="btn ghost lb-btn" type="button" data-lb="flying">Leaderboard</button>
       <a class="btn ghost" href="/">All pub games</a>
-      <p class="fine">Best so far: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk<br>A Robbo's Game Lab game</p>
+      <p class="fine">Best so far: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk<br>A Robbo's Game Lab game · Flying Pint 3.4 Signature Edition</p>
     </div>
   </div>
 
   <div class="overlay" id="over" hidden>
     <div class="card">
+      <div class="record-banner" id="recordBanner" hidden>
+        <svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6C4"/><stop offset=".5" stop-color="#FFC53D"/><stop offset="1" stop-color="#C77700"/></linearGradient></defs><path d="M18 12H9c0 9 4 14 10 15M46 12h9c0 9-4 14-10 15" fill="none" stroke="#FFC53D" stroke-width="4" stroke-linecap="round"/><path d="M18 7h28v15c0 9-6 16-14 16s-14-7-14-16z" fill="url(#tg)"/><path d="M32 12l2.6 5.3 5.9.9-4.3 4.1 1 5.8L32 25.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="#FFF8D6"/><rect x="28" y="37" width="8" height="9" fill="#E8A21A"/><rect x="20" y="46" width="24" height="8" rx="2" fill="url(#tg)"/><rect x="16" y="54" width="32" height="5" rx="2" fill="#B86E00"/></svg>
+        <div class="record-title">NEW PERSONAL BEST!</div>
+        <div class="record-sub" id="recordSub"></div>
+      </div>
       <h2 id="roast">You're barred.</h2>
       <div class="stats">
         <div class="stat"><b id="final">0</b><span>Score</span></div>
@@ -159,9 +180,16 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
 
   // ---------- sound ----------
   let AC = null, muted = store.get("loMute") === "1";
-  let MASTER = null, MUSIC = null;
+  let MASTER = null, MUSIC = null, SFX = null, NOISE = null;
+  const MUSIC_VOL = 0.5;
   function ctx() {
-    if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); MASTER = AC.createGain(); MASTER.gain.value = muted ? 0 : 1; MASTER.connect(AC.destination); MUSIC = AC.createGain(); MUSIC.gain.value = 0.55; MUSIC.connect(MASTER); }
+    if (!AC) {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      MASTER = AC.createGain(); MASTER.gain.value = muted ? 0 : 1; MASTER.connect(AC.destination);
+      MUSIC = AC.createGain(); MUSIC.gain.value = MUSIC_VOL; MUSIC.connect(MASTER);   // soundtrack bus
+      SFX = AC.createGain(); SFX.gain.value = 1; SFX.connect(MASTER);                 // effects bus, independent of the music
+      NOISE = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const nd = NOISE.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    }
     if (AC.state === "suspended") AC.resume();
     return AC;
   }
@@ -170,7 +198,7 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
       const A = ctx(), o = A.createOscillator(), g = A.createGain(), t0 = A.currentTime;
       o.type = type; o.frequency.setValueAtTime(f1, t0); o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
       g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      o.connect(g).connect(MASTER); o.start(t0); o.stop(t0 + dur);
+      o.connect(g).connect(SFX); o.start(t0); o.stop(t0 + dur);
     } catch (e) {}
   }
   // a proper kebab burp: a wobbly low growl through a muffled filter
@@ -183,32 +211,124 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
       lfo.connect(lg).connect(am.gain);
       f.type = "lowpass"; f.frequency.setValueAtTime(900, t0); f.frequency.linearRampToValueAtTime(380, t0 + len); f.Q.value = 6;
       g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.32, t0 + 0.05); g.gain.setValueAtTime(0.28, t0 + len * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
-      o.connect(am).connect(f).connect(g).connect(MASTER);
+      o.connect(am).connect(f).connect(g).connect(SFX);
       o.start(t0); lfo.start(t0); o.stop(t0 + len + 0.05); lfo.stop(t0 + len + 0.05);
     } catch (e) {}
   }
-  // background music: a bouncy pub-piano style loop, made up for this game
+  // ---------- 3.4 soundtrack: "Chucking-Out Time", an original pub-piano arcade tune ----------
+  // Everything is synthesised here with Web Audio: no files, no samples, no borrowed melodies.
   const N = (n) => 440 * Math.pow(2, (n - 69) / 12);
-  const CHORDS = [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55], [57, 60, 64], [53, 57, 60], [55, 59, 62], [55, 59, 62]];
-  const TUNE = [72, 0, 76, 79, 77, 0, 76, 74, 72, 0, 74, 76, 74, 0, 0, 0, 77, 0, 81, 79, 77, 0, 76, 74, 76, 0, 72, 74, 71, 0, 0, 0,
-                72, 0, 76, 79, 81, 0, 79, 77, 76, 0, 77, 79, 79, 0, 0, 0, 77, 76, 74, 72, 74, 0, 76, 74, 72, 0, 0, 0, 79, 0, 74, 0];
+  const BPM = 132, STEP = 60 / BPM / 2;          // eighth notes
+  // 16 bars in C: a verse (bars 0-7) and a sing-along chorus with a music-hall minor iv (bars 8-15)
+  const PROG = [[48, 52, 55], [48, 52, 55], [53, 57, 60], [48, 52, 55], [57, 60, 64], [50, 53, 57], [55, 59, 62], [55, 59, 62],
+                [48, 52, 55, 58], [53, 57, 60], [48, 52, 55], [57, 60, 64], [53, 57, 60], [53, 56, 60], [48, 52, 55], [55, 59, 62]];
+  const MEL = [
+    [67, 0, 72, 0, 76, 74, 72, 0], [79, 0, 76, 0, 72, 0, 0, 0], [77, 0, 81, 0, 77, 76, 74, 0], [76, 0, 72, 0, 67, 0, 0, 0],
+    [69, 72, 76, 0, 79, 0, 76, 0], [77, 0, 74, 0, 72, 0, 69, 0], [71, 72, 74, 0, 79, 0, 77, 0], [74, 0, 71, 0, 67, 0, 0, 0],
+    [79, 0, 79, 81, 79, 0, 76, 0], [77, 0, 77, 79, 77, 0, 72, 0], [76, 77, 79, 0, 84, 0, 79, 0], [81, 0, 79, 0, 76, 0, 72, 0],
+    [77, 0, 81, 0, 84, 0, 81, 0], [80, 0, 77, 0, 72, 0, 68, 0], [79, 0, 76, 0, 72, 0, 74, 76], [79, 0, 0, 74, 0, 71, 74, 0]];
   let step = 0, nextAt = 0, musicOn = false, musicTimer = null;
-  function note(freq, at, dur, type, vol) { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = freq; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + dur); o.connect(g).connect(MUSIC); o.start(at); o.stop(at + dur + 0.02); }
+  const intensity = () => (score >= 20 ? 3 : score >= 10 ? 2 : score >= 5 ? 1 : 0);   // the band builds as you score
+  function env(g, at, peak, dur, attack = 0.006) { g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(peak, at + attack); g.gain.exponentialRampToValueAtTime(0.0001, at + dur); }
+  // honky-tonk piano: two slightly detuned voices with a percussive decay
+  function piano(f, at, dur, vol, dest = MUSIC) {
+    for (const [type, det, v] of [["triangle", -9, 1], ["square", 9, 0.2]]) {
+      const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; o.detune.value = det;
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol * v, at + 0.006); g.gain.exponentialRampToValueAtTime(vol * v * 0.35, at + 0.12); g.gain.exponentialRampToValueAtTime(0.0001, at + dur + 0.08);
+      o.connect(g).connect(dest); o.start(at); o.stop(at + dur + 0.1);
+    }
+  }
+  function pluck(f, at, dur, vol) {
+    const o = AC.createOscillator(), fl = AC.createBiquadFilter(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.value = f;
+    fl.type = "lowpass"; fl.Q.value = 5; fl.frequency.setValueAtTime(1500, at); fl.frequency.exponentialRampToValueAtTime(170, at + 0.2);
+    env(g, at, vol, dur, 0.004); o.connect(fl).connect(g).connect(MUSIC); o.start(at); o.stop(at + dur + 0.02);
+  }
+  function tone(f, at, dur, type, vol, dest = MUSIC) { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; env(g, at, vol, dur, 0.01); o.connect(g).connect(dest); o.start(at); o.stop(at + dur + 0.02); }
+  function noiseHit(at, dur, vol, ftype, freq, dest = MUSIC, q = 0.8) {
+    const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = NOISE;
+    f.type = ftype; f.frequency.value = freq; f.Q.value = q; env(g, at, vol, dur, 0.002); s.connect(f).connect(g).connect(dest); s.start(at, Math.random() * 0.5); s.stop(at + dur + 0.02);
+  }
+  function kick(at, vol = 0.32, dest = MUSIC) { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.setValueAtTime(150, at); o.frequency.exponentialRampToValueAtTime(45, at + 0.12); env(g, at, vol, 0.2, 0.004); o.connect(g).connect(dest); o.start(at); o.stop(at + 0.22); }
+  function snare(at, vol = 0.11, dest = MUSIC) { noiseHit(at, 0.15, vol, "bandpass", 1900, dest); tone(190, at, 0.08, "triangle", vol * 0.7, dest); }
+  const hat = (at, open = false) => noiseHit(at, open ? 0.2 : 0.035, open ? 0.035 : 0.03, "highpass", 7200);
+  const clink = (at) => { tone(2637, at, 0.18, "sine", 0.025); tone(3951, at + 0.01, 0.12, "sine", 0.015); };   // glasses chinking
   function schedule() {
-    const STEP = 60 / 138 / 2; // eighth notes at 138 bpm
-    while (nextAt < AC.currentTime + 0.25) {
-      const bar = Math.floor(step / 8) % 8, beat = step % 8, ch = CHORDS[bar];
-      if (beat % 4 === 0) note(N(ch[0] - 12), nextAt, STEP * 1.6, "triangle", 0.11);           // oom
-      if (beat % 4 === 2) note(N(ch[2] - 12), nextAt, STEP * 1.6, "triangle", 0.09);           // pah (bass)
-      if (beat % 2 === 1) for (const c of ch) note(N(c), nextAt, STEP * 0.7, "square", 0.012); // piano stab
-      const m = TUNE[step % 64]; if (m) note(N(m), nextAt, STEP * 0.9, "square", 0.022);
+    if (!AC || !musicOn) return;
+    while (nextAt < AC.currentTime + 0.3) {
+      const bar = Math.floor(step / 8) % 16, s8 = step % 8, ch = PROG[bar], lv = intensity(), at = nextAt;
+      // plucked bass: root, bounce, fifth, octave pickup
+      if (s8 === 0) pluck(N(ch[0] - 12), at, STEP * 1.8, 0.16);
+      if (s8 === 3) pluck(N(ch[0] - 12), at, STEP * 0.9, 0.1);
+      if (s8 === 4) pluck(N(ch[2] - 12), at, STEP * 1.8, 0.14);
+      if (s8 === 6) pluck(N(ch[0]), at, STEP * 0.9, 0.09);
+      // oom-pah piano chords on the off-beats
+      if (s8 === 2 || s8 === 6) for (const c of ch) piano(N(c), at, STEP * 0.8, 0.026);
+      // melody, held until the next note
+      const row = MEL[bar], m = row[s8];
+      if (m) { let len = 1; while (s8 + len < 8 && !row[s8 + len] && len < 3) len++; piano(N(m), at, STEP * len * 0.92, 0.075); if (lv >= 3) tone(N(m + 12), at, STEP * len * 0.8, "sine", 0.018); }
+      // drums
+      if (s8 === 0 || s8 === 4 || (lv >= 2 && s8 === 7 && bar % 2)) kick(at);
+      if (lv >= 1 && (s8 === 2 || s8 === 6)) snare(at);
+      hat(at, lv >= 2 && s8 === 7);
+      if (lv >= 2 && bar % 4 === 3 && s8 === 5) clink(at);
+      // chorus organ pad once the session is properly going
+      if (lv >= 3 && bar >= 8 && s8 === 0) for (const c of ch) tone(N(c), at, STEP * 7.5, "sine", 0.012);
       nextAt += STEP; step++;
     }
   }
   function startMusic() {
-    try { ctx(); if (musicOn) return; musicOn = true; step = 0; nextAt = AC.currentTime + 0.05; schedule(); musicTimer = setInterval(schedule, 100); } catch (e) {}
+    try {
+      ctx(); if (musicOn) return;
+      musicOn = true; step = 0; nextAt = AC.currentTime + 0.06;
+      MUSIC.gain.cancelScheduledValues(AC.currentTime); MUSIC.gain.setValueAtTime(MUSIC_VOL, AC.currentTime);
+      if (musicTimer) clearInterval(musicTimer);               // never more than one scheduler
+      schedule(); musicTimer = setInterval(schedule, 90);
+    } catch (e) {}
   }
+  function stopMusic(fade = 0.4) {
+    musicOn = false; if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+    if (AC && MUSIC) { const n = AC.currentTime; MUSIC.gain.cancelScheduledValues(n); MUSIC.gain.setValueAtTime(MUSIC.gain.value, n); MUSIC.gain.linearRampToValueAtTime(0.0001, n + Math.max(0.01, fade)); }
+  }
+  // dip the band briefly so a sting cuts through
+  function duck(len = 0.8, to = 0.18) {
+    if (!AC || !MUSIC || !musicOn) return; const n = AC.currentTime;
+    MUSIC.gain.cancelScheduledValues(n); MUSIC.gain.setValueAtTime(MUSIC.gain.value, n); MUSIC.gain.linearRampToValueAtTime(MUSIC_VOL * to, n + 0.05);
+    MUSIC.gain.setValueAtTime(MUSIC_VOL * to, n + len); MUSIC.gain.linearRampToValueAtTime(MUSIC_VOL, n + len + 0.35);
+  }
+  // ---------- stings and flourishes (effects bus) ----------
+  const PENT = [72, 74, 76, 79, 81, 84, 86, 88];
+  let flourishI = 0;
+  function sfx(fn) { try { ctx(); fn(AC.currentTime + 0.01); } catch (e) {} }
+  const arp = (notes, gap, vol, at, dur = 0.22) => notes.forEach((n, i) => n && piano(N(n), at + i * gap, dur, vol, SFX));
+  const cymbal = (at, len = 0.9, vol = 0.07) => noiseHit(at, len, vol, "highpass", 5200, SFX, 0.5);
+  function scoreFlourish() { sfx((at) => { const n = PENT[flourishI % PENT.length]; flourishI++; piano(N(n), at, 0.12, 0.07, SFX); piano(N(n + 7), at + 0.055, 0.16, 0.05, SFX); }); }
+  function whoosh() { sfx((at) => { const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = NOISE; f.type = "bandpass"; f.Q.value = 2; f.frequency.setValueAtTime(700, at); f.frequency.exponentialRampToValueAtTime(3400, at + 0.18); env(g, at, 0.08, 0.22, 0.03); s.connect(f).connect(g).connect(SFX); s.start(at); s.stop(at + 0.25); }); }
+  function brass(notes, at, dur, vol) {
+    for (const n of notes) { const o = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain(); o.type = "sawtooth"; o.frequency.value = N(n); f.type = "lowpass"; f.frequency.setValueAtTime(600, at); f.frequency.linearRampToValueAtTime(2600, at + 0.08); f.frequency.linearRampToValueAtTime(1200, at + dur); g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.03); g.gain.setValueAtTime(vol, at + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, at + dur); o.connect(f).connect(g).connect(SFX); o.start(at); o.stop(at + dur + 0.02); }
+  }
+  const STINGS = [
+    (at) => { arp([72, 76, 79], 0.07, 0.08, at); },                                                         // 5
+    (at) => { arp([72, 76, 79, 84], 0.07, 0.08, at); cymbal(at + 0.21, 0.6, 0.05); },                       // 10
+    (at) => { arp([67, 69, 71, 72, 74, 76, 77, 79, 84], 0.038, 0.07, at); cymbal(at + 0.3, 0.8); },         // 20
+    (at) => { brass([60, 64, 67], at, 0.12, 0.035); brass([65, 69, 72, 77], at + 0.16, 0.45, 0.035); for (let i = 0; i < 4; i++) snare(at + i * 0.04, 0.06, SFX); cymbal(at + 0.16); },   // 30
+    (at) => { brass([67], at, 0.1, 0.05); brass([67], at + 0.12, 0.1, 0.05); brass([67], at + 0.24, 0.1, 0.05); brass([60, 64, 67, 72], at + 0.38, 0.8, 0.04); kick(at + 0.38, 0.35, SFX); cymbal(at + 0.38, 1.4, 0.09); }, // 50
+  ];
+  function sting(i) { duck(0.9); sfx(STINGS[i]); }
+  function pbFanfare() {
+    duck(2.3, 0.1);
+    sfx((at) => {
+      for (const [n, i] of [[84, 0], [88, 1], [91, 2], [96, 3]]) { tone(N(n), at + i * 0.08, 0.6, "sine", 0.06, SFX); tone(N(n + 12), at + i * 0.08, 0.3, "sine", 0.015, SFX); }   // bells
+      for (let i = 0; i < 8; i++) snare(at + 0.3 + i * 0.035, 0.03 + i * 0.008, SFX);                                                                  // roll
+      brass([60, 64, 67], at + 0.6, 0.14, 0.04); brass([60, 64, 67], at + 0.78, 0.14, 0.04);
+      brass([65, 69, 72], at + 0.96, 0.2, 0.04); brass([67, 71, 74, 79], at + 1.2, 0.95, 0.04);
+      kick(at + 1.2, 0.4, SFX); cymbal(at + 1.2, 1.6, 0.1);
+    });
+  }
+  function recordJingle() { sfx((at) => { arp([79, 84, 88, 91], 0.09, 0.07, at, 0.35); cymbal(at + 0.27, 1, 0.06); }); }
+  function sadJingle() { sfx((at) => { [67, 66, 65].forEach((n, i) => brass([n - 12], at + 0.25 + i * 0.22, 0.2, 0.03)); brass([52], at + 0.91, 0.7, 0.03); }); }
   document.addEventListener("visibilitychange", () => { if (!AC) return; if (document.hidden) AC.suspend(); else AC.resume(); });
+  // leaving the page (closing the tab, going back to the hub) stops everything and frees the audio
+  addEventListener("pagehide", () => { stopMusic(0); if (AC) { try { AC.close(); } catch (e) {} AC = null; MASTER = MUSIC = SFX = null; } });
   function setMute(m) { muted = m; store.set("loMute", m ? "1" : "0"); if (MASTER) MASTER.gain.value = m ? 0 : 1; $("wave").style.display = m ? "none" : ""; $("mute").setAttribute("aria-label", m ? "Turn sound on" : "Turn sound off"); }
   $("mute").addEventListener("click", (e) => { e.stopPropagation(); setMute(!muted); });
   setMute(muted);
@@ -220,13 +340,24 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
   let state = "menu", t = 0, score = 0, best = +(store.get("loBest") || 0);
   let y, vy, rot, pipes, kebabs, sinceSpawn, scrollX, shake, flapT, ghosts;
   let particles = [], nearMissCooldown = 0, scorePulse = 0;
+  // 3.4: expressions, milestones and personal-best celebration
+  let mood = "idle", moodT = 0, blinkT = 2.5, blinkDur = 0;
+  let runBest = 0, pbHit = false, crowned = false, mileIdx = 0;
+  let banners = [], banner = null, confetti = [], floaters = [], flashA = 0, flashCol = "#FFFFFF", pbGlow = 0;
+  const MILES = [[5, "TWO-PINT WONDER!", "#5FE3B0"], [10, "BEER GOGGLES ON!", "#3DE0FF"], [20, "ON A SESSION!", "#FF3D7F"], [30, "LOCK-IN REGULAR!", "#B98CFF"], [50, "LANDLORD STATUS!", "#FFD45C"]];
+  const PB_LINES = ["Drinks are on you!", "The landlord's impressed.", "Frame that one.", "Legend of the lock-in.", "Ring the bell!", "They'll name a pub after you."];
+  const MOOD_RANK = { idle: 0, happy: 1, surprised: 2, ecstatic: 3 };
+  function setMood(m, dur) { if (state !== "play") return; if (moodT > 0 && MOOD_RANK[mood] > MOOD_RANK[m]) return; mood = m; moodT = dur; }
   const SKY = [];
   for (let i = 0; i < 40; i++) SKY.push({ x: Math.random() * W, y: Math.random() * 300, r: Math.random() * 1.4 + 0.3, tw: Math.random() * 6 });
   const SKYLINE = [];
   { let x = 0; while (x < W * 2 + 80) { const w = 30 + Math.random() * 50, h = 80 + Math.random() * 140; const win = []; for (let wy = GROUND - h + 12; wy < GROUND - 16; wy += 18) for (let wx = x + 6; wx < x + w - 8; wx += 12) if (Math.random() < 0.35) win.push([wx, wy]); SKYLINE.push({ x, w, h, win }); x += w + 4; } }
 
-  function reset() { y = H * 0.42; vy = 0; rot = 0; pipes = []; kebabs = []; sinceSpawn = 999; scrollX = 0; score = 0; shake = 0; flapT = 0; ghosts = 0; particles = []; nearMissCooldown = 0; scorePulse = 0; $("score").textContent = "0"; }
+  function reset() { y = H * 0.42; vy = 0; rot = 0; pipes = []; kebabs = []; sinceSpawn = 999; scrollX = 0; score = 0; shake = 0; flapT = 0; ghosts = 0; particles = []; nearMissCooldown = 0; scorePulse = 0; $("score").textContent = "0";
+    mood = "idle"; moodT = 0; pbHit = false; crowned = false; mileIdx = 0; banners = []; banner = null; confetti = []; floaters = []; flashA = 0; pbGlow = 0; flourishI = 0;
+    $("score").classList.remove("crowned", "mile", "pop"); }
   function burst(x, y0, count, palette, power = 1) {
+    count = Math.min(count, 260 - particles.length);       // keep phones smooth
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2, v = (35 + Math.random() * 150) * power;
       particles.push({ x, y: y0, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 25, life: .35 + Math.random() * .45, max: .8, size: 1.5 + Math.random() * 3.5, colour: palette[i % palette.length], gravity: 210 });
@@ -235,6 +366,44 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
   function updateParticles(dt) {
     for (const q of particles) { q.life -= dt; q.vy += q.gravity * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= Math.pow(.12, dt); }
     particles = particles.filter(q => q.life > 0);
+    for (const c of confetti) { c.life -= dt; c.vy = Math.min(c.vy + 60 * dt, 170); c.x += (c.vx + Math.sin(t * 3 + c.ph) * 30) * dt; c.y += c.vy * dt; c.rot += c.vr * dt; }
+    confetti = confetti.filter((c) => c.life > 0 && c.y < H + 20);
+    for (const f of floaters) { f.life -= dt; f.y -= 34 * dt; }
+    floaters = floaters.filter((f) => f.life > 0);
+    flashA = Math.max(0, flashA - dt * 3.2); pbGlow = Math.max(0, pbGlow - dt * 0.8);
+    if (banner) { banner.t += dt; if (banner.t > banner.dur) banner = null; }
+    if (!banner && banners.length) banner = banners.shift();
+  }
+  function rainConfetti(n, palette) {
+    n = Math.min(n, 170 - confetti.length);
+    for (let i = 0; i < n; i++) confetti.push({ x: Math.random() * W, y: -10 - Math.random() * 120, vx: (Math.random() - 0.5) * 40, vy: 60 + Math.random() * 80, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 10, w: 4 + Math.random() * 3, h: 7 + Math.random() * 5, col: palette[i % palette.length], ph: Math.random() * 6, life: 3.2 + Math.random() });
+  }
+  function popScore(cls) { const el = $("score"); el.classList.remove("pop", "mile"); void el.offsetWidth; el.classList.add(cls); }
+  // called after every change to the score; scoring itself is unchanged
+  function afterScore(fromKebab) {
+    let fx = false;
+    if (!pbHit && runBest > 0 && score > runBest) { celebratePB(); fx = true; }
+    let hit = -1; while (mileIdx < MILES.length && score >= MILES[mileIdx][0]) hit = mileIdx++;
+    if (hit >= 0) { milestone(hit, fx); fx = true; }
+    if (!fx) { if (!fromKebab) scoreFlourish(); setMood("happy", 0.45); }
+    return fx;
+  }
+  function milestone(i, quiet) {
+    const [n, text, col] = MILES[i];
+    banners.push({ text, sub: n + " PUBS DOWN", col, t: 0, dur: 1.5, big: false });
+    burst(90, y, 18 + i * 8, [col, "#FFF6E0", "#FFB627"], 0.9 + i * 0.12);
+    if (!REDUCED) { flashA = 0.5 + i * 0.1; flashCol = col; }
+    popScore("mile"); setMood("happy", 0.7);
+    if (!quiet) sting(i);
+    if (i >= 3) rainConfetti(20 + i * 10, [col, "#FFF6E0", "#FFB627"]);
+  }
+  function celebratePB() {
+    pbHit = true; crowned = true; setMood("ecstatic", 1.8);
+    banners.length = 0;                       // the record outranks any message still waiting
+    banner = { text: "NEW PERSONAL BEST!", sub: "BEATS YOUR " + runBest, col: "#FFD45C", t: 0, dur: 2.5, big: true };
+    rainConfetti(90, ["#FFD45C", "#FFB627", "#FFF6C4", "#FF3D7F", "#3DE0FF"]);
+    burst(90, y, 34, ["#FFD45C", "#FFF6C4", "#FFB627"], 1.3);
+    pbGlow = 1; $("score").classList.add("crowned"); popScore("mile"); pbFanfare();
   }
   const drunk = () => Math.min(score / 12, 1.6);
   const speed = () => Math.min(150 + score * 3.2, 265);
@@ -268,21 +437,31 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
   let deadAt = 0;
   const canRestart = () => performance.now() - deadAt > 600;
   function show(id) { ["gate", "start", "over"].forEach((k) => ($(k).hidden = k !== id)); }
-  function begin() { startMusic(); reset(); state = "play"; show(null); $("score").hidden = false; flap(); }
+  function begin() {
+    stopMusic(0); reset(); runBest = best; state = "play"; startMusic(); show(null); $("score").hidden = false;
+    $("recordBanner").hidden = true; $("over").querySelector(".card").classList.remove("record"); $("roast").hidden = false;
+    flap();
+  }
   function die() {
     if (state !== "play") return;
-    state = "dead"; deadAt = performance.now(); shake = 0.35; burst(90, y, 28, ["#FFB627", "#FFF6E0", "#FF3D7F", "#FFFFFF"], 1.35); beep(300, 60, 0.45, "sawtooth", 0.08);
+    state = "dead"; deadAt = performance.now(); shake = REDUCED ? 0 : 0.35; burst(90, y, 28, ["#FFB627", "#FFF6E0", "#FF3D7F", "#FFFFFF"], 1.35); beep(300, 60, 0.45, "sawtooth", 0.08);
+    mood = "sad"; moodT = 0; stopMusic(0.5);
+    const prevBest = runBest, record = score > prevBest && prevBest > 0;   // only a genuine beat of an earlier best
     if (score > best) { best = score; store.set("loBest", String(best)); }
+    if (!record) sadJingle();
     if (window.PUB) PUB.submit("flying", score);
     $("roast").textContent = ROASTS[Math.floor(Math.random() * ROASTS.length)];
     $("final").textContent = score; $("best").textContent = best; $("bestStart").textContent = best;
-    $("medal").textContent = (score >= best && score > 0 ? "New best! " : "") + MEDALS.find(([n]) => score >= n)[1] + " · " + D().short;
+    const firstScore = prevBest === 0 && score > 0;
+    $("medal").textContent = (firstScore ? "First score on the board! " : "") + MEDALS.find(([n]) => score >= n)[1] + " · " + D().short;
+    $("over").querySelector(".card").classList.toggle("record", record); $("recordBanner").hidden = !record;
+    if (record) { $("recordSub").textContent = `Previous best ${prevBest} · beaten by ${score - prevBest}`; $("roast").textContent = PB_LINES[Math.floor(Math.random() * PB_LINES.length)]; }
     $("shareMsg").hidden = true;
-    setTimeout(() => { if (state === "dead") { show("over"); $("again").focus({ preventScroll: true }); } }, 650);
+    setTimeout(() => { if (state === "dead") { show("over"); $("again").focus({ preventScroll: true }); if (record) { recordJingle(); rainConfetti(70, ["#FFD45C", "#FFB627", "#FFF6C4", "#FF3D7F"]); } } }, record ? 900 : 650);
   }
   $("go").addEventListener("click", begin);
   $("again").addEventListener("click", () => { if (canRestart()) begin(); });
-  $("change").addEventListener("click", () => { state = "menu"; reset(); $("score").hidden = true; drawPicker(); show("start"); });
+  $("change").addEventListener("click", () => { state = "menu"; stopMusic(0.2); reset(); $("score").hidden = true; drawPicker(); show("start"); });
   $("yes").addEventListener("click", () => { store.set("lo18", "1"); show("start"); $("go").focus({ preventScroll: true }); });
   $("no").addEventListener("click", () => { $("gateMsg").hidden = false; });
   $("share").addEventListener("click", async () => {
@@ -296,6 +475,9 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
   // ---------- update ----------
   function update(dt) {
     t += dt; updateParticles(dt); scorePulse = Math.max(0, scorePulse - dt * 3); nearMissCooldown = Math.max(0, nearMissCooldown - dt);
+    moodT = Math.max(0, moodT - dt); if (moodT === 0 && state === "play") mood = "idle";
+    blinkT -= dt; blinkDur = Math.max(0, blinkDur - dt);
+    if (blinkT <= 0) { blinkDur = 0.13; blinkT = Math.random() < 0.18 ? 0.25 : 2 + Math.random() * 3.2; }
     if (state === "menu") { y = H * 0.42 + Math.sin(t * 3) * 10; scrollX += 60 * dt; return; }
     if (state === "dead") { vy += 1500 * dt; y = Math.min(y + vy * dt, GROUND - D().hh - 2); rot = Math.min(rot + 6 * dt, 1.6); shake = Math.max(0, shake - dt); return; }
     const sp = speed();
@@ -306,10 +488,19 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
     if (sinceSpawn > 205) { spawn(); sinceSpawn = 0; }
     for (const p of pipes) {
       p.x -= sp * dt;
-      if (!p.passed && p.x + p.w < 90) { p.passed = true; score++; scorePulse = 1; $("score").classList.remove("pop"); void $("score").offsetWidth; $("score").classList.add("pop"); burst(90, y, 9, ["#FFB627", "#FFF6E0", "#FFFFFF"], .55); $("score").textContent = score; beep(880, 1320, 0.08, "triangle", 0.05); if (score % 10 === 0) { toast("BEER GOGGLES UP!"); burst(90, y, 24, ["#FFB627", "#FF3D7F", "#FFF6E0"], 1.1); } }
+      if (!p.passed && p.x + p.w < 90) { p.passed = true; score++; scorePulse = 1; $("score").classList.remove("pop"); void $("score").offsetWidth; $("score").classList.add("pop"); burst(90, y, 9, ["#FFB627", "#FFF6E0", "#FFFFFF"], .55); $("score").textContent = score; const big = afterScore(false); if (!big && score % 10 === 0) { toast("BEER GOGGLES UP!"); burst(90, y, 24, ["#FFB627", "#FF3D7F", "#FFF6E0"], 1.1); } }
       { const d = D(); if (90 + d.hw > p.x + 4 && 90 - d.hw < p.x + p.w - 4 && (y - d.hh < p.top || y + d.hh > p.bottom)) die(); }
     }
-    for (const k of kebabs) { k.x -= sp * dt; if (!k.got && Math.abs(k.x - 90) < 26 && Math.abs(k.y - y) < 28) { k.got = true; score += 3; scorePulse = 1; $("score").classList.remove("pop"); void $("score").offsetWidth; $("score").classList.add("pop"); burst(k.x, k.y, 22, ["#E8C38A", "#5FBF5A", "#FFB627", "#FFF6E0"], 1.1); $("score").textContent = score; toast("KEBAB! +3"); burp(); } }
+    for (const k of kebabs) { k.x -= sp * dt; if (!k.got && Math.abs(k.x - 90) < 26 && Math.abs(k.y - y) < 28) { k.got = true; score += 3; scorePulse = 1; $("score").classList.remove("pop"); void $("score").offsetWidth; $("score").classList.add("pop"); burst(k.x, k.y, 22, ["#E8C38A", "#5FBF5A", "#FFB627", "#FFF6E0"], 1.1); $("score").textContent = score; toast("KEBAB! +3"); burp(); afterScore(true); } }
+    if (state === "play" && nearMissCooldown <= 0) {
+      const d = D();
+      for (const p of pipes) {
+        if (90 + d.hw > p.x + 4 && 90 - d.hw < p.x + p.w - 4) {
+          const room = Math.min((y - d.hh) - p.top, p.bottom - (y + d.hh));
+          if (room >= 0 && room < 9) { setMood("surprised", 0.6); nearMissCooldown = 1.2; whoosh(); floaters.push({ text: "PHEW!", x: 90, y: y - 34, life: 0.8, col: "#9FD8FF" }); break; }
+        }
+      }
+    }
     pipes = pipes.filter((p) => p.x > -80); kebabs = kebabs.filter((k) => k.x > -40 && !k.got);
     if (y + D().hh + 2 > GROUND) { y = GROUND - D().hh - 2; die(); }
     if (y < -40) y = -40;
@@ -362,16 +553,46 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
   let pick = DRINKS[store.get("loDrink")] ? store.get("loDrink") : "lager";
   const D = () => DRINKS[pick];
 
-  function face(g, fx, fy, col, dead, rosy) {
-    g.fillStyle = col; g.strokeStyle = col;
-    if (dead) { g.lineWidth = 2; for (const ex of [-5, 5]) { g.beginPath(); g.moveTo(fx + ex - 3, fy - 3); g.lineTo(fx + ex + 3, fy + 3); g.moveTo(fx + ex + 3, fy - 3); g.lineTo(fx + ex - 3, fy + 3); g.stroke(); } }
-    else { g.beginPath(); g.arc(fx - 5, fy, 2.2, 0, 7); g.arc(fx + 5, fy, 2.2, 0, 7); g.fill(); if (rosy) { g.fillStyle = "#FF6B8A88"; g.beginPath(); g.arc(fx - 8, fy + 5, 3, 0, 7); g.arc(fx + 8, fy + 5, 3, 0, 7); g.fill(); g.fillStyle = col; } }
-    g.beginPath(); g.arc(fx, fy + 7, 3, 0, Math.PI); g.fill();
+  // expressive face: idle, happy, surprised, sad (crashed) and ecstatic (new best), with blinking and eyebrows
+  function face(g, fx, fy, col, expr, rosy, blink) {
+    g.fillStyle = col; g.strokeStyle = col; g.lineCap = "round";
+    const bob = Math.sin(t * 2.2) * 0.4;
+    // eyebrows: [height above the eyes, inner-end lift]
+    const [bh, lift] = { idle: [5.2 + bob, 0], happy: [6.4, -0.6], surprised: [8, 0.3], sad: [5.4, 1.8], ecstatic: [8.2, -0.8] }[expr] || [5.2, 0];
+    g.lineWidth = 1.5;
+    for (const sd of [-1, 1]) { g.beginPath(); g.moveTo(fx + sd * 7.4, fy - bh + Math.max(0, -lift)); g.lineTo(fx + sd * 2.8, fy - bh - Math.max(0, lift)); g.stroke(); }
+    // eyes
+    if (expr === "ecstatic") { g.lineWidth = 1.7; for (const ex of [-5, 5]) { g.beginPath(); g.arc(fx + ex, fy + 1, 2.5, Math.PI * 1.1, Math.PI * 1.9); g.stroke(); } }
+    else if (blink && expr !== "surprised") { g.lineWidth = 1.6; for (const ex of [-5, 5]) { g.beginPath(); g.moveTo(fx + ex - 2.4, fy); g.lineTo(fx + ex + 2.4, fy); g.stroke(); } }
+    else if (expr === "sad") { for (const ex of [-5, 5]) { g.beginPath(); g.arc(fx + ex, fy - 0.4, 2.4, 0, Math.PI); g.fill(); } }
+    else {
+      const er = expr === "surprised" ? 2.9 : 2.2;
+      g.beginPath(); g.arc(fx - 5, fy, er, 0, 7); g.arc(fx + 5, fy, er, 0, 7); g.fill();
+      g.fillStyle = "#FFFFFFB0"; g.beginPath(); g.arc(fx - 5.7, fy - 0.8, er * 0.32, 0, 7); g.arc(fx + 4.3, fy - 0.8, er * 0.32, 0, 7); g.fill(); g.fillStyle = col;
+    }
+    if (rosy || expr === "ecstatic") { g.fillStyle = "#FF6B8A88"; g.beginPath(); g.arc(fx - 8.5, fy + 5, 3, 0, 7); g.arc(fx + 8.5, fy + 5, 3, 0, 7); g.fill(); g.fillStyle = col; }
+    // mouth
+    if (expr === "happy") { g.beginPath(); g.arc(fx, fy + 6.2, 4.3, 0, Math.PI); g.fill(); }
+    else if (expr === "ecstatic") { g.beginPath(); g.arc(fx, fy + 5.8, 5.2, 0, Math.PI); g.fill(); g.fillStyle = "#FF6B8A"; g.beginPath(); g.ellipse(fx, fy + 9.2, 2.4, 1.4, 0, 0, 7); g.fill(); }
+    else if (expr === "surprised") { g.beginPath(); g.ellipse(fx, fy + 8.5, 2.2, 3, 0, 0, 7); g.fill(); g.fillStyle = "#9FD8FF"; g.beginPath(); g.moveTo(fx + 11, fy - 9); g.quadraticCurveTo(fx + 14, fy - 4, fx + 11, fy - 3); g.quadraticCurveTo(fx + 8, fy - 4, fx + 11, fy - 9); g.fill(); }
+    else if (expr === "sad") { g.lineWidth = 1.7; g.beginPath(); g.arc(fx, fy + 11, 3.4, Math.PI * 1.15, Math.PI * 1.85); g.stroke(); g.fillStyle = "#9FD8FF"; g.beginPath(); g.ellipse(fx - 6, fy + 4.5, 1.3, 2, 0, 0, 7); g.fill(); }
+    else { g.beginPath(); g.arc(fx, fy + 7, 3, 0, Math.PI); g.fill(); }
   }
+  // a little gold crown worn for the rest of a record-breaking run
+  function crown(g, cy) {
+    g.save(); g.translate(0, cy + Math.sin(t * 4) * 1.2); g.rotate(Math.sin(t * 2.4) * 0.08);
+    const cg = g.createLinearGradient(0, -10, 0, 2); cg.addColorStop(0, "#FFF3B0"); cg.addColorStop(0.6, "#FFC53D"); cg.addColorStop(1, "#C77700");
+    g.fillStyle = cg; g.beginPath(); g.moveTo(-10, 2); g.lineTo(-11, -8); g.lineTo(-5, -3); g.lineTo(0, -11); g.lineTo(5, -3); g.lineTo(11, -8); g.lineTo(10, 2); g.closePath(); g.fill();
+    g.fillStyle = "#FF3D7F"; g.beginPath(); g.arc(0, -2, 1.8, 0, 7); g.fill(); g.fillStyle = "#3DE0FF"; g.beginPath(); g.arc(-6, -1, 1.3, 0, 7); g.arc(6, -1, 1.3, 0, 7); g.fill();
+    g.fillStyle = "#FFFFFFAA"; g.fillRect(-8, -1, 3, 1.4);
+    g.restore();
+  }
+  const CROWN_Y = { lager: -25, stout: -20, shot: -15, bottle: -29, wine: -20 };
   function bubbles(g, x0, y0, h, n) { g.fillStyle = "#FFFFFF66"; for (let i = 0; i < n; i++) { g.beginPath(); g.arc(x0 + i * 4, y0 - ((t * 30 + i * 9) % h), 1.2, 0, 7); g.fill(); } }
-  function drawDrink(g, kind, px, py, r, flapping, dead, rosy) {
+  function drawDrink(g, kind, px, py, r, flapping, expr = "idle", rosy = false, blink = false, crowned = false, squash = 0) {
     const d = DRINKS[kind];
     g.save(); g.translate(px, py); g.rotate(r);
+    if (squash) g.scale(1 - squash * 0.25, 1 + squash * 0.35);   // drawing only: collisions use the fixed hit box
     g.save(); g.globalAlpha = .22; g.fillStyle = "#000"; g.beginPath(); g.ellipse(2, 22, 18, 5, 0, 0, 7); g.fill(); g.restore();
     const flapA = flapping ? -0.9 : Math.sin(t * 14) * 0.35, ws = kind === "shot" ? 0.75 : 1;
     for (const side of [-1, 1]) {
@@ -384,30 +605,31 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
       const lagerGrad = g.createLinearGradient(-13, -10, 13, 12); lagerGrad.addColorStop(0, "#FFE08A"); lagerGrad.addColorStop(.38, "#FFB627"); lagerGrad.addColorStop(1, "#D97708"); g.fillStyle = lagerGrad; g.beginPath(); g.moveTo(-13, -12); g.lineTo(13, -12); g.lineTo(10, 18); g.lineTo(-10, 18); g.closePath(); g.fill();
       g.fillStyle = "#FFCE5C"; g.fillRect(-9, -8, 4, 22); bubbles(g, -3, 10, 22, 4);
       g.fillStyle = "#FFF6E0"; g.beginPath(); g.arc(-8, -13, 6, 0, 7); g.arc(0, -16, 7, 0, 7); g.arc(8, -13, 6, 0, 7); g.fill();
-      face(g, 0, 2, "#2A1400", dead, rosy);
+      face(g, 0, 2, "#2A1400", expr, rosy, blink);
     } else if (kind === "stout") {
       const stoutGrad = g.createLinearGradient(-13, -10, 13, 12); stoutGrad.addColorStop(0, "#5B3021"); stoutGrad.addColorStop(.45, "#1B0F0B"); stoutGrad.addColorStop(1, "#090709"); g.fillStyle = stoutGrad; g.beginPath(); g.moveTo(-13, -10); g.quadraticCurveTo(-15, 4, -10, 18); g.lineTo(10, 18); g.quadraticCurveTo(15, 4, 13, -10); g.closePath(); g.fill();
       g.fillStyle = "#4A2418"; g.fillRect(-10, -4, 3, 18);
       g.fillStyle = "#F3E6C8"; g.beginPath(); g.moveTo(-14, -10); g.quadraticCurveTo(0, -20, 14, -10); g.lineTo(13, -6); g.lineTo(-13, -6); g.closePath(); g.fill();
-      face(g, 0, 4, "#F3E6C8", dead, rosy);
+      face(g, 0, 4, "#F3E6C8", expr, rosy, blink);
     } else if (kind === "shot") {
       g.fillStyle = "#CFE7F2AA"; g.beginPath(); g.moveTo(-10, -11); g.lineTo(10, -11); g.lineTo(8, 11); g.lineTo(-8, 11); g.closePath(); g.fill();
       g.fillStyle = "#E89A2E"; g.beginPath(); g.moveTo(-9.3, -5); g.lineTo(9.3, -5); g.lineTo(8, 9); g.lineTo(-8, 9); g.closePath(); g.fill();
       g.fillStyle = "#FFFFFF"; g.fillRect(-10, -12, 20, 2); g.fillStyle = "#FFFFFF55"; g.fillRect(-8, -3, 2, 10);
-      g.save(); g.scale(0.75, 0.75); face(g, 0, 1, "#2A1400", dead, rosy); g.restore();
+      g.save(); g.scale(0.75, 0.75); face(g, 0, 1, "#2A1400", expr, rosy, blink); g.restore();
     } else if (kind === "bottle") {
       g.fillStyle = "#6B3A12"; g.beginPath(); g.moveTo(-4, -22); g.lineTo(4, -22); g.lineTo(4, -12); g.quadraticCurveTo(10, -8, 10, -2); g.lineTo(10, 22); g.lineTo(-10, 22); g.lineTo(-10, -2); g.quadraticCurveTo(-10, -8, -4, -12); g.closePath(); g.fill();
       g.fillStyle = "#B8BEC8"; g.fillRect(-5, -25, 10, 4);
       g.fillStyle = "#8A4E1E"; g.fillRect(-8, -2, 3, 22);
       g.fillStyle = "#F2E2B6"; g.fillRect(-10, 0, 20, 16);
-      face(g, 0, 6, "#2A1400", dead, rosy);
+      face(g, 0, 6, "#2A1400", expr, rosy, blink);
     } else if (kind === "wine") {
       g.fillStyle = "#E7EEF8"; g.fillRect(-1.5, 6, 3, 12); g.beginPath(); g.ellipse(0, 19, 9, 2.5, 0, 0, 7); g.fill();
       g.fillStyle = "#E7EEF888"; g.beginPath(); g.moveTo(-13, -16); g.lineTo(13, -16); g.quadraticCurveTo(15, 6, 0, 7); g.quadraticCurveTo(-15, 6, -13, -16); g.fill();
       g.fillStyle = "#9B1B3E"; g.beginPath(); g.moveTo(-13.6, -6); g.lineTo(13.6, -6); g.quadraticCurveTo(14, 6, 0, 6.5); g.quadraticCurveTo(-14, 6, -13.6, -6); g.fill();
       g.fillStyle = "#FFFFFF66"; g.fillRect(-10, -14, 2, 12);
-      face(g, 0, -4, "#FFE9EF", dead, rosy);
+      face(g, 0, -4, "#FFE9EF", expr, rosy, blink);
     }
+    if (crowned) crown(g, CROWN_Y[kind]);
     g.restore();
   }
   // drink picker previews
@@ -416,7 +638,7 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
       const c = document.getElementById("pv-" + k); if (!c) continue;
       const dpr = Math.min(window.devicePixelRatio || 1, 2.5), g = c.getContext("2d");
       c.width = 56 * dpr; c.height = 56 * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, 56, 56);
-      drawDrink(g, k, 28, 30, 0, false, false, false);
+      drawDrink(g, k, 28, 30, 0, false, "idle", false, false, false);
     }
     for (const b of document.querySelectorAll(".drink")) { const on = b.dataset.k === pick; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); }
     $("drinkHint").textContent = D().name + ": " + D().hint;
@@ -457,7 +679,50 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
     // Cinematic edge vignette
     const vignette = cx.createRadialGradient(W/2, H/2, H*.22, W/2, H/2, H*.78); vignette.addColorStop(0, "#00000000"); vignette.addColorStop(1, "#03030D88"); cx.fillStyle = vignette; cx.fillRect(0, 0, W, H);
     const pg = cx.createRadialGradient(90, y, 4, 90, y, 40); pg.addColorStop(0, "#FFCB6738"); pg.addColorStop(1, "#FFCB6700"); cx.fillStyle = pg; cx.fillRect(50, y - 40, 80, 80);
-    drawDrink(cx, pick, 90, y, state === "menu" ? Math.sin(t * 3) * 0.1 : rot, flapT > 0, state === "dead", drunk() > 0.6);
+    const expr = state === "dead" ? "sad" : state === "menu" ? "idle" : mood;
+    drawDrink(cx, pick, 90, y, state === "menu" ? Math.sin(t * 3) * 0.1 : rot, flapT > 0, expr, drunk() > 0.6, blinkDur > 0, crowned, REDUCED ? 0 : flapT / 0.18 * 0.5);
+    cx.restore();
+    drawFX();
+  }
+  // celebration layer, drawn on top without camera shake so it stays readable
+  function drawFX() {
+    if (pbGlow > 0) { const e = cx.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.72); e.addColorStop(0, "#FFD45C00"); e.addColorStop(1, `rgba(255,212,92,${(0.55 * pbGlow).toFixed(3)})`); cx.fillStyle = e; cx.fillRect(0, 0, W, H); }
+    if (flashA > 0) { cx.globalAlpha = flashA * 0.22; cx.fillStyle = flashCol; cx.fillRect(0, 0, W, H); cx.globalAlpha = 1; }
+    for (const c of confetti) { cx.save(); cx.translate(c.x, c.y); cx.rotate(c.rot); cx.globalAlpha = Math.min(1, c.life); cx.fillStyle = c.col; cx.fillRect(-c.w / 2, -c.h / 2 * Math.abs(Math.cos(c.rot * 1.3)), c.w, c.h * Math.abs(Math.cos(c.rot * 1.3)) + 1); cx.restore(); }
+    cx.globalAlpha = 1; cx.textAlign = "center"; cx.textBaseline = "middle";
+    for (const f of floaters) { cx.globalAlpha = Math.min(1, f.life * 2); cx.font = "14px Bungee, Impact, sans-serif"; cx.lineWidth = 4; cx.strokeStyle = "#0A0E24"; cx.strokeText(f.text, f.x, f.y); cx.fillStyle = f.col; cx.fillText(f.text, f.x, f.y); }
+    cx.globalAlpha = 1;
+    if (banner) drawBanner(banner);
+  }
+  const backOut = (k) => 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2);
+  function drawBanner(b) {
+    const k = Math.min(1, b.t / 0.32), sc = REDUCED ? 1 : backOut(k), fade = Math.min(1, (b.dur - b.t) / 0.35), by = b.big ? 178 : 168;
+    cx.save(); cx.globalAlpha = Math.max(0, fade); cx.translate(W / 2, by); cx.scale(sc, sc);
+    if (b.big) {
+      // slow-turning rays behind the trophy message
+      cx.save(); cx.rotate(t * 0.6); cx.fillStyle = "#FFD45C22";
+      for (let i = 0; i < 12; i++) { cx.rotate(Math.PI / 6); cx.beginPath(); cx.moveTo(0, 0); cx.lineTo(-14, -150); cx.lineTo(14, -150); cx.closePath(); cx.fill(); }
+      cx.restore();
+      drawTrophy(0, -58);
+    }
+    const lines = b.big ? ["NEW PERSONAL", "BEST!"] : [b.text], fs = b.big ? 34 : 25;
+    cx.font = `${fs}px Bungee, Impact, sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.lineJoin = "round";
+    let w = 0; for (const l of lines) w = Math.max(w, cx.measureText(l).width); const fit = Math.min(1, (W - 30) / w); cx.scale(fit, fit);
+    lines.forEach((l, i) => {
+      const ly = (i - (lines.length - 1) / 2) * fs * 1.02;
+      const tg = cx.createLinearGradient(0, ly - fs / 2, 0, ly + fs / 2); tg.addColorStop(0, "#FFFFFF"); tg.addColorStop(0.45, b.col); tg.addColorStop(1, b.big ? "#D97A00" : b.col);
+      cx.lineWidth = 7; cx.strokeStyle = "#140A02"; cx.strokeText(l, 0, ly + 3); cx.strokeText(l, 0, ly); cx.fillStyle = tg; cx.fillText(l, 0, ly);
+    });
+    if (b.sub) { const sy = (lines.length * fs * 1.02) / 2 + 12; cx.font = "800 12px Inter, Arial, sans-serif"; cx.lineWidth = 4; cx.strokeStyle = "#0A0E24"; cx.strokeText(b.sub, 0, sy); cx.fillStyle = "#FFF6E0"; cx.fillText(b.sub, 0, sy); }
+    cx.restore();
+  }
+  function drawTrophy(x, y0) {
+    cx.save(); cx.translate(x, y0 + Math.sin(t * 3) * 2);
+    const tg = cx.createLinearGradient(0, -20, 0, 22); tg.addColorStop(0, "#FFF6C4"); tg.addColorStop(0.5, "#FFC53D"); tg.addColorStop(1, "#B86E00");
+    cx.strokeStyle = "#FFC53D"; cx.lineWidth = 3.5; cx.beginPath(); cx.arc(-15, -9, 7, Math.PI * 0.5, Math.PI * 1.5); cx.stroke(); cx.beginPath(); cx.arc(15, -9, 7, -Math.PI * 0.5, Math.PI * 0.5); cx.stroke();
+    cx.fillStyle = tg; cx.beginPath(); cx.moveTo(-15, -20); cx.lineTo(15, -20); cx.lineTo(15, -8); cx.quadraticCurveTo(14, 6, 0, 7); cx.quadraticCurveTo(-14, 6, -15, -8); cx.closePath(); cx.fill();
+    cx.fillRect(-3, 6, 6, 7); cx.fillRect(-10, 13, 20, 5); cx.fillStyle = "#B86E00"; cx.fillRect(-13, 18, 26, 4);
+    cx.fillStyle = "#FFFFFFAA"; cx.fillRect(-10, -17, 3, 14);
     cx.restore();
   }
 
