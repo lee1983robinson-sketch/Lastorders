@@ -45,30 +45,141 @@
   }
   // ---------- drawing ----------
   function glass(k, x, y, a = 0) { // x, y = bottom centre in world, already camera-adjusted
-    g.save(); g.translate(x, y); g.rotate(a); const w = k.w, h = k.h;
-    if (k.n === "tray") { const tg = g.createLinearGradient(0, -h, 0, 0); tg.addColorStop(0, "#F0F2F8"); tg.addColorStop(1, "#8A90A2"); g.fillStyle = tg; rr(g, -w / 2, -h, w, h, 5); g.fill(); g.restore(); return; }
-    if (k.n === "wine") { g.fillStyle = "rgba(220,235,255,.55)"; g.fillRect(-2, -h * 0.42, 4, h * 0.42); g.beginPath(); g.ellipse(0, -2, w * 0.34, 3.5, 0, 0, 7); g.fill();
-      g.fillStyle = "rgba(220,235,255,.25)"; g.beginPath(); g.moveTo(-w / 2, -h); g.lineTo(w / 2, -h); g.quadraticCurveTo(w / 2 + 2, -h * 0.4, 0, -h * 0.42); g.quadraticCurveTo(-w / 2 - 2, -h * 0.4, -w / 2, -h); g.fill();
-      g.fillStyle = k.col; g.beginPath(); g.moveTo(-w / 2 + 2, -h * 0.75); g.lineTo(w / 2 - 2, -h * 0.75); g.quadraticCurveTo(w / 2, -h * 0.42, 0, -h * 0.44); g.quadraticCurveTo(-w / 2, -h * 0.42, -w / 2 + 2, -h * 0.75); g.fill(); }
-    else {
-      const tw = w, bw = k.n === "shot" ? w * 0.8 : w * 0.82;
-      g.fillStyle = "rgba(220,235,255,.25)"; g.beginPath(); g.moveTo(-tw / 2, -h); g.lineTo(tw / 2, -h); g.lineTo(bw / 2, 0); g.lineTo(-bw / 2, 0); g.closePath(); g.fill();
-      const fillTop = k.n === "shot" ? -h * 0.7 : k.n === "stout" ? -h * 0.86 : -h * 0.8;
-      g.fillStyle = k.col; g.beginPath(); g.moveTo(-tw / 2 + 2 + (tw - bw) / 2 * (1 + fillTop / h), fillTop); g.lineTo(tw / 2 - 2 - (tw - bw) / 2 * (1 + fillTop / h), fillTop); g.lineTo(bw / 2 - 2, -2); g.lineTo(-bw / 2 + 2, -2); g.closePath(); g.fill();
-      if (k.n !== "shot") { g.fillStyle = k.n === "stout" ? "#F3E6C8" : "#FFF6E0"; rr(g, -tw / 2 + 2, -h - 2, tw - 4, (k.n === "stout" ? h * 0.16 : h * 0.22), 5); g.fill(); }
-      if (k.n === "tankard") { g.strokeStyle = "rgba(220,235,255,.55)"; g.lineWidth = 5; g.beginPath(); g.arc(w / 2 + 6, -h * 0.5, h * 0.22, -1.4, 1.4); g.stroke(); }
-      g.fillStyle = "rgba(255,255,255,.4)"; g.fillRect(-tw / 2 + 5, -h * 0.85, 3, h * 0.7);
+    g.save(); g.translate(x, y); g.rotate(a);
+    const w = k.w, h = k.h;
+
+    // Soft contact shadow gives each glass a little weight on the stack.
+    if (k.n !== "tray") {
+      g.fillStyle = "rgba(0,0,0,.24)";
+      g.beginPath(); g.ellipse(0, -1, w * .48, 3.5, 0, 0, Math.PI * 2); g.fill();
     }
-    g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(-w / 2, -h); g.lineTo(w / 2, -h); g.stroke();
+
+    if (k.n === "tray") {
+      const tg = g.createLinearGradient(0, -h, 0, 0);
+      tg.addColorStop(0, "#F5F7FC"); tg.addColorStop(.28, "#C9D0DE");
+      tg.addColorStop(.62, "#818A9E"); tg.addColorStop(1, "#454D62");
+      g.fillStyle = tg; rr(g, -w / 2, -h, w, h, 5); g.fill();
+      g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(-w / 2 + 7, -h + 1); g.lineTo(w / 2 - 7, -h + 1); g.stroke();
+      g.restore(); return;
+    }
+
+    if (k.n === "wine") {
+      // Bowl, stem and foot with glass-like highlights.
+      const bowl = g.createLinearGradient(-w / 2, 0, w / 2, 0);
+      bowl.addColorStop(0, "rgba(180,205,235,.48)"); bowl.addColorStop(.18, "rgba(245,250,255,.20)");
+      bowl.addColorStop(.72, "rgba(190,215,245,.12)"); bowl.addColorStop(1, "rgba(220,235,255,.42)");
+      g.fillStyle = bowl; g.beginPath();
+      g.moveTo(-w / 2, -h); g.lineTo(w / 2, -h);
+      g.quadraticCurveTo(w / 2 + 2, -h * .42, 0, -h * .42);
+      g.quadraticCurveTo(-w / 2 - 2, -h * .42, -w / 2, -h); g.closePath(); g.fill();
+      g.save(); g.beginPath(); g.moveTo(-w / 2 + 2, -h * .74); g.lineTo(w / 2 - 2, -h * .74);
+      g.quadraticCurveTo(w / 2, -h * .42, 0, -h * .44); g.quadraticCurveTo(-w / 2, -h * .42, -w / 2 + 2, -h * .74); g.closePath(); g.clip();
+      const wine = g.createLinearGradient(0, -h * .75, 0, -h * .4);
+      wine.addColorStop(0, "#F04A67"); wine.addColorStop(1, "#70152F");
+      g.fillStyle = wine; g.fillRect(-w, -h, w * 2, h);
+      g.restore();
+      g.strokeStyle = "rgba(255,255,255,.72)"; g.lineWidth = 1.6; g.beginPath();
+      g.moveTo(-w * .42, -h * .94); g.quadraticCurveTo(-w * .48, -h * .68, -w * .2, -h * .5); g.stroke();
+      g.fillStyle = "rgba(225,238,255,.75)"; g.fillRect(-1.5, -h * .42, 3, h * .36);
+      g.beginPath(); g.ellipse(0, -1.5, w * .34, 3, 0, 0, Math.PI * 2); g.fill();
+    } else {
+      const topW = w, bottomW = k.n === "shot" ? w * .8 : w * .82;
+      const leftTop = -topW / 2, rightTop = topW / 2;
+      const leftBottom = -bottomW / 2, rightBottom = bottomW / 2;
+
+      // Glass body: cool edge tint, clear centre and a darker weighted base.
+      const body = g.createLinearGradient(leftTop, 0, rightTop, 0);
+      body.addColorStop(0, "rgba(207,229,255,.48)");
+      body.addColorStop(.12, "rgba(245,250,255,.17)");
+      body.addColorStop(.48, "rgba(255,255,255,.07)");
+      body.addColorStop(.86, "rgba(210,232,255,.13)");
+      body.addColorStop(1, "rgba(210,230,255,.42)");
+      g.fillStyle = body; g.beginPath();
+      g.moveTo(leftTop, -h); g.lineTo(rightTop, -h);
+      g.lineTo(rightBottom, 0); g.lineTo(leftBottom, 0); g.closePath(); g.fill();
+
+      // Liquid clipped inside the glass, with a subtle meniscus.
+      const fillTop = k.n === "shot" ? -h * .70 : k.n === "stout" ? -h * .86 : -h * .80;
+      g.save(); g.beginPath(); g.moveTo(leftTop + 3, -h + 3); g.lineTo(rightTop - 3, -h + 3);
+      g.lineTo(rightBottom - 3, -2); g.lineTo(leftBottom + 3, -2); g.closePath(); g.clip();
+      const liquid = g.createLinearGradient(0, fillTop, 0, 0);
+      if (k.n === "stout") {
+        liquid.addColorStop(0, "#563326"); liquid.addColorStop(.18, "#2C1711"); liquid.addColorStop(1, "#100A08");
+      } else {
+        liquid.addColorStop(0, "#FFD15A"); liquid.addColorStop(.22, "#FFB323"); liquid.addColorStop(.78, "#E98A0B"); liquid.addColorStop(1, "#A94D08");
+      }
+      g.fillStyle = liquid; g.fillRect(-w, fillTop, w * 2, h);
+      g.fillStyle = "rgba(255,255,255,.20)";
+      g.beginPath(); g.ellipse(0, fillTop + 1, w * .39, 2.2, 0, 0, Math.PI * 2); g.fill();
+      // Fine carbonation bubbles in lager.
+      if (k.n !== "stout" && k.n !== "shot") {
+        for (let i = 0; i < 5; i++) {
+          const bx = Math.sin(i * 8.1 + w) * w * .25, by = fillTop + 9 + i * 8;
+          g.fillStyle = i % 2 ? "rgba(255,245,195,.32)" : "rgba(255,255,255,.22)";
+          g.beginPath(); g.arc(bx, by, i % 2 ? 1.1 : 1.5, 0, Math.PI * 2); g.fill();
+        }
+      }
+      g.restore();
+
+      // Foam head, with a rounded, slightly uneven edge.
+      if (k.n !== "shot") {
+        const foamH = k.n === "stout" ? h * .17 : h * .22;
+        const foam = g.createLinearGradient(0, -h - 2, 0, -h + foamH);
+        foam.addColorStop(0, "#FFFDF1"); foam.addColorStop(.55, "#FFF3D6"); foam.addColorStop(1, "#D9C7A7");
+        g.fillStyle = foam; rr(g, -topW / 2 + 2, -h - 2, topW - 4, foamH, 6); g.fill();
+        g.fillStyle = "rgba(255,255,255,.65)";
+        g.beginPath(); g.ellipse(-topW * .19, -h + 2, topW * .16, 2, 0, 0, Math.PI * 2); g.fill();
+      }
+
+      // Bright glass rim and long specular reflections.
+      g.strokeStyle = "rgba(255,255,255,.82)"; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(-topW / 2 + 1, -h); g.lineTo(topW / 2 - 1, -h); g.stroke();
+      g.strokeStyle = "rgba(255,255,255,.58)"; g.lineWidth = 2.2;
+      g.beginPath(); g.moveTo(-topW * .34, -h * .84); g.lineTo(-bottomW * .34, -h * .12); g.stroke();
+      g.strokeStyle = "rgba(160,205,255,.34)"; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(topW * .39, -h * .82); g.lineTo(bottomW * .39, -h * .12); g.stroke();
+      g.strokeStyle = "rgba(255,255,255,.36)"; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(-bottomW * .42, -1); g.lineTo(bottomW * .42, -1); g.stroke();
+
+      if (k.n === "tankard") {
+        const hg = g.createLinearGradient(w / 2, 0, w / 2 + 14, 0);
+        hg.addColorStop(0, "rgba(220,235,255,.25)"); hg.addColorStop(.5, "rgba(255,255,255,.65)"); hg.addColorStop(1, "rgba(180,205,235,.22)");
+        g.strokeStyle = hg; g.lineWidth = 5; g.beginPath(); g.arc(w / 2 + 6, -h * .5, h * .22, -1.4, 1.4); g.stroke();
+      }
+    }
     g.restore();
   }
   function draw(dt) {
-    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#1B1240"); bg.addColorStop(1, "#2A160E"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#211747"); bg.addColorStop(.48, "#21152F"); bg.addColorStop(1, "#160D13");
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+
+    // Warm out-of-focus pub lights add atmosphere without distracting from the tower.
+    for (let i = 0; i < 7; i++) {
+      const lx = 24 + i * 53, ly = 82 + (i % 3) * 54;
+      const glow = g.createRadialGradient(lx, ly, 1, lx, ly, 30);
+      glow.addColorStop(0, i % 2 ? "rgba(255,184,77,.12)" : "rgba(91,192,255,.09)");
+      glow.addColorStop(1, "rgba(255,184,77,0)");
+      g.fillStyle = glow; g.fillRect(lx - 30, ly - 30, 60, 60);
+    }
+    // Very subtle wall texture.
+    g.fillStyle = "rgba(255,255,255,.018)";
+    for (let y = 20; y < H; y += 34) g.fillRect(0, y, W, 1);
+
     // height markers
     g.fillStyle = "rgba(255,246,224,.12)"; g.font = "bold 11px Inter, Arial"; g.textAlign = "left";
     for (let m = 0; m < 400; m += 5) { const y = BASE_Y - m * 52 + cam; if (y < -20 || y > H) continue; g.fillRect(0, y, 18, 1.5); if (m) g.fillText(m, 22, y + 4); }
     // bar counter
-    const by = BASE_Y + cam; const bar = g.createLinearGradient(0, by, 0, H); bar.addColorStop(0, "#9A6438"); bar.addColorStop(0.08, "#6A3E1E"); bar.addColorStop(1, "#2A160C"); g.fillStyle = bar; g.fillRect(0, by, W, H - by + 40);
+    const by = BASE_Y + cam; const bar = g.createLinearGradient(0, by, 0, H);
+    bar.addColorStop(0, "#B77A48"); bar.addColorStop(.06, "#80502B"); bar.addColorStop(.35, "#5B321B"); bar.addColorStop(1, "#24130D");
+    g.fillStyle = bar; g.fillRect(0, by, W, H - by + 40);
+    g.fillStyle = "rgba(255,220,165,.13)"; g.fillRect(0, by + 4, W, 2);
+    for (let i = 0; i < 18; i++) {
+      const yy = by + 18 + i * 11;
+      g.strokeStyle = i % 3 === 0 ? "rgba(255,210,150,.055)" : "rgba(20,8,3,.07)";
+      g.lineWidth = 1; g.beginPath(); g.moveTo(0, yy); g.bezierCurveTo(90, yy - 2, 220, yy + 3, W, yy - 1); g.stroke();
+    }
     g.save(); const sway = REDUCED || state !== "play" ? 0 : Math.sin(t * 2) * lean * 0.6;
     g.translate(W / 2, by); g.rotate(sway); g.translate(-W / 2, -by);
     for (const s of stack) glass(s, s.x, s.y + cam);
