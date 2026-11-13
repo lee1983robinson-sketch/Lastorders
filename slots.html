@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Fruit Machine</title>
+<meta name="description" content="A proper pub fruit machine with holds, nudges, a gamble and a pick-a-pint bonus. Free play, no real money. 18+.">
+<meta name="theme-color" content="#0A0E24">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Fruit Machine">
+<meta property="og:description" content="Holds, nudges, a gamble and a pick-a-pint bonus. Free play pub fruit machine. 18+.">
+<meta property="og:image" content="/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
+<style>
+/* controls sit on the machine's button deck; positions are fractions of the 360 x 640 machine */
+.deck { position: absolute; left: 0; right: 0; pointer-events: none; }
+.holds { top: 73.6%; height: 7%; }
+.holds button { position: absolute; top: 0; height: 100%; width: 25.6%; pointer-events: auto; border-radius: 12px; border: 2px solid #4A2A10; cursor: pointer;
+  font: 400 15px var(--display); color: #3A1C00; background: linear-gradient(180deg, #5A4A3A, #3A2E24); box-shadow: 0 4px 0 #1A120A, inset 0 1px 0 #FFFFFF22; transition: background .15s, transform .08s; }
+.holds button:nth-child(1) { left: 8.9%; } .holds button:nth-child(2) { left: 37.2%; } .holds button:nth-child(3) { left: 65.6%; }
+.holds button.lit { background: radial-gradient(circle at 50% 35%, #FFF3B0, #FFC53D 45%, #E08A00); color: #3A1C00; box-shadow: 0 4px 0 #8A5200, 0 0 18px #FFB627AA, inset 0 1px 0 #FFFFFFAA; animation: lamp 0.9s ease-in-out infinite; }
+.holds button.on { background: radial-gradient(circle at 50% 35%, #FFD0DA, #FF3D7F 50%, #B0144A); color: #fff; box-shadow: 0 4px 0 #6A0A2A, 0 0 22px #FF3D7FCC; animation: none; }
+.holds button.nudge { background: radial-gradient(circle at 50% 35%, #C8FFF0, #3DE0C0 50%, #0A8A70); color: #032A22; box-shadow: 0 4px 0 #055A48, 0 0 20px #3DE0C0AA; animation: lamp 0.6s ease-in-out infinite; }
+.holds button:disabled { color: #8A7A6A; }
+.holds button:active:not(:disabled) { transform: translateY(2px); }
+@keyframes lamp { 50% { filter: brightness(1.25); } }
+.mainrow { top: 81.4%; height: 8.4%; display: grid; grid-template-columns: 26% 1fr 26%; gap: 2.6%; padding: 0 5.5%; }
+.mainrow button { pointer-events: auto; border-radius: 14px; cursor: pointer; border: 0; font-family: var(--display); }
+#stake, #pays { background: linear-gradient(180deg, #2C2F66, #1C2150); color: #F4F1FF; box-shadow: 0 4px 0 #0A0C26, inset 0 1px 0 #FFFFFF22; font-size: 13px; line-height: 1.1; }
+#stake b { display: block; font-size: 17px; color: #FFB627; font-weight: 400; }
+#spin { font-size: 24px; color: #2A1400; background: radial-gradient(circle at 50% 30%, #FFF3B0, #FFB627 55%, #D97A00); box-shadow: 0 5px 0 #8A5200, 0 0 24px #FFB62766, inset 0 2px 0 #FFFFFFAA; }
+#spin.collect { background: radial-gradient(circle at 50% 30%, #D8FFE8, #5FE3B0 55%, #12A86A); box-shadow: 0 5px 0 #0A6A40, 0 0 24px #5FE3B066; color: #032A16; font-size: 20px; }
+#spin:disabled { filter: grayscale(.6) brightness(.7); }
+.mainrow button:active:not(:disabled) { transform: translateY(3px); }
+#pays.gamble { background: linear-gradient(180deg, #FF6A9A, #FF3D7F 55%, #B0144A); box-shadow: 0 4px 0 #6A0A2A, 0 0 20px #FF3D7F88; color: #fff; font-size: 15px; animation: lamp .7s ease-in-out infinite; }
+.panel { position: absolute; left: 6%; right: 6%; top: 26%; pointer-events: auto; background: linear-gradient(160deg, rgba(40,20,70,.97), rgba(10,8,30,.98)); border: 2px solid #FFB627; border-radius: 20px;
+  padding: 16px; text-align: center; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 20px 60px #000d, 0 0 40px #FFB62744; animation: cardIn .4s cubic-bezier(.2,1.25,.4,1) both; z-index: 5; }
+.panel h2 { color: #FFB627; font-size: 24px; }
+.panel .row button { min-height: 52px; }
+.gcard { align-self: center; width: 84px; height: 112px; border-radius: 12px; background: linear-gradient(180deg, #FFFFFF, #EDE6D6); color: #C8102E; display: flex; align-items: center; justify-content: center;
+  font: 400 46px var(--display); box-shadow: 0 8px 20px #000a; transition: transform .25s; }
+.gcard.flip { transform: rotateY(90deg); }
+.trail { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
+.trail span { font: 400 12px var(--display); padding: 4px 7px; border-radius: 8px; background: #1C2150; color: #8F8CB8; }
+.trail span.on { background: #FFB627; color: #2A1400; box-shadow: 0 0 12px #FFB627AA; }
+.pints { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pints button { aspect-ratio: .7; border-radius: 14px; border: 2px solid #4A3A80; background: #161A44 center 40% / 60% auto no-repeat url(/img/drinks/lager.webp); cursor: pointer; position: relative; transition: transform .15s; }
+.pints button:active { transform: scale(.95); }
+.pints button span { position: absolute; left: 0; right: 0; bottom: 6px; font: 400 18px var(--display); color: #FFB627; text-shadow: 0 2px 0 #000; }
+.pints button.dim { opacity: .45; }
+.pints button.got { border-color: #FFB627; box-shadow: 0 0 24px #FFB627AA; }
+.paytable { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; text-align: left; font-size: 14px; color: #F4F1FF; }
+.paytable b { font-family: var(--display); font-weight: 400; color: #FFB627; text-align: right; }
+.toast { top: 30%; }
+.home, .mute { bottom: 1.2%; }
+</style>
+</head>
+<body class="game">
+<div class="stage">
+  <div class="screen">
+    <canvas id="game" aria-label="Fruit machine" role="img"></canvas>
+    <div class="deck holds" id="holds">
+      <button type="button" data-r="0" disabled>HOLD</button><button type="button" data-r="1" disabled>HOLD</button><button type="button" data-r="2" disabled>HOLD</button>
+    </div>
+    <div class="deck mainrow">
+      <button type="button" id="stake">STAKE<b id="stakeVal">10</b></button>
+      <button type="button" id="spin">SPIN</button>
+      <button type="button" id="pays">PAYS<br>&amp; RULES</button>
+    </div>
+
+    <div class="panel" id="gamble" hidden role="dialog" aria-label="Gamble">
+      <h2>HIGHER OR LOWER?</h2>
+      <p class="big" id="gText">Double or nothing.</p>
+      <div class="gcard" id="gCard">7</div>
+      <div class="trail" id="gTrail"></div>
+      <div class="row"><button class="btn" id="gHi" type="button">HIGHER ▲</button><button class="btn" id="gLo" type="button" style="background:#3D8BFF;color:#06122E;box-shadow:0 4px 0 #1840A0">LOWER ▼</button></div>
+      <button class="btn ghost" id="gTake" type="button">Take the money</button>
+    </div>
+    <div class="panel" id="bonus" hidden role="dialog" aria-label="Pub Crawl bonus">
+      <h2>PUB CRAWL BONUS!</h2>
+      <p class="big">Three pints on the reels. Pick one, see what the landlord's put under it.</p>
+      <div class="pints" id="pints"><button type="button" data-i="0" aria-label="Pint 1"></button><button type="button" data-i="1" aria-label="Pint 2"></button><button type="button" data-i="2" aria-label="Pint 3"></button></div>
+    </div>
+    <div class="panel" id="payPanel" hidden role="dialog" aria-label="Pays and rules">
+      <h2>PAYS</h2>
+      <div class="paytable" id="paytable"></div>
+      <p class="fine">Wins pay on the middle line, times your stake. Holds and nudges light up at random. After a win you can gamble it on higher or lower. Three pints anywhere start the Pub Crawl bonus.</p>
+      <button class="btn" id="payClose" type="button">BACK TO IT</button>
+    </div>
+
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <button class="iconbtn mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+    <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+    <div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>FRUIT MACHINE</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+    <div class="overlay" id="start" hidden><div class="card"><h1>FRUIT MACHINE</h1><p class="big">The one in the corner by the gents. Holds, nudges, a gamble and the Pub Crawl bonus.</p>
+<p>Spin, line up three on the middle line, then collect or gamble it. Biggest single win goes on the leaderboard.</p>
+<button class="btn" id="go" type="button">FEED THE MACHINE</button>
+<button class="btn ghost lb-btn" type="button" data-lb="slots">Leaderboard</button><a class="btn ghost" href="/">All pub games</a>
+<p class="fine"><b>Free play only.</b> Credits aren't money: you can't buy them or cash them out. If real gambling ever stops being fun, visit begambleaware.org</p></div></div>
+    <div class="overlay" id="over" hidden><div class="card"><h2>LANDLORD'S LOCK-IN</h2><p class="big">You're out of credits. The landlord's slipped you a few more.</p>
+<button class="btn" id="topup" type="button">TAKE 500 CREDITS</button><a class="btn ghost" href="/">All pub games</a>
+<p class="fine">Free play only. Credits aren't money.</p></div></div>
+  </div>
+</div>
+<script src="/common.js"></script>
+<script src="/slots.js"></script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 By **Robbo's Game Lab**. Logo files: `lab-badge.svg`, `lab-logo.png`.
 
-Last Orders: fifteen 18+ pub games in one place, with a home screen at `/`.
+Last Orders: sixteen 18+ pub games in one place (including a free-play fruit machine), with a home screen at `/`.
 
 It's a static website (no server, no database), so it can go on Render as a free **Static Site**, which never goes to sleep and doesn't use your free web-service hours.
 
@@ -70,3 +70,9 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - Pint Stacker: real lager, stout, wine and bottle; glass sizes now match the photos (the tankard became a bottle).
 - Barman Rush: real pints. Pool: real table photo mapped onto the playing area.
 - Flying Pint: illustrated characters (lager, stout, wine, bottle and the new Cool Pint), animated with flapping wings, squash and stretch, breathing, blinking, sparkles, a sweat drop on close shaves, stars on a crash and the record crown. The shot keeps its drawn character until it has artwork.
+
+## Version 3.8: Fruit Machine
+
+- slots.html / slots.js: a British pub fruit machine. Three reels, one win line, random holds (never twice running, two reels at most) and nudges, Hi-Lo gamble ladder (up to five doubles), and a "Pub Crawl" pick-a-pint bonus for three pints anywhere.
+- Reel maths tuned by simulating a million spins: about a 21% hit rate and 87% return before holds and nudges.
+- Free play only: credits are pretend, can't be bought and can't be cashed out. A free 500-credit "lock-in" top-up appears when you run dry. Leaderboard key "slots" records the biggest single collected win (API cap 2,000,000).

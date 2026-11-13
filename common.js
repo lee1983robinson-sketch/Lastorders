@@ -178,8 +178,8 @@ window.PUB = (() => {
   addEventListener("pageshow", () => document.body && document.body.classList.remove("leaving"));
   // ---------- online leaderboards ----------
   const GAME_NAMES = { flying: "Flying Pint", goggles: "Beer Goggles", darts: "Darts", pop: "Pub Pop", merge: "Snack Merge", crush: "Bar Crush", barman: "Barman Rush", stack: "Pint Stacker",
-    bowling: "Bottle Bowling", pong: "Beer Pong", pool: "Pool", pour: "Perfect Pour", sort: "Drink Sort", quiz: "Pub Quiz", cards: "Higher or Lower" };
-  const UNITS = { pop: "level", crush: "level", sort: "level", darts: "legs won", stack: "high", cards: "in a row" };
+    bowling: "Bottle Bowling", pong: "Beer Pong", pool: "Pool", pour: "Perfect Pour", sort: "Drink Sort", quiz: "Pub Quiz", cards: "Higher or Lower", slots: "Fruit Machine" };
+  const UNITS = { pop: "level", crush: "level", sort: "level", darts: "legs won", stack: "high", cards: "in a row", slots: "credits" };
   const LB_API = (store.get("lbApi") || "https://lastorders-api.onrender.com").replace(/\/+$/, "");
   function playerId() { let id = store.get("lbId"); if (!id || !/^[a-z0-9]{12,40}$/.test(id)) { id = ""; const a = new Uint8Array(14); (crypto.getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => (a[i] = Math.random() * 256))); for (const b of a) id += (b % 36).toString(36); store.set("lbId", id); } return id; }
   async function api(path, body) {
