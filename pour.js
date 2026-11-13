@@ -69,7 +69,7 @@
     return { top: y0 - stemH - bowlH, fillH: bowlH, base: y0 - stemH };
   }
   function draw(dt) {
-    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#24142E"); bg.addColorStop(1, "#140A06"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#24142E"); bg.addColorStop(1, "#140A06"); g.fillStyle = bg; g.fillRect(0, 0, W, H); PUB.backdrop(g, W, H, 0.55);
     // back bar mirror + bottles
     g.fillStyle = "#2E1A3E"; rr(g, 16, 70, W - 32, 140, 10); g.fill(); for (let i = 0; i < 12; i++) { const x = 30 + i * 26, h = 30 + (i * 13) % 26; g.fillStyle = ["#3DAA5A", "#A86A2A", "#2E6ABA", "#C83A4A", "#E8E8E8", "#7A3AA8"][i % 6]; g.globalAlpha = 0.6; rr(g, x, 196 - h, 14, h, 3); g.fill(); g.fillRect(x + 5, 188 - h, 4, 9); g.globalAlpha = 1; }
     // bar top

@@ -58,7 +58,7 @@
   addEventListener("keydown", (e) => { if (state !== "play") return; if (e.code === "ArrowUp") { lane = Math.max(0, lane - 1); e.preventDefault(); } if (e.code === "ArrowDown") { lane = Math.min(3, lane + 1); e.preventDefault(); } if (e.code === "Space" || e.code === "ArrowLeft") { e.preventDefault(); serve(lane); } });
 
   // ---------- drawing ----------
-  function pint(x, y, s = 1, empty = false) { g.save(); g.translate(x, y); g.scale(s, s); g.fillStyle = empty ? "rgba(200,230,255,.35)" : "#FFB627"; g.beginPath(); g.moveTo(-7, -18); g.lineTo(7, -18); g.lineTo(5.5, 0); g.lineTo(-5.5, 0); g.closePath(); g.fill(); g.strokeStyle = "rgba(255,255,255,.6)"; g.lineWidth = 1; g.stroke(); if (!empty) { g.fillStyle = "#FFF6E0"; g.beginPath(); g.arc(-4, -18, 3.5, 0, 7); g.arc(1, -20, 4, 0, 7); g.arc(5, -18, 3, 0, 7); g.fill(); } g.restore(); }
+  function pint(x, y, s = 1, empty = false) { const im = !empty && PUB.art("drinks/lager"); if (im) { g.drawImage(im, x - 7 * s, y - 26 * s, 14 * s, 26 * s); return; } g.save(); g.translate(x, y); g.scale(s, s); g.fillStyle = empty ? "rgba(200,230,255,.35)" : "#FFB627"; g.beginPath(); g.moveTo(-7, -18); g.lineTo(7, -18); g.lineTo(5.5, 0); g.lineTo(-5.5, 0); g.closePath(); g.fill(); g.strokeStyle = "rgba(255,255,255,.6)"; g.lineWidth = 1; g.stroke(); if (!empty) { g.fillStyle = "#FFF6E0"; g.beginPath(); g.arc(-4, -18, 3.5, 0, 7); g.arc(1, -20, 4, 0, 7); g.arc(5, -18, 3, 0, 7); g.fill(); } g.restore(); }
   function person(p) {
     const y = LANES[p.lane] - 34, bob = p.state === "walk" && p.pause <= 0 ? Math.abs(Math.sin(p.t * 9)) * 3 : 0, x = p.x;
     g.save(); g.translate(x, y - bob);
@@ -76,7 +76,7 @@
   function burpBubble() {}
   function draw(dt) {
     // back wall
-    const wall = g.createLinearGradient(0, 0, 0, H); wall.addColorStop(0, "#3A2236"); wall.addColorStop(1, "#1A0F14"); g.fillStyle = wall; g.fillRect(0, 0, W, H);
+    const wall = g.createLinearGradient(0, 0, 0, H); wall.addColorStop(0, "#3A2236"); wall.addColorStop(1, "#1A0F14"); g.fillStyle = wall; g.fillRect(0, 0, W, H); PUB.backdrop(g, W, H, 0.42);
     g.fillStyle = "#4A2A20"; g.fillRect(0, 90, W, 6);
     // window + neon
     g.fillStyle = "#16224A"; rr(g, 120, 104, 120, 50, 6); g.fill(); g.strokeStyle = "#5A3A22"; g.lineWidth = 4; g.stroke(); g.fillStyle = "#FFE7A8"; g.beginPath(); g.arc(214, 122, 8, 0, 7); g.fill();

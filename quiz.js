@@ -48,7 +48,7 @@
 
   // ---------- background: the pub with the quiz board ----------
   function draw(dt) {
-    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#22142E"); bg.addColorStop(1, "#120A06"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#22142E"); bg.addColorStop(1, "#120A06"); g.fillStyle = bg; g.fillRect(0, 0, W, H); PUB.backdrop(g, W, H, 0.5);
     for (let i = 0; i < 12; i++) { g.fillStyle = ["#FFB62714", "#FF3D7F12", "#3DE0FF10"][i % 3]; g.beginPath(); g.arc((i * 89 + Math.sin(t * 0.3 + i) * 8) % W, 60 + (i * 53) % 520, 20 + (i % 4) * 14, 0, 7); g.fill(); }
     g.fillStyle = "#5A3A22"; rr(g, 10, 64, W - 20, 470, 16); g.fill(); g.fillStyle = "#1B2620"; rr(g, 18, 72, W - 36, 454, 12); g.fill();
     if (state === "play" && !locked) { left = Math.max(0, left - dt); if (left <= 0) answer(-1); }

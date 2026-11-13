@@ -4,9 +4,9 @@
   const { $, store, REDUCED, pop, thud, cheer, fanfare, sad, burp, beep, music, wireMute, fit, show, gate, toast, share, best, rr, particles } = PUB;
   const W = 360, H = 640, LX = 44, RX = 316, FLOOR = 568, TOPY = 176, DANGER = 196, DROPY = 140;
   const TIERS = [
-    { n: "Peanut", r: 12, c: "#D49A5A", p: 1 }, { n: "Scampi Fry", r: 16, c: "#F2A23A", p: 3 }, { n: "Pork Scratching", r: 21, c: "#B86A30", p: 6 },
-    { n: "Pickled Onion", r: 26, c: "#EDE6C8", p: 10 }, { n: "Packet of Crisps", r: 32, c: "#3D7BFF", p: 15 }, { n: "Pickled Egg", r: 38, c: "#F6F0DC", p: 21 },
-    { n: "Scotch Egg", r: 45, c: "#A0602C", p: 28 }, { n: "Pork Pie", r: 52, c: "#D9963E", p: 36 }, { n: "Burger", r: 60, c: "#8A4A26", p: 45 }, { n: "Sunday Roast", r: 68, c: "#F4F1EA", p: 55 },
+    { n: "Peanuts", r: 12, c: "#D49A5A", p: 1, img: "peanuts" }, { n: "Crisps", r: 16, c: "#F2C23A", p: 3, img: "crisps" }, { n: "Pork Scratchings", r: 21, c: "#B86A30", p: 6, img: "scratchings" },
+    { n: "Pickled Egg", r: 26, c: "#F6E7A0", p: 10, img: "egg" }, { n: "Scotch Egg", r: 32, c: "#C0702C", p: 15, img: "scotch-egg" }, { n: "Sausage Roll", r: 38, c: "#E8A848", p: 21, img: "sausage-roll" },
+    { n: "Pork Pie", r: 45, c: "#D9963E", p: 28, img: "pie" }, { n: "Burger", r: 52, c: "#E04A2A", p: 36, img: "burger" }, { n: "Pizza", r: 60, c: "#FF6A3D", p: 45, img: "pizza" }, { n: "Mighty Kebab", r: 68, c: "#7BD86A", p: 55, img: "kebab" },
   ];
   let g = null, view = null; fit($("game"), W, H, (o) => { view = o; g = o.g; });
   const FX = particles();
@@ -41,7 +41,26 @@
       g.fillStyle = "#F07A2A"; g.save(); g.translate(r * 0.42, r * 0.45); g.rotate(-0.5); rr(g, -r * 0.2, -r * 0.05, r * 0.4, r * 0.1, r * 0.05); g.fill(); g.restore();
       g.save(); g.translate(r * 0.05, r * 0.12); face(r * 0.38, "#2A1000"); g.restore(); },
   ];
-  function drawSnack(t, x, y, ang = 0, s = 1) { const r = TIERS[t].r * s; g.save(); g.translate(x, y); g.rotate(ang); g.fillStyle = "rgba(0,0,0,.25)"; g.beginPath(); g.ellipse(2, r * 0.9, r * 0.8, r * 0.18, 0, 0, 7); g.fill(); DRAW[t](r); g.restore(); }
+  // real snack photos become round tokens (matching the round physics), built once and reused every frame
+  const RIMS = ["#D49A5A", "#F2C23A", "#B86A30", "#E8D27A", "#C0702C", "#E8A848", "#D9963E", "#E04A2A", "#FF6A3D", "#7BD86A"];
+  const BADGES = [];
+  function badge(t) {
+    if (BADGES[t]) return BADGES[t]; const im = PUB.art("snacks/" + TIERS[t].img); if (!im) return null;
+    const r = TIERS[t].r, S = 3, D = Math.ceil(r * 2 * S) + 4, c = document.createElement("canvas"); c.width = c.height = D; const x = c.getContext("2d"); x.translate(D / 2, D / 2); x.scale(S, S);
+    const disc = x.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r); disc.addColorStop(0, "#3A2A4A"); disc.addColorStop(1, "#140C22");
+    x.save(); x.beginPath(); x.arc(0, 0, r, 0, 7); x.clip(); x.fillStyle = disc; x.fillRect(-r, -r, r * 2, r * 2);
+    const k = (r * 2.15) / Math.max(im.naturalWidth, im.naturalHeight); x.drawImage(im, -im.naturalWidth * k / 2, -im.naturalHeight * k / 2 + r * 0.04, im.naturalWidth * k, im.naturalHeight * k);
+    const sh = x.createRadialGradient(0, 0, r * 0.7, 0, 0, r); sh.addColorStop(0, "rgba(0,0,0,0)"); sh.addColorStop(1, "rgba(0,0,0,.45)"); x.fillStyle = sh; x.fillRect(-r, -r, r * 2, r * 2);
+    const gl = x.createLinearGradient(0, -r, 0, 0); gl.addColorStop(0, "rgba(255,255,255,.35)"); gl.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = gl; x.beginPath(); x.ellipse(-r * 0.15, -r * 0.5, r * 0.7, r * 0.38, -0.3, 0, 7); x.fill();
+    x.restore(); x.lineWidth = Math.max(2, r * 0.09); x.strokeStyle = RIMS[t]; x.beginPath(); x.arc(0, 0, r - x.lineWidth / 2, 0, 7); x.stroke();
+    x.lineWidth = 1; x.strokeStyle = "rgba(255,255,255,.45)"; x.beginPath(); x.arc(0, 0, r - Math.max(2, r * 0.09) - 0.5, Math.PI * 1.1, Math.PI * 1.7); x.stroke();
+    return (BADGES[t] = c);
+  }
+  function drawSnack(t, x, y, ang = 0, s = 1) {
+    const r = TIERS[t].r * s; g.save(); g.translate(x, y); g.rotate(ang); g.fillStyle = "rgba(0,0,0,.25)"; g.beginPath(); g.ellipse(2, r * 0.9, r * 0.8, r * 0.18, 0, 0, 7); g.fill();
+    const b = badge(t); if (b) g.drawImage(b, -r - 2 * s / 3, -r - 2 * s / 3, r * 2 + 4 * s / 3, r * 2 + 4 * s / 3); else DRAW[t](r);
+    g.restore();
+  }
 
   // ---------- physics ----------
   let bodies = [], state = "menu", score = 0, held = 0, nextT = 0, dropX = W / 2, canDrop = true, dangerT = 0, t = 0, biggest = 0, idSeq = 1;
@@ -77,7 +96,7 @@
     a.dead = b.dead = true; const nt = a.t + 1, x = (a.x + b.x) / 2, y = (a.y + b.y) / 2;
     score += TIERS[a.t].p * 2; FX.burst(x, y, TIERS[a.t].c, 12 + a.t * 2, 140 + a.t * 15, 3 + a.t * 0.3); FX.ring(x, y, "#FFF6E0", a.r * 1.8);
     pop(1.4 - a.t * 0.08);
-    if (nt >= TIERS.length) { score += 500; toast("TWO SUNDAY ROASTS!<br>+500", 1600); fanfare(); cheer(true); return hud(); }
+    if (nt >= TIERS.length) { score += 500; toast("TWO MIGHTY KEBABS!<br>+500", 1600); fanfare(); cheer(true); return hud(); }
     const nb = addBody(nt, x, y, (a.vx + b.vx) / 2, Math.min(0, (a.vy + b.vy) / 2) - 60); nb.pop = 1;
     if (nt > biggest) { biggest = nt; if (nt >= 4) { toast(TIERS[nt].n.toUpperCase() + "!", 1200); nt >= 7 ? (fanfare(), cheer(false)) : beep(660, 990, 0.15, "triangle", 0.06); if (nt === 9) burp(); } }
     hud();
@@ -92,7 +111,7 @@
   }
   function over() {
     state = "over"; sad(); const b = best("mergeBest", score); PUB.submit("merge", score);
-    $("oScore").textContent = score; $("oBest").textContent = b; $("oBig").textContent = TIERS[biggest].n; $("oSub").textContent = biggest >= 9 ? "A Sunday roast! You legend." : biggest >= 7 ? "Got to the " + TIERS[biggest].n.toLowerCase() + ". Not bad at all." : "Glass is full. Have another go."; $("shareMsg").hidden = true; show("over");
+    $("oScore").textContent = score; $("oBest").textContent = b; $("oBig").textContent = TIERS[biggest].n; $("oSub").textContent = biggest >= 9 ? "The Mighty Kebab! You legend." : biggest >= 7 ? "Got to the " + TIERS[biggest].n.toLowerCase() + ". Not bad at all." : "Glass is full. Have another go."; $("shareMsg").hidden = true; show("over");
   }
   const cv = $("game");
   cv.addEventListener("pointerdown", (e) => { if (state !== "play") return; PUB.ctx(); dropX = view.point(e).x; cv.setPointerCapture(e.pointerId); });
@@ -115,7 +134,7 @@
     const dang = dangerT > 0.2; g.setLineDash([8, 6]); g.strokeStyle = dang ? `rgba(255,61,127,${0.5 + 0.5 * Math.sin(t * 14)})` : "rgba(255,246,224,.25)"; g.lineWidth = 2; g.beginPath(); g.moveTo(LX, DANGER); g.lineTo(RX, DANGER); g.stroke(); g.setLineDash([]);
   }
   function draw(dt) {
-    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#1B1240"); bg.addColorStop(1, "#2A160E"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#1B1240"); bg.addColorStop(1, "#2A160E"); g.fillStyle = bg; g.fillRect(0, 0, W, H); PUB.backdrop(g, W, H, 0.55);
     for (let i = 0; i < 9; i++) { g.fillStyle = ["#FFB62714", "#FF3D7F12", "#3DE0FF10"][i % 3]; g.beginPath(); g.arc((i * 97) % W, 120 + ((i * 53) % 300), 30 + (i % 4) * 14, 0, 7); g.fill(); }
     // evolution strip
     const sx = 26, step = (W - 52) / 9; g.fillStyle = "#0A0E24aa"; rr(g, 10, 64, W - 20, 40, 14); g.fill();

@@ -67,7 +67,7 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
 .stat span { font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); font-weight: 800; }
 .medal { font-family: var(--display); font-size: 18px; color: var(--lager); padding: 8px 12px; border: 2px dashed #6B4A12; border-radius: 12px; }
 .fine { font-size: 12px; color: #8F8CB8; }
-.pick { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.pick { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
 .drink { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 8px; min-height: 44px; border-radius: 12px; border: 2px solid #2C2F66; background: #161A44; color: var(--muted); font: 800 11px var(--body); cursor: pointer; }
 .drink canvas { width: 44px; height: 44px; }
 .drink.on { border-color: var(--lager); color: var(--foam); background: #2A2350; }
@@ -126,12 +126,13 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
         <button class="drink" type="button" data-k="shot"><canvas id="pv-shot" width="56" height="56" aria-hidden="true"></canvas>Shot</button>
         <button class="drink" type="button" data-k="bottle"><canvas id="pv-bottle" width="56" height="56" aria-hidden="true"></canvas>Bottle</button>
         <button class="drink" type="button" data-k="wine"><canvas id="pv-wine" width="56" height="56" aria-hidden="true"></canvas>Wine</button>
+        <button class="drink" type="button" data-k="cool"><canvas id="pv-cool" width="56" height="56" aria-hidden="true"></canvas>Cool</button>
       </div>
       <p class="fine" id="drinkHint" aria-live="polite"></p>
       <button class="btn" id="go" type="button">START DRINKING</button>
       <button class="btn ghost lb-btn" type="button" data-lb="flying">Leaderboard</button>
       <a class="btn ghost" href="/">All pub games</a>
-      <p class="fine">Best so far: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk<br>A Robbo's Game Lab game · Flying Pint 3.4 Signature Edition</p>
+      <p class="fine">Best so far: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk<br>A Robbo's Game Lab game · Flying Pint 3.5 · characters by Robbo's Game Lab</p>
     </div>
   </div>
 
@@ -474,6 +475,7 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
 
   // ---------- update ----------
   function update(dt) {
+    if (pickerDirty || !spriteCache[pick]) { for (const k in SPRITES) sprite(k); if (pickerDirty) { pickerDirty = false; drawPicker(); } }
     t += dt; updateParticles(dt); scorePulse = Math.max(0, scorePulse - dt * 3); nearMissCooldown = Math.max(0, nearMissCooldown - dt);
     moodT = Math.max(0, moodT - dt); if (moodT === 0 && state === "play") mood = "idle";
     blinkT -= dt; blinkDur = Math.max(0, blinkDur - dt);
@@ -548,8 +550,22 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
     shot:   { name: "Shot",          short: "Shot",   hint: "Tiny, so easier to squeeze through. Drops like a stone.", g: 1780, flap: 475, hw: 10, hh: 11, wx: 9, wy: 0, emoji: "🥃" },
     bottle: { name: "Bottle of Beer", short: "Bottle", hint: "Skinny but tall. Mind your head.", g: 1500, flap: 430, hw: 11, hh: 20, wx: 10, wy: 4, emoji: "🍾" },
     wine:   { name: "Glass of Wine", short: "Wine",   hint: "Floaty and fancy. Gentle flaps.", g: 1240, flap: 380, hw: 13, hh: 15, wx: 13, wy: -6, emoji: "🍷" },
+    cool:   { name: "Cool Pint",     short: "Cool Pint", hint: "Too cool to panic. Handles like a lager, looks better doing it.", g: 1500, flap: 430, hw: 15, hh: 14, wx: 13, wy: -2, emoji: "😎" },
   };
-  const ORDER = ["lager", "stout", "shot", "bottle", "wine"];
+  const ORDER = ["lager", "stout", "shot", "bottle", "wine", "cool"];
+  // ---------- illustrated characters (Robbo's Game Lab artwork), animated in code ----------
+  // anchor = middle of the drink's body, eyes for blinking; all measured as a fraction of the picture height
+  const SPRITES = {"lager": {"asp": 1.0205, "ax": 0.5471, "ay": 0.584, "eyes": [[0.6189, 0.3791, 0.0861, 0.0984], [0.7766, 0.4201, 0.0717, 0.0902]], "lid": "#F2A010"}, "stout": {"asp": 0.9737, "ax": 0.5, "ay": 0.6174, "eyes": [[0.5607, 0.3583, 0.081, 0.0931], [0.7166, 0.4291, 0.0668, 0.085]], "lid": "#2A1510"}, "wine": {"asp": 0.661, "ax": 0.3625, "ay": 0.3774, "eyes": [[0.5224, 0.3454, 0.064, 0.0746]], "lid": "#D6304A"}, "bottle": {"asp": 0.9283, "ax": 0.4302, "ay": 0.5756, "eyes": [[0.5019, 0.376, 0.0814, 0.093], [0.6143, 0.4399, 0.062, 0.0775]], "lid": "#C85A10"}, "cool": {"asp": 1.2298, "ax": 0.5872, "ay": 0.617, "eyes": [], "lid": null}};
+  const SPRITE_H = { lager: 55, stout: 55, wine: 57, bottle: 59, cool: 53 };
+  const spriteCache = {}; let pickerDirty = false;
+  function sprite(kind) {
+    if (spriteCache[kind]) return spriteCache[kind];
+    const m = SPRITES[kind]; if (!m || !window.PUB || !PUB.art) return null;
+    const im = PUB.art("chars/" + kind); if (!im) return null;
+    const h = SPRITE_H[kind], w = h * m.asp, S = 3, c = document.createElement("canvas"); c.width = Math.ceil(w * S); c.height = Math.ceil(h * S);
+    const x = c.getContext("2d"); x.imageSmoothingQuality = "high"; x.drawImage(im, 0, 0, c.width, c.height);   // pre-scaled once, cheap to draw every frame
+    pickerDirty = true; return (spriteCache[kind] = { c, w, h, m });
+  }
   let pick = DRINKS[store.get("loDrink")] ? store.get("loDrink") : "lager";
   const D = () => DRINKS[pick];
 
@@ -587,12 +603,43 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
     g.fillStyle = "#FFFFFFAA"; g.fillRect(-8, -1, 3, 1.4);
     g.restore();
   }
-  const CROWN_Y = { lager: -25, stout: -20, shot: -15, bottle: -29, wine: -20 };
+  const CROWN_Y = { lager: -25, stout: -20, shot: -15, bottle: -29, wine: -20, cool: -25 };
+  function drawSprite(g, sp, d, flapping, expr, blink, crowned, kind) {
+    const h = sp.h, ox = -sp.m.ax * h, oy = -sp.m.ay * h;
+    // feathery wings behind the shoulders, flapping hard on a tap and fluttering otherwise
+    const flapA = flapping ? -0.9 : Math.sin(t * 14) * 0.35;
+    for (const side of [-1, 1]) {
+      g.save(); g.translate(side * (d.hw - 1), -h * 0.22); g.rotate(side * (0.5 - flapA * side));
+      g.fillStyle = "#FFFFFF"; g.beginPath(); g.ellipse(side * 11, -5, 14, 7, side * -0.4, 0, 7); g.fill();
+      g.fillStyle = "#D9D6F0"; g.beginPath(); g.ellipse(side * 14, -2, 9, 3.5, side * -0.4, 0, 7); g.fill();
+      g.strokeStyle = "#C9C4E8"; g.lineWidth = 0.8; g.beginPath(); g.moveTo(side * 4, -4); g.lineTo(side * 20, -7); g.stroke();
+      g.restore();
+    }
+    // a gentle "breathing" wobble keeps the character alive even between flaps
+    const breathe = 1 + Math.sin(t * 5) * 0.025;
+    g.save(); g.scale(1 / breathe, breathe);
+    g.drawImage(sp.c, ox, oy, sp.w, h);
+    // blinking: eyelids in the drink's own colour with a lash line
+    if (blink && sp.m.lid && expr !== "ecstatic") for (const [ex, ey, rx, ry] of sp.m.eyes) {
+      const cx2 = ox + ex * h, cy2 = oy + ey * h; g.fillStyle = sp.m.lid; g.beginPath(); g.ellipse(cx2, cy2, rx * h * 1.12, ry * h * 1.08, 0, 0, 7); g.fill();
+      g.strokeStyle = "#2A1400"; g.lineWidth = 0.9; g.beginPath(); g.moveTo(cx2 - rx * h, cy2); g.quadraticCurveTo(cx2, cy2 + ry * h * 0.55, cx2 + rx * h, cy2); g.stroke();
+    }
+    g.restore();
+    const top = oy + 2;
+    if (expr === "surprised") { g.fillStyle = "#9FD8FF"; g.beginPath(); g.moveTo(h * 0.42, top + 4); g.quadraticCurveTo(h * 0.5, top + 12, h * 0.42, top + 14); g.quadraticCurveTo(h * 0.34, top + 12, h * 0.42, top + 4); g.fill(); }
+    if (expr === "happy" || expr === "ecstatic") { g.fillStyle = "#FFF6C4"; for (let i = 0; i < (expr === "ecstatic" ? 4 : 2); i++) { const a = t * 3 + i * 1.7, sx = Math.cos(a) * h * 0.55, sy = top + 6 + Math.sin(a * 1.3) * 8, r = 1.6 + Math.sin(t * 9 + i) * 0.8; g.beginPath(); g.moveTo(sx, sy - r * 2); g.lineTo(sx + r * 0.6, sy - r * 0.6); g.lineTo(sx + r * 2, sy); g.lineTo(sx + r * 0.6, sy + r * 0.6); g.lineTo(sx, sy + r * 2); g.lineTo(sx - r * 0.6, sy + r * 0.6); g.lineTo(sx - r * 2, sy); g.lineTo(sx - r * 0.6, sy - r * 0.6); g.closePath(); g.fill(); } }
+    if (expr === "sad") { // seeing stars after the crash
+      for (let i = 0; i < 3; i++) { const a = t * 4 + i * 2.1, sx = Math.cos(a) * 14, sy = top - 4 + Math.sin(a) * 4; g.fillStyle = i === 1 ? "#FF3D7F" : "#FFD45C"; g.beginPath(); for (let k = 0; k < 10; k++) { const rr2 = k % 2 ? 1.4 : 3.2, aa = k * Math.PI / 5 - Math.PI / 2; g.lineTo(sx + Math.cos(aa) * rr2, sy + Math.sin(aa) * rr2); } g.closePath(); g.fill(); }
+    }
+    if (crowned) crown(g, top - 3);
+  }
   function bubbles(g, x0, y0, h, n) { g.fillStyle = "#FFFFFF66"; for (let i = 0; i < n; i++) { g.beginPath(); g.arc(x0 + i * 4, y0 - ((t * 30 + i * 9) % h), 1.2, 0, 7); g.fill(); } }
   function drawDrink(g, kind, px, py, r, flapping, expr = "idle", rosy = false, blink = false, crowned = false, squash = 0) {
     const d = DRINKS[kind];
     g.save(); g.translate(px, py); g.rotate(r);
     if (squash) g.scale(1 - squash * 0.25, 1 + squash * 0.35);   // drawing only: collisions use the fixed hit box
+    const sp = sprite(kind);
+    if (sp) { drawSprite(g, sp, d, flapping, expr, blink, crowned, kind); g.restore(); return; }
     g.save(); g.globalAlpha = .22; g.fillStyle = "#000"; g.beginPath(); g.ellipse(2, 22, 18, 5, 0, 0, 7); g.fill(); g.restore();
     const flapA = flapping ? -0.9 : Math.sin(t * 14) * 0.35, ws = kind === "shot" ? 0.75 : 1;
     for (const side of [-1, 1]) {
@@ -601,7 +648,7 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
       g.fillStyle = "#D9D6F0"; g.beginPath(); g.ellipse(side * 11, -2, 7, 3, side * -0.4, 0, 7); g.fill();
       g.restore();
     }
-    if (kind === "lager") {
+    if (kind === "lager" || kind === "cool") {
       const lagerGrad = g.createLinearGradient(-13, -10, 13, 12); lagerGrad.addColorStop(0, "#FFE08A"); lagerGrad.addColorStop(.38, "#FFB627"); lagerGrad.addColorStop(1, "#D97708"); g.fillStyle = lagerGrad; g.beginPath(); g.moveTo(-13, -12); g.lineTo(13, -12); g.lineTo(10, 18); g.lineTo(-10, 18); g.closePath(); g.fill();
       g.fillStyle = "#FFCE5C"; g.fillRect(-9, -8, 4, 22); bubbles(g, -3, 10, 22, 4);
       g.fillStyle = "#FFF6E0"; g.beginPath(); g.arc(-8, -13, 6, 0, 7); g.arc(0, -16, 7, 0, 7); g.arc(8, -13, 6, 0, 7); g.fill();
@@ -638,7 +685,8 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
       const c = document.getElementById("pv-" + k); if (!c) continue;
       const dpr = Math.min(window.devicePixelRatio || 1, 2.5), g = c.getContext("2d");
       c.width = 56 * dpr; c.height = 56 * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, 56, 56);
-      drawDrink(g, k, 28, 30, 0, false, "idle", false, false, false);
+      if (SPRITES[k] && sprite(k)) { g.save(); g.translate(28, 31); g.scale(0.78, 0.78); drawDrink(g, k, 0, 0, 0, false, "idle", false, false, false); g.restore(); }
+      else drawDrink(g, k, 28, 30, 0, false, "idle", false, false, false);
     }
     for (const b of document.querySelectorAll(".drink")) { const on = b.dataset.k === pick; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); }
     $("drinkHint").textContent = D().name + ": " + D().hint;

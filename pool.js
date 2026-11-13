@@ -131,14 +131,21 @@
     g.fillStyle = "#0A0E24cc"; rr(g, W - 30, 200, 14, 200, 7); g.fill(); const pg = g.createLinearGradient(0, 400, 0, 200); pg.addColorStop(0, "#5FE3B0"); pg.addColorStop(0.6, "#FFB627"); pg.addColorStop(1, "#FF3D7F"); g.fillStyle = pg; const ph = 200 * pull / MAXPULL; rr(g, W - 30, 400 - ph, 14, Math.max(14, ph), 7); g.fill();
   }
   function draw(dt) {
-    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#1B1240"); bg.addColorStop(1, "#140C08"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#1B1240"); bg.addColorStop(1, "#140C08"); g.fillStyle = bg; g.fillRect(0, 0, W, H); PUB.backdrop(g, W, H, 0.6);
     // light over the table
     const lt = g.createRadialGradient(W / 2, (Y0 + Y1) / 2, 40, W / 2, (Y0 + Y1) / 2, 360); lt.addColorStop(0, "rgba(255,230,170,.18)"); lt.addColorStop(1, "rgba(255,230,170,0)"); g.fillStyle = lt; g.fillRect(0, 0, W, H);
+    const tableImg = PUB.art("pool-table");
+    if (tableImg) {
+      // the photo's cloth (50,26)-(279,429) is mapped exactly onto the game's playing area
+      const sx = (X1 - X0) / 229, sy = (Y1 - Y0) / 403;
+      g.drawImage(tableImg, X0 - 50 * sx, Y0 - 26 * sy, tableImg.naturalWidth * sx, tableImg.naturalHeight * sy);
+    } else {
     // wood rails
     const wd = g.createLinearGradient(0, Y0 - 26, 0, Y1 + 26); wd.addColorStop(0, "#6A3A1A"); wd.addColorStop(0.5, "#8A5226"); wd.addColorStop(1, "#5A2E12"); g.fillStyle = wd; rr(g, X0 - 26, Y0 - 26, X1 - X0 + 52, Y1 - Y0 + 52, 18); g.fill();
     g.fillStyle = "#D8B060"; for (const [x, y] of [[X0 - 13, Y0 + 120], [X0 - 13, Y1 - 120], [X1 + 13, Y0 + 120], [X1 + 13, Y1 - 120], [(X0 + X1) / 2 - 60, Y0 - 13], [(X0 + X1) / 2 + 60, Y0 - 13], [(X0 + X1) / 2 - 60, Y1 + 13], [(X0 + X1) / 2 + 60, Y1 + 13]]) { g.beginPath(); g.arc(x, y, 2.5, 0, 7); g.fill(); }
     // cloth
     const cl = g.createRadialGradient(W / 2, (Y0 + Y1) / 2, 30, W / 2, (Y0 + Y1) / 2, 320); cl.addColorStop(0, "#1E8A4A"); cl.addColorStop(1, "#0E5A2E"); g.fillStyle = cl; g.fillRect(X0 - 6, Y0 - 6, X1 - X0 + 12, Y1 - Y0 + 12);
+    }
     g.strokeStyle = "rgba(255,255,255,.25)"; g.lineWidth = 1; g.beginPath(); g.moveTo(X0, Y1 - 120); g.lineTo(X1, Y1 - 120); g.stroke(); g.beginPath(); g.arc((X0 + X1) / 2, Y1 - 120, 40, 0, Math.PI); g.stroke();
     g.fillStyle = "rgba(255,255,255,.4)"; g.beginPath(); g.arc((X0 + X1) / 2, Y0 + 120, 2, 0, 7); g.fill();
     for (const [px, py] of POCKETS) { g.fillStyle = "#050505"; g.beginPath(); g.arc(px, py, PR, 0, 7); g.fill(); g.strokeStyle = "#3A1A0A"; g.lineWidth = 3; g.stroke(); }

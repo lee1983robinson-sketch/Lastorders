@@ -61,3 +61,12 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - Every game's music now plays through the new house band: honky-tonk piano (organ for Pool and Darts, bells for the calmer puzzle games), plucked bass, drums and glass clinks, keeping each game's own tune.
 - Shared sounds use one noise buffer instead of building a new one per sound; fanfare and "unlucky" stings upgraded; music stops when you leave a game.
 - New personal best celebration (trophy, gold card, confetti, fanfare) for Snack Merge, Barman Rush, Pint Stacker, Bottle Bowling, Beer Pong, Perfect Pour, Pub Quiz, Higher or Lower and Beer Goggles. Only when an earlier best is genuinely beaten.
+
+## Version 3.6: real artwork
+
+- Artwork lives in /img (WebP). Games use PUB.art(name) and fall back to their drawn versions until an image has loaded.
+- Pub photo backdrop (blurred and dimmed, cached once) in Snack Merge, Pint Stacker, Barman Rush, Pool, Pub Quiz, Drink Sort, Perfect Pour and Pub Pop.
+- Snack Merge: ten real snacks as round photo tokens (Peanuts → Crisps → Pork Scratchings → Pickled Egg → Scotch Egg → Sausage Roll → Pork Pie → Burger → Pizza → Mighty Kebab). Physics and points unchanged.
+- Pint Stacker: real lager, stout, wine and bottle; glass sizes now match the photos (the tankard became a bottle).
+- Barman Rush: real pints. Pool: real table photo mapped onto the playing area.
+- Flying Pint: illustrated characters (lager, stout, wine, bottle and the new Cool Pint), animated with flapping wings, squash and stretch, breathing, blinking, sparkles, a sweat drop on close shaves, stars on a crash and the record crown. The shot keeps its drawn character until it has artwork.

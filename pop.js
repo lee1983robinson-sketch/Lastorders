@@ -151,7 +151,7 @@
     g.globalAlpha = 1;
   }
   function draw(dt) {
-    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#1B1240"); bg.addColorStop(0.6, "#120E2C"); bg.addColorStop(1, "#2A160E"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#1B1240"); bg.addColorStop(0.6, "#120E2C"); bg.addColorStop(1, "#2A160E"); g.fillStyle = bg; g.fillRect(0, 0, W, H); PUB.backdrop(g, W, H, 0.64);
     for (const b of BOKEH) { g.fillStyle = b.c; g.beginPath(); g.arc(b.x + Math.sin(t * 0.3 + b.s) * 6, b.y, b.r, 0, 7); g.fill(); }
     // ceiling beam + lose line
     g.fillStyle = "#3A2418"; g.fillRect(0, TOP - 14, W, 14); g.fillStyle = "#5A3A22"; g.fillRect(0, TOP - 4, W, 4);

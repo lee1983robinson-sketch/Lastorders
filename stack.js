@@ -6,8 +6,9 @@
   let g = null, view = null; fit($("game"), W, H, (o) => { view = o; g = o.g; });
   const FX = particles();
   const KINDS = [
-    { n: "pint", w: 50, h: 64, col: "#FFB627" }, { n: "half", w: 42, h: 46, col: "#FFB627" }, { n: "wine", w: 44, h: 60, col: "#9B1B3E" },
-    { n: "stout", w: 52, h: 66, col: "#1B0F0B" }, { n: "shot", w: 30, h: 28, col: "#E89A2E" }, { n: "tankard", w: 58, h: 60, col: "#FFB627" },
+    // sizes follow the real drink photos so what you see is what stacks
+    { n: "pint", w: 44, h: 76, col: "#FFB627" }, { n: "half", w: 40, h: 56, col: "#FFB627" }, { n: "wine", w: 37, h: 76, col: "#9B1B3E" },
+    { n: "stout", w: 43, h: 76, col: "#1B0F0B" }, { n: "shot", w: 30, h: 28, col: "#E89A2E" }, { n: "bottle", w: 24, h: 74, col: "#6B3A12" },
   ];
   let state = "menu", stack = [], mover = null, falling = null, score = 0, perfect = 0, t = 0, cam = 0, camT = 0, lean = 0, topple = null;
   function nextKind() { const pool = score < 5 ? [0, 1, 5] : score < 12 ? [0, 1, 2, 3, 5] : [0, 1, 2, 3, 4, 5]; return KINDS[pool[Math.floor(Math.random() * pool.length)]]; }
@@ -53,6 +54,9 @@
       g.fillStyle = "rgba(0,0,0,.24)";
       g.beginPath(); g.ellipse(0, -1, w * .48, 3.5, 0, 0, Math.PI * 2); g.fill();
     }
+
+    const photo = { pint: "lager", half: "lager", stout: "stout", wine: "wine", bottle: "bottle" }[k.n], im = photo && PUB.art("drinks/" + photo);
+    if (im) { g.drawImage(im, -w / 2, -h, w, h); g.restore(); return; }
 
     if (k.n === "tray") {
       const tg = g.createLinearGradient(0, -h, 0, 0);
@@ -153,7 +157,7 @@
   function draw(dt) {
     const bg = g.createLinearGradient(0, 0, 0, H);
     bg.addColorStop(0, "#211747"); bg.addColorStop(.48, "#21152F"); bg.addColorStop(1, "#160D13");
-    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    g.fillStyle = bg; g.fillRect(0, 0, W, H); PUB.backdrop(g, W, H, 0.5);
 
     // Warm out-of-focus pub lights add atmosphere without distracting from the tower.
     for (let i = 0; i < 7; i++) {

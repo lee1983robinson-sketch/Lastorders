@@ -98,7 +98,7 @@
     g.restore();
   }
   function draw(dt) {
-    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#1B1240"); bg.addColorStop(1, "#2A160E"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#1B1240"); bg.addColorStop(1, "#2A160E"); g.fillStyle = bg; g.fillRect(0, 0, W, H); PUB.backdrop(g, W, H, 0.62);
     for (let i = 0; i < 8; i++) { g.fillStyle = ["#FFB62712", "#FF3D7F10", "#3DE0FF0e"][i % 3]; g.beginPath(); g.arc((i * 97) % W, 100 + (i * 71) % 400, 30 + (i % 3) * 20, 0, 7); g.fill(); }
     const bar = g.createLinearGradient(0, 548, 0, H); bar.addColorStop(0, "#8A5A32"); bar.addColorStop(0.1, "#5A3418"); bar.addColorStop(1, "#24130A"); g.fillStyle = bar; g.fillRect(0, 548, W, H);
     const sl = slots(); lifted += ((sel >= 0 ? 1 : 0) - lifted) * Math.min(1, dt * 14);

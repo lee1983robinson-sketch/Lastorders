@@ -129,6 +129,22 @@ window.PUB = (() => {
   }
   // the celebration appears when the game-over card does (or straight away if it is already up)
   function record(prev, v) { recordAt = Date.now(); const over = $("over"); pendingRecord = { prev, v }; if (over && !over.hidden) { showRecord(pendingRecord); pendingRecord = null; } }
+  // ---------- real artwork (loaded on demand, games fall back to their drawn versions until ready) ----------
+  const ART = {};
+  function art(name) { let a = ART[name]; if (!a) { a = ART[name] = new Image(); a.decoding = "async"; a.src = "/img/" + name + ".webp"; } return a.complete && a.naturalWidth ? a : null; }
+  let backCache = null;
+  // the pub photo, softly blurred and dimmed so the game stays easy to read; drawn from a cached canvas
+  function backdrop(g, W, H, dim = 0.55) {
+    const im = art("pub-bg"); if (!im) return false;
+    if (!backCache || backCache.W !== W || backCache.H !== H || backCache.dim !== dim) {
+      const c = document.createElement("canvas"); c.width = W * 2; c.height = H * 2; const x = c.getContext("2d"); x.scale(2, 2);
+      const s = Math.max((W + 16) / im.naturalWidth, (H + 16) / im.naturalHeight), w = im.naturalWidth * s, h = im.naturalHeight * s;
+      x.filter = "blur(2.5px) saturate(1.15)"; x.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); x.filter = "none";
+      const v = x.createLinearGradient(0, 0, 0, H); v.addColorStop(0, `rgba(10,8,30,${Math.min(0.95, dim + 0.15)})`); v.addColorStop(0.5, `rgba(12,8,26,${dim})`); v.addColorStop(1, `rgba(12,6,10,${Math.min(0.95, dim + 0.22)})`); x.fillStyle = v; x.fillRect(0, 0, W, H);
+      backCache = { c, W, H, dim };
+    }
+    g.drawImage(backCache.c, 0, 0, W, H); return true;
+  }
   // studio credit on every start screen
   addEventListener("DOMContentLoaded", () => { const c = document.querySelector("#start .card"); if (c && !c.querySelector(".credit") && !/Robbo/.test(c.textContent)) { const p = document.createElement("p"); p.className = "fine credit"; p.innerHTML = '18+ · Know your limits: drinkaware.co.uk<br>A Robbo\'s Game Lab game'; c.appendChild(p); } });
   if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
@@ -247,5 +263,5 @@ window.PUB = (() => {
       get count() { return list.length; },
     };
   }
-  return { record, stopMusic, confetti, submit, openBoard, playerId, GAME_NAMES, $, store, REDUCED, ctx, beep, noise, pop, thud, smash, cheer, fanfare, sad, burp, music, wireMute, fit, show, gate, toast, share, best, rr, shade, particles };
+  return { art, backdrop, record, stopMusic, confetti, submit, openBoard, playerId, GAME_NAMES, $, store, REDUCED, ctx, beep, noise, pop, thud, smash, cheer, fanfare, sad, burp, music, wireMute, fit, show, gate, toast, share, best, rr, shade, particles };
 })();
