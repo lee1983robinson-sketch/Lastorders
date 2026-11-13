@@ -189,7 +189,12 @@ window.PUB = (() => {
   let flushing = false;
   async function flush() {
     if (flushing) return; flushing = true;
-    try { let q = JSON.parse(store.get("lbQueue") || "[]");
+    try {
+      if (store.get("lbNamePending") === "1" && store.get("lbName")) {
+        try { const j = await api("/api/name", { id: playerId(), name: store.get("lbName") }); store.set("lbName", j.name); store.set("lbNamePending", "0"); }
+        catch (e) { if (e.status === 400 || e.status === 409) { store.set("lbName", ""); store.set("lbNamePending", "0"); store.set("nameAsked", "0"); } }
+      }
+      let q = JSON.parse(store.get("lbQueue") || "[]");
       while (q.length) { const it = q[0]; try { const j = await api("/api/score", { game: it.game, score: it.score, id: playerId(), name: store.get("lbName") || undefined }); if (j.name) store.set("lbName", j.name); note(j, it.game); } catch (e) { if (e.status === 400) {} else break; } q.shift(); store.set("lbQueue", JSON.stringify(q)); q = JSON.parse(store.get("lbQueue") || "[]"); }
     } catch (e) {} flushing = false;
   }
@@ -212,6 +217,12 @@ window.PUB = (() => {
 .lb-msg{font-size:14px;color:#B9B6D9;text-align:center;padding:14px 4px}.lb-you{font-size:13px;color:#B9B6D9;text-align:center}
 .lb-name{display:flex;gap:6px}.lb-name button{min-height:44px;border-radius:12px;border:0;background:#FFB627;color:#2A1400;font:400 15px Bungee,Impact,sans-serif;padding:0 14px;cursor:pointer;white-space:nowrap}
 .lb-err{font-size:13px;color:#FF7A8E;min-height:1em}
+.lb-as{font-size:13px;color:#B9B6D9;text-align:center}.lb-as b{color:#FFF6E0}.lb-as button{border:0;background:none;color:#FFB627;font:800 13px Inter,sans-serif;text-decoration:underline;cursor:pointer;padding:6px 2px}
+.nm-box{text-align:center;gap:12px;padding:22px 18px;border-color:#FFB627;animation:nmIn .45s cubic-bezier(.2,1.4,.4,1)}.nm-emoji{font-size:44px;line-height:1}
+.nm-h{margin:0;font:400 21px/1.15 Bungee,Impact,sans-serif;color:#FFB627}.nm-p{margin:0;font-size:14px;line-height:1.45;color:#B9B6D9}
+.nm-box input{text-align:center;font-size:18px;min-height:52px}.nm-go{min-height:52px;border-radius:14px;border:0;background:#FFB627;color:#2A1400;font:400 19px Bungee,Impact,sans-serif;cursor:pointer;box-shadow:0 4px 0 #A86A00}.nm-go:disabled{opacity:.6}
+.nm-later{border:0;background:none;color:#8F8CB8;font:700 13px Inter,sans-serif;cursor:pointer;padding:6px}
+@keyframes nmIn{from{transform:translateY(24px) scale(.94);opacity:0}to{transform:none;opacity:1}}
 .lb-note{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;transition:.35s;z-index:90;background:#12153Aee;border:1px solid #FFB627;border-radius:14px;padding:10px 12px;font:600 13px Inter,sans-serif;color:#F4F1FF;width:max-content;max-width:calc(100% - 32px);text-align:center}
 .lb-note.on{opacity:1;transform:translate(-50%,0)}.lb-note b{color:#FFB627}.lb-note button{margin-left:6px;border:0;border-radius:8px;background:#FFB627;color:#2A1400;font:800 12px Inter,sans-serif;padding:6px 8px;cursor:pointer}
 .lb-btn{background:#1C2150!important;color:#F4F1FF!important}`;
@@ -224,7 +235,8 @@ window.PUB = (() => {
       <label for="lbGame" style="position:absolute;left:-9999px">Game</label><select id="lbGame">${Object.entries(GAME_NAMES).map(([k, v]) => `<option value="${k}" ${k === game ? "selected" : ""}>${v}</option>`).join("")}</select>
       <div class="lb-tabs" role="tablist"><button type="button" role="tab" data-p="today" class="on">Today</button><button type="button" role="tab" data-p="all">All time</button></div>
       <ol class="lb-list" id="lbList"></ol><div class="lb-you" id="lbYou"></div>
-      <div class="lb-name"><label for="lbNick" style="position:absolute;left:-9999px">Your nickname</label><input id="lbNick" maxlength="16" placeholder="Your nickname" autocomplete="nickname" value="${(store.get("lbName") || "").replace(/"/g, "")}"><button type="button" id="lbSave">SAVE</button></div><div class="lb-err" id="lbErr" aria-live="polite"></div></div>`;
+      <div class="lb-as" id="lbAs" ${realName() ? "" : "hidden"}>Playing as <b>${esc(realName() || "")}</b> · <button type="button" id="lbChange">Change name</button></div>
+      <div class="lb-name" id="lbNameRow" ${realName() ? "hidden" : ""}><label for="lbNick" style="position:absolute;left:-9999px">Your nickname</label><input id="lbNick" maxlength="16" placeholder="Your nickname" autocomplete="nickname" value="${(realName() || "").replace(/"/g, "")}"><button type="button" id="lbSave">SAVE</button></div><div class="lb-err" id="lbErr" aria-live="polite"></div></div>`;
     document.body.appendChild(w);
     const close = () => w.remove(); w.addEventListener("click", (e) => { if (e.target === w) close(); }); w.querySelector(".lb-x").addEventListener("click", close);
     const unit = () => UNITS[game] || "";
@@ -237,10 +249,46 @@ window.PUB = (() => {
     }
     w.querySelector("#lbGame").addEventListener("change", (e) => { game = e.target.value; load(); });
     w.querySelectorAll(".lb-tabs button").forEach((b) => b.addEventListener("click", () => { period = b.dataset.p; w.querySelectorAll(".lb-tabs button").forEach((x) => x.classList.toggle("on", x === b)); load(); }));
+    w.querySelector("#lbChange").addEventListener("click", () => { w.querySelector("#lbAs").hidden = true; w.querySelector("#lbNameRow").hidden = false; w.querySelector("#lbNick").focus(); });
     w.querySelector("#lbSave").addEventListener("click", async () => { const n = w.querySelector("#lbNick").value.trim(), E = w.querySelector("#lbErr"); E.style.color = "#B9B6D9"; E.textContent = "Saving…";
-      try { const j = await api("/api/name", { id: playerId(), name: n }); store.set("lbName", j.name); E.style.color = "#5FE3B0"; E.textContent = "Saved. You're " + j.name + " now."; load(); } catch (e) { E.style.color = "#FF7A8E"; E.textContent = e.message; } });
+      try { const j = await api("/api/name", { id: playerId(), name: n }); store.set("lbName", j.name); store.set("lbNamePending", "0"); store.set("nameAsked", "1"); E.style.color = "#5FE3B0"; E.textContent = "Saved. You're " + j.name + " now."; const as = w.querySelector("#lbAs"); as.querySelector("b").textContent = j.name; as.hidden = false; w.querySelector("#lbNameRow").hidden = true; load(); } catch (e) { E.style.color = "#FF7A8E"; E.textContent = e.message; } });
     load();
   }
+  // a "Punter 1234" name is the scoreboard's placeholder, not one the player chose
+  const realName = () => { const n = store.get("lbName") || ""; return n && !/^Punter \d+$/.test(n) ? n : ""; };
+  function askName() {
+    if (realName() || store.get("nameAsked") === "1" || store.get("lo18") !== "1" || document.getElementById("nameWrap") || document.getElementById("lbWrap")) return;
+    if (!document.getElementById("lbcss")) { const st = document.createElement("style"); st.id = "lbcss"; st.textContent = LBCSS; document.head.appendChild(st); }
+    const w = document.createElement("div"); w.className = "lb-wrap"; w.id = "nameWrap"; w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", "Pick a nickname");
+    w.innerHTML = `<div class="lb-box nm-box"><div class="nm-emoji" aria-hidden="true">🍺</div><h3 class="nm-h">WHAT DO THEY CALL YOU DOWN THE PUB?</h3>
+      <p class="nm-p">Pick a nickname for the leaderboards so your mates can see who's top of the pub. You only do this once.</p>
+      <label for="nmIn" style="position:absolute;left:-9999px">Nickname</label><input id="nmIn" maxlength="16" placeholder="e.g. Robbo" autocomplete="nickname">
+      <button type="button" class="nm-go" id="nmGo">LET'S GO</button><div class="lb-err" id="nmErr" aria-live="polite"></div>
+      <button type="button" class="nm-later" id="nmLater">Maybe later</button></div>`;
+    document.body.appendChild(w); setTimeout(() => { try { w.querySelector("#nmIn").focus(); } catch (e) {} }, 250);
+    const close = () => { store.set("nameAsked", "1"); w.remove(); };
+    w.querySelector("#nmLater").addEventListener("click", close);
+    const go = async () => {
+      const n = w.querySelector("#nmIn").value.replace(/\s+/g, " ").trim(), E = w.querySelector("#nmErr");
+      if (n.length < 2) { E.style.color = "#FF7A8E"; E.textContent = "At least 2 letters, go on."; return; }
+      E.style.color = "#B9B6D9"; E.textContent = "Saving…"; w.querySelector("#nmGo").disabled = true;
+      try {
+        // the free scoreboard can be asleep: wait 8 seconds at most, then keep the name and send it later
+        const j = await Promise.race([api("/api/name", { id: playerId(), name: n }), new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error("slow"), { slow: true })), 8000))]);
+        store.set("lbName", j.name); store.set("lbNamePending", "0"); close(); toastName(j.name);
+      } catch (e) {
+        if (e.status === 400 || e.status === 409) { E.style.color = "#FF7A8E"; E.textContent = e.message; w.querySelector("#nmGo").disabled = false; return; }
+        store.set("lbName", n); store.set("lbNamePending", "1"); close(); toastName(n);
+      }
+    };
+    w.querySelector("#nmGo").addEventListener("click", go); w.querySelector("#nmIn").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+  }
+  function toastName(n) { const el = document.createElement("div"); el.className = "lb-note"; el.innerHTML = `Cheers, <b>${esc(n)}</b>. Good luck tonight! 🍻`; document.body.appendChild(el); setTimeout(() => el.classList.add("on"), 20); setTimeout(() => { el.classList.remove("on"); setTimeout(() => el.remove(), 400); }, 3500); }
+  addEventListener("DOMContentLoaded", () => {
+    setTimeout(askName, 600);
+    // straight after someone says yes to the 18+ question
+    document.addEventListener("click", (e) => { if (e.target && e.target.id === "yes") setTimeout(askName, 450); });
+  });
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   document.addEventListener("click", (e) => { const el = e.target.closest && e.target.closest("[data-lb]"); if (!el) return; e.preventDefault(); openBoard(el.dataset.lb); });
   addEventListener("load", () => setTimeout(flush, 1500));
