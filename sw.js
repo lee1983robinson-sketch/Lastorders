@@ -1,5 +1,5 @@
 // Last Orders: works offline once loaded. Bump VERSION on every release.
-const VERSION = "lastorders-3.1";
+const VERSION = "lastorders-3.3";
 const FILES = ["/", "/index.html", "/common.css", "/common.js", "/lab-badge.svg", "/lab-logo.png", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/vendor/three.module.min.js", "/run3d.js", "/quiz-data.js", "/flying-pint.html", "/run.html", "/run-lite.html", "/darts.html", "/pop.html", "/pop.js", "/merge.html", "/merge.js", "/crush.html", "/crush.js", "/barman.html", "/barman.js", "/stack.html", "/stack.js", "/bowling.html", "/bowling.js", "/pong.html", "/pong.js", "/pool.html", "/pool.js", "/pour.html", "/pour.js", "/sort.html", "/sort.js", "/quiz.html", "/quiz.js", "/cards.html", "/cards.js"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });

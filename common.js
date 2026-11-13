@@ -8,7 +8,7 @@ window.PUB = (() => {
   // ---------- sound ----------
   let AC = null, MASTER = null, MUSIC = null, muted = store.get("loMute") === "1";
   function ctx() {
-    if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); MASTER = AC.createGain(); MASTER.gain.value = muted ? 0 : 1; MASTER.connect(AC.destination); MUSIC = AC.createGain(); MUSIC.gain.value = 0.45; MUSIC.connect(MASTER); }
+    if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); MASTER = AC.createGain(); MASTER.gain.value = muted ? 0 : 1; MASTER.connect(AC.destination); MUSIC = AC.createGain(); MUSIC.gain.value = 0.34; MUSIC.connect(MASTER); }
     if (AC.state === "suspended") AC.resume(); return AC;
   }
   function beep(f1, f2, dur, type = "square", vol = 0.06, delay = 0) {
@@ -38,10 +38,19 @@ window.PUB = (() => {
   let musicTimer = null;
   function music(chords, tune, bpm = 132) {
     try { ctx(); if (musicTimer) return; const N = (n) => 440 * Math.pow(2, (n - 69) / 12), STEP = 60 / bpm / 2; let step = 0, next = AC.currentTime + 0.05;
-      const note = (f, at, dur, type, vol) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + dur); o.connect(g).connect(MUSIC); o.start(at); o.stop(at + dur + 0.02); };
+      // Every game keeps its own chord progression and melody, with a light
+      // original arcade rhythm underneath. All sounds are synthesised locally:
+      // no copyrighted recordings, downloads or extra assets are required.
+      const page = (location.pathname.split("/").pop() || "home").replace(/\.html?$/i, "");
+      const timbre = ({ "flying-pint": "sine", run: "triangle", "run-lite": "triangle", darts: "square", pop: "sine", merge: "triangle", crush: "square", barman: "sawtooth", stack: "triangle", bowling: "sine", pong: "square", pool: "triangle", pour: "sine", sort: "triangle", quiz: "sine", cards: "triangle" })[page] || "triangle";
+      const note = (f, at, dur, type, vol, dest = MUSIC) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + dur); o.connect(g).connect(dest); o.start(at); o.stop(at + dur + 0.02); };
+      const kick = (at) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.setValueAtTime(115, at); o.frequency.exponentialRampToValueAtTime(42, at + .13); g.gain.setValueAtTime(.0001, at); g.gain.exponentialRampToValueAtTime(.13, at + .008); g.gain.exponentialRampToValueAtTime(.0001, at + .15); o.connect(g).connect(MUSIC); o.start(at); o.stop(at + .16); };
+      const tick = (at, loud = false) => { const o = AC.createOscillator(), g = AC.createGain(), f = AC.createBiquadFilter(); o.type = "square"; o.frequency.value = loud ? 1750 : 2350; f.type = "highpass"; f.frequency.value = 1300; g.gain.setValueAtTime(loud ? .025 : .010, at); g.gain.exponentialRampToValueAtTime(.0001, at + .035); o.connect(f).connect(g).connect(MUSIC); o.start(at); o.stop(at + .04); };
       const sched = () => { while (next < AC.currentTime + 0.25) { const ch = chords[Math.floor(step / 8) % chords.length], b = step % 8;
-        if (b % 4 === 0) note(N(ch[0] - 12), next, STEP * 1.6, "triangle", 0.1); if (b % 4 === 2) note(N(ch[2] - 12), next, STEP * 1.6, "triangle", 0.08);
-        if (b % 2 === 1) for (const c of ch) note(N(c), next, STEP * 0.6, "square", 0.011); const m = tune[step % tune.length]; if (m) note(N(m), next, STEP * 0.9, "triangle", 0.05);
+        if (b % 4 === 0) { note(N(ch[0] - 12), next, STEP * 1.6, "triangle", 0.085); kick(next); }
+        if (b % 4 === 2) { note(N(ch[2] - 12), next, STEP * 1.5, "triangle", 0.065); tick(next, true); }
+        if (b % 2 === 1) { for (const c of ch) note(N(c), next, STEP * 0.6, timbre, 0.009); tick(next, false); }
+        const m = tune[step % tune.length]; if (m) note(N(m), next, STEP * 0.9, timbre, 0.043);
         next += STEP; step++; } };
       sched(); musicTimer = setInterval(sched, 100); } catch (e) {}
   }
@@ -100,7 +109,7 @@ window.PUB = (() => {
     document.querySelectorAll(".pill b, .nums .sc").forEach((b) => { let prev = b.textContent; new MutationObserver(() => { if (b.textContent !== prev) { prev = b.textContent; b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump"); setTimeout(() => b.classList.remove("bump"), 160); } }).observe(b, { childList: true, characterData: true, subtree: true }); });
   });
   document.addEventListener("click", (e) => {
-    const b = e.target.closest && e.target.closest(".btn, .iconbtn, .who, .opp button, .drink"); if (b && !b.disabled) beep(1300, 1000, 0.025, "sine", 0.025);
+    const b = e.target.closest && e.target.closest(".btn, .iconbtn, .who, .opp button, .drink"); if (b && !b.disabled) { beep(1300, 1000, 0.025, "sine", 0.025); if (navigator.vibrate && !REDUCED) navigator.vibrate(8); }
     const a = e.target.closest && e.target.closest("a[href^='/']"); if (a && !e.defaultPrevented && !a.hasAttribute("data-lb") && !e.metaKey && !e.ctrlKey && !REDUCED) { e.preventDefault(); document.body.classList.add("leaving"); setTimeout(() => (location.href = a.href), 160); }
   });
   addEventListener("pageshow", () => document.body && document.body.classList.remove("leaving"));

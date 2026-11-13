@@ -66,3 +66,42 @@ body.leaving { opacity: 0; transition: opacity .16s ease-in; }
 @media (max-height: 640px) { .card { padding: 14px; gap: 9px; } h1 { font-size: 32px; } .btn { min-height: 46px; } .big { font-size: 15px; } }
 @media (prefers-reduced-motion: reduce) { body, .overlay:not([hidden]), .overlay:not([hidden]) .card, .overlay:not([hidden]) .card > * { animation: none !important; } }
 .overlay .card { max-height: 100%; overflow-y: auto; pointer-events: auto; box-sizing: border-box; }
+
+
+/* ---------- Last Orders 3.2: premium arcade finish ---------- */
+:root {
+  --night: #070916;
+  --panel: rgba(13, 17, 43, .96);
+  --line: rgba(117, 128, 220, .34);
+  --tile: rgba(29, 35, 82, .92);
+  --glow-gold: 0 0 12px rgba(255,182,39,.24), 0 0 34px rgba(255,182,39,.10);
+  --glow-pink: 0 0 18px rgba(255,61,127,.18);
+}
+html { background: var(--night); }
+body { isolation: isolate; background-image: radial-gradient(ellipse at 50% -12%, rgba(92,49,139,.30), transparent 58%), radial-gradient(ellipse at 100% 100%, rgba(22,87,125,.12), transparent 48%); }
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .22; background-image: linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px); background-size: 34px 34px; mask-image: linear-gradient(to bottom, black, transparent 88%); }
+.screen { isolation: isolate; }
+.pill { background: linear-gradient(145deg, rgba(18,23,61,.96), rgba(7,10,31,.94)); border-color: rgba(133,145,245,.32); box-shadow: 0 6px 22px rgba(0,0,0,.22), inset 0 1px rgba(255,255,255,.06); }
+.pill b { text-shadow: 0 0 16px rgba(255,246,224,.18); }
+.iconbtn { background: linear-gradient(145deg, rgba(34,40,91,.96), rgba(12,16,48,.96)); border-color: rgba(143,153,255,.42); box-shadow: 0 7px 20px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.09); }
+.iconbtn:hover { border-color: var(--lager); box-shadow: var(--glow-gold); }
+.card { background: linear-gradient(155deg, rgba(22,27,68,.98), rgba(8,11,34,.98)); border: 1px solid rgba(132,145,245,.48); box-shadow: 0 24px 80px rgba(0,0,0,.62), 0 0 0 5px rgba(110,120,230,.055), inset 0 1px rgba(255,255,255,.09); }
+h1 { text-shadow: 0 0 24px rgba(255,182,39,.32), 0 3px 0 #713500, 0 8px 24px rgba(0,0,0,.45); }
+h2 { text-shadow: 0 0 20px rgba(255,61,127,.22); }
+.btn { position: relative; overflow: hidden; background: linear-gradient(180deg, #ffd36b 0%, #ffb627 52%, #e99612 100%); box-shadow: 0 5px 0 #9d5b00, 0 9px 24px rgba(255,166,24,.17), inset 0 1px rgba(255,255,255,.55); }
+.btn::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,.22) 48%, transparent 70%); transform: translateX(-130%); transition: transform .55s ease; }
+.btn:hover::after { transform: translateX(130%); }
+.btn.ghost { background: linear-gradient(180deg, #30386f, #171d4c); box-shadow: 0 4px 0 #080b29, inset 0 1px rgba(255,255,255,.10); }
+.stat { background: linear-gradient(145deg, rgba(39,45,103,.95), rgba(17,21,58,.95)); border: 1px solid rgba(133,145,245,.18); box-shadow: inset 0 1px rgba(255,255,255,.045); }
+.toast { filter: drop-shadow(0 5px 14px rgba(0,0,0,.6)); }
+/* Home-screen cards inherit each game's own accent colour. */
+a.game { background: linear-gradient(155deg, rgba(31,37,88,.98), rgba(12,15,43,.98)); border-color: rgba(132,145,245,.24); box-shadow: 0 9px 24px rgba(0,0,0,.20), inset 0 1px rgba(255,255,255,.055); }
+a.game .art { position: relative; border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent); box-shadow: inset 0 0 28px color-mix(in srgb, var(--accent) 13%, transparent), 0 6px 18px rgba(0,0,0,.20); }
+a.game .art::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(145deg, rgba(255,255,255,.13), transparent 42%, rgba(0,0,0,.12)); }
+a.game .art svg { filter: drop-shadow(0 4px 7px rgba(0,0,0,.34)); transition: transform .22s cubic-bezier(.2,.8,.2,1), filter .22s; }
+a.game:hover .art svg, a.game:focus-visible .art svg { transform: scale(1.09) rotate(-2deg); filter: drop-shadow(0 7px 12px rgba(0,0,0,.42)); }
+a.game:hover, a.game:focus-visible { border-color: var(--accent, var(--lager)); box-shadow: 0 12px 30px rgba(0,0,0,.28), 0 0 22px color-mix(in srgb, var(--accent) 18%, transparent); }
+a.game b { text-shadow: 0 2px 12px rgba(0,0,0,.3); }
+.new { box-shadow: 0 3px 12px rgba(255,61,127,.24); }
+@media (hover: none) { a.game:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .btn::after { display: none; } a.game .art svg { transition: none; } }
