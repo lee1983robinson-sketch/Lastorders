@@ -114,3 +114,6 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 
 ## 4.4: share previews
 - New og.png (17 games) and a share image for every game in img/share. Links on Facebook and WhatsApp now show the right game.
+
+## 4.5: competition link
+- win.html is a share link for the £50 Flying Pint weekend. Facebook shows the WIN £50 picture and tapping opens Flying Pint.
