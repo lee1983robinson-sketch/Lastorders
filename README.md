@@ -111,3 +111,6 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - .well-known/assetlinks.json links the Android app (com.onrender.lastorders.twa) to the site, so it opens full screen.
 - privacy.html is the privacy policy for the store listing, linked from Profile.
 - The manifest has an id.
+
+## 4.4: share previews
+- New og.png (17 games) and a share image for every game in img/share. Links on Facebook and WhatsApp now show the right game.
