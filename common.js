@@ -311,5 +311,7 @@ window.PUB = (() => {
       get count() { return list.length; },
     };
   }
-  return { art, backdrop, record, stopMusic, confetti, submit, openBoard, playerId, GAME_NAMES, $, store, REDUCED, ctx, beep, noise, pop, thud, smash, cheer, fanfare, sad, burp, music, wireMute, fit, show, gate, toast, share, best, rr, shade, particles };
+  // for games with their own soundtrack: the music bus (follows the mute button) and the shared noise buffer
+  const bus = () => { ctx(); return { ac: AC, music: MUSIC, master: MASTER, noise: NOISE }; };
+  return { bus, art, backdrop, record, stopMusic, confetti, submit, openBoard, playerId, GAME_NAMES, $, store, REDUCED, ctx, beep, noise, pop, thud, smash, cheer, fanfare, sad, burp, music, wireMute, fit, show, gate, toast, share, best, rr, shade, particles };
 })();

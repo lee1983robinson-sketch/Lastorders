@@ -82,3 +82,11 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - Club Fruitie (slots.html, leaderboard key "slots"): old-school pub fruitie. Numbers on the win line climb a 30-step trail; a full trail puts you on the 14-box feature board, where a chasing light lands on cash (3x to 20x), the cash ladder (gamble up to 150x), a streak (5 free spins, wins x2), 6 nudges, go again or the 200x jackpot. Plus random holds and nudges, Hi-Lo gamble and the pick-a-pint bonus. Simulated: board about every 23 spins, ~85% return with holds and nudges.
 - Golden Pints (goldpints.html, key "mega"): modern 5-reel, 20-line slot with real drink photos, the Cool Pint wild (reels 2-4), Bonus Bell free spins (10/15/20, wins x3, retrigger), anticipation slow-down, payline display, big/mega/epic win celebrations, auto (25) and turbo, a level bar with bonus credits and a once-a-day bonus wheel. Simulated: ~29% of spins win, free spins about 1 in 220, ~87% return.
 - Both share one free-play credit balance and the 500-credit lock-in top-up.
+
+## Version 4.0: Bar Crush redesign
+
+- New look: real drink and food pieces (beer, wine, blue and purple cocktails, whisky, burger, chips) cut from the concept art, glass HUD panels, neon board frame, star progress bar.
+- Specials: 4 in a line makes a Rocket (clears its row or column), 5 makes a Wild (clears every drink of the type it's swapped with), a T or L makes a Bomb (3x3). Swapping two specials together: rocket+rocket crossfire, rocket+bomb triple lines, bomb+bomb 5x5, wild+rocket or wild+bomb turns every drink of that type into one, wild+wild clears the board.
+- Power-ups (start with 3 each, earn more by winning): Shuffle, Bomb (tap a drink), Rocket (tap a drink; tap the button again to switch row/column), Freeze (next move is free).
+- Levels: target scales with level and with how many drink types are on the board (calibrated with a bot), three stars, level select, best score per level, The Big Round (every fifth level: 28 moves, points x2).
+- Original "Lock-In House" soundtrack (115 BPM, generated in code) with its own music on/off button, separate from the sound button.
