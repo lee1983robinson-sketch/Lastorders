@@ -97,3 +97,12 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - A bottom navigation bar on phones, and a floating bar on desktop. Search works too.
 - Every game has its own artwork in img/games, cut from real gameplay as small WebP files.
 - Nothing is reset: every existing score key, nickname and leaderboard is kept. Play counts start from the first visit on 4.1.
+
+## 4.2: app feel
+- The hub is laid out like an app: square launcher tiles, three across on phones, with the name and your best score under each.
+- Press and hold a game (or right-click it on desktop) for a preview sheet with artwork, description, your best, times played, Play, Favourite and Leaderboard.
+- Games zoom open from their tile. Taps give a small vibration on Android.
+- Material-style bottom tabs (Home, Games, Ranks, Awards, Profile). Each tab remembers where you'd scrolled to, and tapping the tab you're on goes back to the top.
+- Back from any tab goes to Home, then out of the app.
+- The top bar stays clear until you scroll; on other tabs the big title moves up into the bar.
+- No text selection, tap flash or page bounce. A "Get the app" banner appears when Chrome allows installing. The small print has moved to Profile.

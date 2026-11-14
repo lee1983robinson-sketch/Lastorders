@@ -6,27 +6,27 @@
   "scope": "/",
   "display": "fullscreen",
   "orientation": "portrait",
-  "background_color": "#0A0E24",
-  "theme_color": "#0A0E24",
+  "background_color": "#070A1F",
+  "theme_color": "#070A1F",
   "categories": [
     "games"
   ],
   "shortcuts": [
     {
-      "name": "Pub Quiz",
-      "url": "/quiz.html"
+      "name": "Golden Pints",
+      "url": "/goldpints.html"
     },
     {
-      "name": "Snack Merge",
-      "url": "/merge.html"
+      "name": "Bar Crush",
+      "url": "/crush.html"
     },
     {
-      "name": "Pool",
-      "url": "/pool.html"
+      "name": "Flying Pint",
+      "url": "/flying-pint.html"
     },
     {
-      "name": "Darts",
-      "url": "/darts.html"
+      "name": "Leaderboards",
+      "url": "/#boards"
     }
   ],
   "icons": [

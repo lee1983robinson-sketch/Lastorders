@@ -25,11 +25,12 @@
 <body class="hub">
 <header class="bar" id="topbar">
   <a class="brand" href="#home" aria-label="Robbo's Game Lab home"><img src="/lab-badge.svg" width="30" height="30" alt=""><span><b>ROBBO'S GAME LAB</b><small>Last Orders</small></span></a>
+  <span class="bartitle" id="barTitle" aria-hidden="true"></span>
   <button class="ibtn" id="searchBtn" type="button" aria-label="Search games"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
   <a class="avatar" id="avatarBtn" href="#me" aria-label="Your profile"><span id="avatarTxt">?</span></a>
 </header>
 <div class="searchbox" id="searchbox" hidden>
-  <input id="q" type="search" placeholder="Search 17 games" autocomplete="off" aria-label="Search games">
+  <input id="q" type="search" placeholder="Search games" autocomplete="off" aria-label="Search games">
   <div class="sgrid" id="sresults"></div>
 </div>
 
@@ -37,18 +38,13 @@
   <!-- HOME -->
   <section class="view" id="v-home" aria-label="Home">
     <div class="hello"><h1 id="hello">Evening</h1><div class="chips" id="quick"></div></div>
+    <div class="getapp" id="getApp" hidden><img src="/icon-192.png" alt="" width="44" height="44"><div><b>Get the Last Orders app</b><span>Full screen, quicker to open, works offline.</span></div><button class="getgo" id="getAppGo" type="button">Install</button><button class="getx" id="getAppX" type="button" aria-label="Not now"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="hero" id="hero" aria-roledescription="carousel"></div>
     <div class="dots" id="heroDots"></div>
     <section class="block" id="recentBlock" hidden><div class="bh"><h2>Recently played</h2></div><div class="hrow" id="rowRecent"></div></section>
     <section class="block"><div class="bh"><h2>Daily challenges</h2><span class="sub" id="dcSub"></span></div><div class="daily" id="daily"></div></section>
     <section class="block" id="favBlock" hidden><div class="bh"><h2>Your favourites</h2></div><div class="hrow" id="rowFav"></div></section>
     <div id="catRows"></div>
-    <footer class="foot">
-      <button class="btn" id="install" type="button" hidden>Add Last Orders to your phone</button>
-      <p class="fine" id="installTip">Tip: in Chrome tap the three dots, then <b>Add to Home screen</b>, and it works like an app.</p>
-      <p class="fine">18+ only. Know your limits: drinkaware.co.uk · The fruit machines are free play only: credits aren't money.</p>
-      <p class="fine">© 2026 Robbo's Game Lab. All rights reserved.</p>
-    </footer>
   </section>
 
   <!-- GAMES -->
@@ -81,14 +77,20 @@
     <p class="fine" id="meSince"></p>
     <section class="block"><div class="bh"><h2>Personal bests</h2></div><div class="bests" id="meBests"></div></section>
     <section class="block" id="meFavBlock"><div class="bh"><h2>Favourites</h2></div><div class="hrow" id="meFav"></div></section>
+    <footer class="foot">
+      <button class="btn" id="install" type="button" hidden>Add Last Orders to your phone</button>
+      <p class="fine" id="installTip">Tip: in Chrome tap the three dots, then <b>Add to Home screen</b>, and it works like an app.</p>
+      <p class="fine">18+ only. Know your limits: drinkaware.co.uk · The fruit machines are free play only: credits aren't money.</p>
+      <p class="fine">© 2026 Robbo's Game Lab. All rights reserved.</p>
+    </footer>
   </section>
 </main>
 
 <nav class="tabs" id="tabs" aria-label="Main">
   <a href="#home" data-v="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg><span>Home</span></a>
   <a href="#games" data-v="games"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="11" rx="5"/><path d="M8 10.5v4M6 12.5h4"/><circle cx="15.5" cy="11.5" r="1"/><circle cx="17.5" cy="13.5" r="1"/></svg><span>Games</span></a>
-  <a href="#boards" data-v="boards"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg><span>Leaderboards</span></a>
-  <a href="#awards" data-v="awards"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/></svg><span>Achievements</span></a>
+  <a href="#boards" data-v="boards"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg><span>Ranks</span></a>
+  <a href="#awards" data-v="awards"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/></svg><span>Awards</span></a>
   <a href="#me" data-v="me"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Profile</span></a>
 </nav>
 
@@ -101,6 +103,15 @@
     <div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div>
 </div>
 <div class="achtoast" id="achToast" aria-live="polite"></div>
+<div class="sheet peek" id="peek" hidden role="dialog" aria-label="Game details"><div class="sheetbox">
+  <span class="grab" aria-hidden="true"></span>
+  <div class="pkart"><img id="pkArt" alt="" width="1024" height="576"><button class="getx" id="pkClose" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="pkhead"><div><small id="pkCat"></small><h2 id="pkName"></h2></div><button class="fav pkfav" id="pkFav" type="button" aria-label="Favourite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-8.7C1.4 8.4 3.3 5 6.6 5c2 0 3.3 1.1 4 2.3h2.8C14.1 6.1 15.4 5 17.4 5c3.3 0 5.2 3.4 3.8 6.3C19 15.6 12 20 12 20z"/></svg></button></div>
+  <p id="pkText"></p>
+  <div class="pkstats" id="pkStats"></div>
+  <div class="pkbtns"><a class="play big" id="pkPlay" href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Play</a><a class="ghostbtn" id="pkBoard" href="#boards">Leaderboard</a></div>
+</div></div>
+<div class="zoom" id="zoom" hidden></div>
 <script src="/common.js"></script>
 <script src="/hub.js"></script>
 </body>

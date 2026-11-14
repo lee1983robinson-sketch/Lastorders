@@ -38,16 +38,18 @@
   // ---------- favourites ----------
   let favs = J("favs", []);
   const isFav = (id) => favs.includes(id);
-  function toggleFav(id) { favs = isFav(id) ? favs.filter((x) => x !== id) : [...favs, id]; store.set("favs", JSON.stringify(favs)); document.querySelectorAll(`.fav[data-id="${id}"]`).forEach((b) => { b.classList.toggle("on", isFav(id)); b.setAttribute("aria-pressed", isFav(id)); }); renderFavRows(); }
-  document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest(".fav"); if (!b) return; e.preventDefault(); e.stopPropagation(); toggleFav(b.dataset.id); }, true);   // capture phase, so the heart never opens the game
+  function toggleFav(id) { favs = isFav(id) ? favs.filter((x) => x !== id) : [...favs, id]; store.set("favs", JSON.stringify(favs)); document.querySelectorAll(`.fav[data-id="${id}"]`).forEach((b) => { b.classList.toggle("on", isFav(id)); b.setAttribute("aria-pressed", isFav(id)); }); route(true); }
+  document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest(".fav"); if (!b) return; e.preventDefault(); e.stopPropagation(); toggleFav(b.dataset.id); buzz(10); }, true);   // capture phase, so the heart never opens the game
 
   const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>';
   const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-8.7C1.4 8.4 3.3 5 6.6 5c2 0 3.3 1.1 4 2.3h2.8C14.1 6.1 15.4 5 17.4 5c3.3 0 5.2 3.4 3.8 6.3C19 15.6 12 20 12 20z"/></svg>';
-  function card(g, lazy = true) {
+  const CAT_NAME = { arcade: "Arcade", pub: "Pub Game", puzzles: "Puzzle", slots: "Slots" };
+  // App-style tile: square artwork, name, then your best (gold) or the category (grey). Press and hold for details.
+  function card(g) {
     const st = g.best();
-    return `<a class="gc" href="${href(g)}"><div class="art"><img src="${art(g)}" alt="" width="640" height="480" ${lazy ? 'loading="lazy"' : ""} decoding="async">
-      <button class="fav ${isFav(g.id) ? "on" : ""}" type="button" data-id="${g.id}" aria-label="Favourite ${esc(g.name)}" aria-pressed="${isFav(g.id)}">${HEART}</button>${g.isNew ? '<span class="newb">NEW</span>' : ""}<span class="go">${PLAY}</span></div>
-      <div class="meta"><b>${esc(g.name)}</b><span>${esc(g.tag)}</span><i class="${st ? "" : "dim"}">${st ? esc(st) : "Not played yet"}</i></div></a>`;
+    return `<a class="gc" href="${href(g)}" data-id="${g.id}" draggable="false"><div class="art"><img src="${art(g)}" alt="" width="640" height="480" loading="lazy" decoding="async" draggable="false">${g.isNew ? '<span class="newb">NEW</span>' : ""}${isFav(g.id) ? `<span class="fv">${HEART}</span>` : ""}
+      <button class="info" type="button" data-peek="${g.id}" aria-label="About ${esc(g.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></button></div>
+      <b class="nm">${esc(g.name)}</b><small class="${st ? "gold" : ""}">${st ? esc(st) : CAT_NAME[g.cat]}</small></a>`;
   }
 
   // ---------- player data ----------
@@ -230,28 +232,100 @@
     $("sresults").innerHTML = list.length ? list.map((g) => card(g)).join("") : `<p class="empty">Nothing called "${esc(q)}" behind the bar.</p>`;
   }
 
-  // ---------- routing ----------
+  // ---------- routing (each tab keeps its own scroll position, like an app) ----------
   let view = "home";
-  function route() {
+  try { history.scrollRestoration = "manual"; } catch (e) {}
+  const scrollMem = {}, TITLES = { home: "", games: "Games", boards: "Leaderboards", awards: "Achievements", me: "Profile" };
+  function route(keep) {
     const [v, arg] = (location.hash.replace("#", "") || "home").split("/"), name = ["home", "games", "boards", "awards", "me"].includes(v) ? v : "home";
-    const changed = name !== view; view = name;
+    const changed = name !== view, y = scrollY;
+    view = name;
     document.querySelectorAll(".view").forEach((s) => { const on = s.id === "v-" + name; if (on && s.hidden) { s.hidden = false; s.style.animation = "none"; void s.offsetWidth; s.style.animation = ""; } else if (!on) s.hidden = true; });
     document.querySelectorAll(".tabs a").forEach((a) => { const on = a.dataset.v === name; a.classList.toggle("on", on); if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
-    $("searchbox").hidden = true;
+    $("searchbox").hidden = true; $("barTitle").textContent = TITLES[name];
     if (name === "home") renderHome(); else if (name === "games") renderGames(arg || "all"); else if (name === "boards") renderBoardsShell(arg); else if (name === "awards") renderAwards(); else renderMe();
-    if (changed) scrollTo({ top: 0 });
+    if (changed) scrollTo(0, arg ? 0 : scrollMem[name] || 0); else if (keep === true) scrollTo(0, y);
+    onScroll();
   }
-  addEventListener("hashchange", route);
+  addEventListener("hashchange", () => route());
+  // Tabs: Home is the root. Back from any tab goes Home, then out of the app, rather than through every tab you visited.
+  document.querySelectorAll(".tabs a").forEach((a) => a.addEventListener("click", (e) => {
+    e.preventDefault(); buzz(8);
+    const to = a.dataset.v;
+    if (to === view) { scrollTo({ top: 0, behavior: "smooth" }); return; }           // tap the tab you're on: back to the top
+    if (to === "home") { if (history.state && history.state.tab) { history.back(); return; } history.replaceState(null, "", location.pathname); route(); return; }
+    if (view === "home") history.pushState({ tab: 1 }, "", "#" + to); else history.replaceState({ tab: 1 }, "", "#" + to);
+    route();
+  }));
+  // The top bar: brand on Home; on other tabs the big title moves up into the bar as you scroll.
+  function onScroll() { const y = scrollY; if (!document.getElementById("v-" + view).hidden) scrollMem[view] = y; $("topbar").classList.toggle("scrolled", y > 4); $("topbar").classList.toggle("titled", view !== "home" && y > 34); }
+  addEventListener("scroll", onScroll, { passive: true });
+
+  // ---------- feel: haptics, press-and-hold preview, zoom into the game ----------
+  function buzz(ms) { try { if (navigator.vibrate && !PUB.REDUCED) navigator.vibrate(ms); } catch (e) {} }
+  let peekId = null;
+  function peek(id) {
+    const g = BY[id]; if (!g) return; peekId = id; buzz(14);
+    const st = g.best(), n = plays()[id] || 0;
+    $("pkArt").src = heroArt(g); $("pkName").textContent = g.name; $("pkCat").textContent = CAT_NAME[g.cat] + (g.isNew ? " · New" : "");
+    $("pkText").textContent = g.hero || g.tag;
+    $("pkStats").innerHTML = `<div><b>${st ? esc(st) : "None yet"}</b><span>Your best</span></div><div><b>${n ? fmt(n) : "0"}</b><span>Times played</span></div>`;
+    $("pkPlay").href = href(g); $("pkBoard").href = "#boards/" + id;
+    const f = $("pkFav"); f.dataset.id = id; f.classList.toggle("on", isFav(id)); f.setAttribute("aria-pressed", isFav(id));
+    $("peek").hidden = false; document.body.classList.add("locked");
+  }
+  function unpeek() { $("peek").hidden = true; document.body.classList.remove("locked"); peekId = null; }
+  $("peek").addEventListener("click", (e) => { if (e.target === $("peek") || e.target.closest("#pkClose")) unpeek(); });
+  $("pkBoard").addEventListener("click", () => unpeek());
+  // Long press (touch) or right-click (desktop) on a tile opens the preview. The "…" button does the same.
+  let lpT = null, lpX = 0, lpY = 0, lpFired = false;
+  document.addEventListener("pointerdown", (e) => {
+    const t = e.target.closest && e.target.closest(".gc"); if (!t || e.button > 0) return;
+    lpFired = false; lpX = e.clientX; lpY = e.clientY; t.classList.add("press");
+    clearTimeout(lpT); lpT = setTimeout(() => { lpFired = true; t.classList.remove("press"); peek(t.dataset.id); }, 430);
+  }, { passive: true });
+  const lpCancel = () => { clearTimeout(lpT); document.querySelectorAll(".gc.press").forEach((x) => x.classList.remove("press")); };
+  document.addEventListener("pointermove", (e) => { if (Math.hypot(e.clientX - lpX, e.clientY - lpY) > 9) lpCancel(); }, { passive: true });
+  document.addEventListener("pointerup", lpCancel, { passive: true }); document.addEventListener("pointercancel", lpCancel, { passive: true });
+  document.addEventListener("contextmenu", (e) => { const t = e.target.closest && e.target.closest(".gc"); if (!t) return; e.preventDefault(); if (!lpFired) peek(t.dataset.id); });
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest) return;
+    const info = e.target.closest("[data-peek]"); if (info) { e.preventDefault(); e.stopPropagation(); peek(info.dataset.peek); return; }
+    const t = e.target.closest(".gc, #pkPlay, .play, .dc"); if (!t || e.metaKey || e.ctrlKey) return;
+    if (lpFired) { e.preventDefault(); e.stopPropagation(); lpFired = false; return; }   // the long press already opened the preview
+    const url = t.getAttribute("href"); if (!url || url[0] !== "/") return;
+    e.preventDefault(); e.stopPropagation(); buzz(10); launch(t, url);
+  }, true);
+  // Opening a game: its artwork grows to fill the screen, then the game loads underneath.
+  function launch(from, url) {
+    const slide = from.closest(".slide"), img = from.querySelector("img") || (slide && slide.querySelector("img")) || ($("peek").hidden ? null : $("pkArt"));
+    if (PUB.REDUCED || !img) { location.href = url; return; }
+    const r = img.getBoundingClientRect(), z = $("zoom");
+    z.style.backgroundImage = `url("${img.currentSrc || img.src}")`;
+    Object.assign(z.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px", borderRadius: "18px", opacity: "1" });
+    z.hidden = false; void z.offsetWidth; z.classList.add("go");
+    Object.assign(z.style, { left: "0px", top: "0px", width: innerWidth + "px", height: innerHeight + "px", borderRadius: "0px" });
+    setTimeout(() => (location.href = url), 300);
+  }
+  addEventListener("pageshow", () => { const z = $("zoom"); z.hidden = true; z.classList.remove("go"); unpeek(); });
+
+  // ---------- get the app ----------
+  const standalone = matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches || navigator.standalone;
+  function showGetApp() { if (standalone) return; let no = 0; try { no = +localStorage.getItem("getAppNo") || 0; } catch (e) {} if (Date.now() - no < 7 * 864e5) return; $("getApp").hidden = false; }
+  $("getAppX").addEventListener("click", () => { $("getApp").hidden = true; store.set("getAppNo", String(Date.now())); });
 
   // ---------- start up ----------
   logDaily(); checkAch(true); paintAvatar(); route();
-  addEventListener("pageshow", (e) => { if (e.persisted) { logDaily(); checkAch(true); route(); } });   // back from a game: refresh bests
+  if (location.hash && location.hash !== "#home" && !(history.state && history.state.tab)) { const h = location.hash; history.replaceState(null, "", location.pathname); history.pushState({ tab: 1 }, "", h); }   // opened straight on a tab: Back still lands on Home
+  addEventListener("pageshow", (e) => { if (e.persisted) { logDaily(); checkAch(true); route(true); } });   // back from a game: refresh bests
   if (store.get("lo18") !== "1") { $("gate").hidden = false; $("yes").addEventListener("click", () => { store.set("lo18", "1"); $("gate").hidden = true; }); $("no").addEventListener("click", () => { $("gateMsg").hidden = false; }); }
   const splash = $("splash"), playSplash = () => { splash.hidden = false; splash.classList.remove("out"); setTimeout(() => splash.classList.add("out"), 1300); setTimeout(() => (splash.hidden = true), 1850); };
   let seen = false; try { seen = sessionStorage.getItem("labSplash") === "1"; sessionStorage.setItem("labSplash", "1"); } catch (e) {}
   if (!seen) playSplash();
   let deferred = null;
-  addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; $("install").hidden = false; $("installTip").hidden = true; });
-  $("install").addEventListener("click", async () => { if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; $("install").hidden = true; });
-  if (matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches) $("installTip").hidden = true;
+  addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; $("install").hidden = false; $("installTip").hidden = true; showGetApp(); });
+  async function install() { if (!deferred) { $("getApp").hidden = true; return; } deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; $("install").hidden = true; $("getApp").hidden = true; }
+  $("install").addEventListener("click", install); $("getAppGo").addEventListener("click", install);
+  addEventListener("appinstalled", () => { $("getApp").hidden = true; $("install").hidden = true; });
+  if (standalone) { $("installTip").hidden = true; document.documentElement.classList.add("standalone"); }
 })();
