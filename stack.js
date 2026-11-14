@@ -7,7 +7,7 @@
   const FX = particles();
   const KINDS = [
     // sizes follow the real drink photos so what you see is what stacks
-    { n: "pint", w: 44, h: 76, col: "#FFB627" }, { n: "half", w: 40, h: 56, col: "#FFB627" }, { n: "wine", w: 37, h: 76, col: "#9B1B3E" },
+    { n: "pint", w: 44, h: 76, col: "#FFB627" }, { n: "half", w: 40, h: 56, col: "#FFB627" }, { n: "wine", w: 37, h: 64, col: "#9B1B3E" },
     { n: "stout", w: 43, h: 76, col: "#1B0F0B" }, { n: "shot", w: 30, h: 28, col: "#E89A2E" }, { n: "bottle", w: 24, h: 74, col: "#6B3A12" },
   ];
   let state = "menu", stack = [], mover = null, falling = null, score = 0, perfect = 0, t = 0, cam = 0, camT = 0, lean = 0, topple = null;
@@ -56,6 +56,15 @@
     }
 
     const photo = { pint: "lager", half: "lager", stout: "stout", wine: "wine", bottle: "bottle" }[k.n], im = photo && PUB.art("drinks/" + photo);
+    if (im && k.n === "wine") {
+      // the photo has a tall, nearly see-through glass above the wine, which made stacked drinks look like they were floating.
+      // Draw it from just above the wine line and give it a visible rim, so the next drink sits flush on top.
+      const top = Math.round(im.height * 0.155);
+      g.drawImage(im, 0, top, im.width, im.height - top, -w / 2, -h, w, h);
+      g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 1.2;
+      g.beginPath(); g.ellipse(0, -h + 1.5, w * .47, 1.6, 0, 0, Math.PI * 2); g.stroke();
+      g.restore(); return;
+    }
     if (im) { g.drawImage(im, -w / 2, -h, w, h); g.restore(); return; }
 
     if (k.n === "tray") {

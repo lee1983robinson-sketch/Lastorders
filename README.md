@@ -126,3 +126,6 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - Challenge links (?beat=17&from=Lee) show a "Beat 17" banner. Beating it pops "You beat Chris!" and offers to send it back.
 - PROMO in common.js adds the current prize line to shares until its end date. Edit it for the next competition.
 - GoatCounter shows challenge visits under Campaigns as "challenge".
+
+## 4.8: Pint Stacker wine fix
+- The red wine glass is drawn without its nearly invisible empty top and has a rim line, so drinks stack flush on it. Its stacking height is 64 (was 76).
