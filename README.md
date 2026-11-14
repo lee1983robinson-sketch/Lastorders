@@ -90,3 +90,10 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - Power-ups (start with 3 each, earn more by winning): Shuffle, Bomb (tap a drink), Rocket (tap a drink; tap the button again to switch row/column), Freeze (next move is free).
 - Levels: target scales with level and with how many drink types are on the board (calibrated with a bot), three stars, level select, best score per level, The Big Round (every fifth level: 28 moves, points x2).
 - Original "Lock-In House" soundtrack (115 BPM, generated in code) with its own music on/off button, separate from the sound button.
+
+## 4.1: Robbo's Game Lab platform redesign
+- The new home page (index.html, hub.css, hub.js) has a featured carousel, recently played, daily challenges, favourites and category rows.
+- New sections: Games (with filters), Leaderboards (today and all time, with a top-3 podium), Achievements (24, worked out from real scores) and Profile (stats and personal bests).
+- A bottom navigation bar on phones, and a floating bar on desktop. Search works too.
+- Every game has its own artwork in img/games, cut from real gameplay as small WebP files.
+- Nothing is reset: every existing score key, nickname and leaderboard is kept. Play counts start from the first visit on 4.1.

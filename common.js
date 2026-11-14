@@ -129,6 +129,19 @@ window.PUB = (() => {
   }
   // the celebration appears when the game-over card does (or straight away if it is already up)
   function record(prev, v) { recordAt = Date.now(); const over = $("over"); pendingRecord = { prev, v }; if (over && !over.hidden) { showRecord(pendingRecord); pendingRecord = null; } }
+  // ---------- player activity (for the home screen, profile and achievements) ----------
+  const PAGE_GAME = { "flying-pint": "flying", run: "goggles", "run-lite": "goggles", darts: "darts", pop: "pop", merge: "merge", crush: "crush", barman: "barman", stack: "stack",
+    bowling: "bowling", pong: "pong", pool: "pool", pour: "pour", sort: "sort", quiz: "quiz", cards: "cards", slots: "slots", goldpints: "mega" };
+  (function trackPlay() {
+    const page = (location.pathname.split("/").pop() || "").replace(/\.html?$/i, ""), game = PAGE_GAME[page]; if (!game) return;
+    try {
+      const plays = JSON.parse(store.get("statPlays") || "{}"); plays[game] = (plays[game] || 0) + 1; store.set("statPlays", JSON.stringify(plays));
+      const recent = JSON.parse(store.get("statRecent") || "[]").filter((r) => r.g !== game); recent.unshift({ g: game, t: Date.now() }); store.set("statRecent", JSON.stringify(recent.slice(0, 12)));
+      const days = JSON.parse(store.get("statDays") || "[]"), d = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" }); if (!days.includes(d)) { days.push(d); store.set("statDays", JSON.stringify(days.slice(-90))); }
+      if (!store.get("statSince")) store.set("statSince", d);
+    } catch (e) {}
+  })();
+
   // ---------- real artwork (loaded on demand, games fall back to their drawn versions until ready) ----------
   const ART = {};
   function art(name) { let a = ART[name]; if (!a) { a = ART[name] = new Image(); a.decoding = "async"; a.src = "/img/" + name + ".webp"; } return a.complete && a.naturalWidth ? a : null; }
@@ -198,7 +211,9 @@ window.PUB = (() => {
       while (q.length) { const it = q[0]; try { const j = await api("/api/score", { game: it.game, score: it.score, id: playerId(), name: store.get("lbName") || undefined }); if (j.name) store.set("lbName", j.name); note(j, it.game); } catch (e) { if (e.status === 400) {} else break; } q.shift(); store.set("lbQueue", JSON.stringify(q)); q = JSON.parse(store.get("lbQueue") || "[]"); }
     } catch (e) {} flushing = false;
   }
-  function submit(game, score) { score = Math.floor(score); if (!GAME_NAMES[game] || !(score > 0)) return; let q = []; try { q = JSON.parse(store.get("lbQueue") || "[]"); } catch (e) {} q = q.filter((x) => x.game !== game || x.score > score); if (!q.some((x) => x.game === game && x.score >= score)) q.push({ game, score }); store.set("lbQueue", JSON.stringify(q.slice(-30))); flush(); }
+  const todayKey = () => new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" });
+  function recordDay(game, score) { try { const k = "day-" + todayKey(), d = JSON.parse(store.get(k) || "{}"); if (!(d[game] >= score)) { d[game] = score; store.set(k, JSON.stringify(d)); } } catch (e) {} }
+  function submit(game, score) { score = Math.floor(score); if (!GAME_NAMES[game] || !(score > 0)) return; recordDay(game, score); let q = []; try { q = JSON.parse(store.get("lbQueue") || "[]"); } catch (e) {} q = q.filter((x) => x.game !== game || x.score > score); if (!q.some((x) => x.game === game && x.score >= score)) q.push({ game, score }); store.set("lbQueue", JSON.stringify(q.slice(-30))); flush(); }
   function note(j, game) {
     if (!j || !j.today) return; const el = document.createElement("div"); el.className = "lb-note";
     el.innerHTML = `${j.todayBest ? "New best today! " : ""}You're <b>#${j.today.r}</b> today on ${GAME_NAMES[game]}` + (j.all ? ` · <b>#${j.all.r}</b> all time` : "") + ` <button type="button" data-lb="${game}">See board</button>`;
@@ -313,5 +328,5 @@ window.PUB = (() => {
   }
   // for games with their own soundtrack: the music bus (follows the mute button) and the shared noise buffer
   const bus = () => { ctx(); return { ac: AC, music: MUSIC, master: MASTER, noise: NOISE }; };
-  return { bus, art, backdrop, record, stopMusic, confetti, submit, openBoard, playerId, GAME_NAMES, $, store, REDUCED, ctx, beep, noise, pop, thud, smash, cheer, fanfare, sad, burp, music, wireMute, fit, show, gate, toast, share, best, rr, shade, particles };
+  return { api, todayKey, UNITS, bus, art, backdrop, record, stopMusic, confetti, submit, openBoard, playerId, GAME_NAMES, $, store, REDUCED, ctx, beep, noise, pop, thud, smash, cheer, fanfare, sad, burp, music, wireMute, fit, show, gate, toast, share, best, rr, shade, particles };
 })();
