@@ -329,7 +329,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
   $("no").addEventListener("click", () => { $("gateMsg").hidden = false; });
   $("share").addEventListener("click", async () => {
     const won = P[0].legs >= 2, txt = `${won ? "Beat" : "Lost to"} ${OPP[opp].name} ${P[0].legs}-${P[1].legs} at darts on Last Orders 🎯🍺 Average ${avg(P[0]).toFixed(1)}${stats.n180 ? `, ${stats.n180}×180!` : ""}`;
-    const m = $("shareMsg"); m.hidden = false; try { await navigator.clipboard.writeText(txt); m.textContent = "Copied. Paste it to a mate."; } catch (e) { m.textContent = txt; }
+    PUB.share(txt, $("shareMsg"));
   });
 
   // ---------- drawing ----------

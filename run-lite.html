@@ -344,7 +344,7 @@ p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
   $("no").addEventListener("click", () => { $("gateMsg").hidden = false; });
   $("share").addEventListener("click", async () => {
     const txt = `I ran ${score} on Beer Goggles and got caught by ${/^[AEIOU]/.test(LEVELS[levelOf(beers).i].name) ? "an" : "a"} ${LEVELS[levelOf(beers).i].name} after ${beers} beers 🍺😂 Beat that.`;
-    const m = $("shareMsg"); m.hidden = false; try { await navigator.clipboard.writeText(txt); m.textContent = "Copied. Paste it to a mate."; } catch (e) { m.textContent = txt; }
+    PUB.share(txt, $("shareMsg"));
   });
 
   // ---------- update ----------

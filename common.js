@@ -109,7 +109,8 @@ window.PUB = (() => {
   }
   let toastT = null;
   function toast(html, ms = 900) { const el = $("toast"); if (!el) return; el.innerHTML = html; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), ms); }
-  async function share(text, msgEl) { if (msgEl) msgEl.hidden = false; try { await navigator.clipboard.writeText(text); if (msgEl) msgEl.textContent = "Copied. Paste it to a mate."; } catch (e) { if (msgEl) msgEl.textContent = text; } }
+  async function copyText(text, msgEl) { if (msgEl) msgEl.hidden = false; try { await navigator.clipboard.writeText(text); if (msgEl) msgEl.textContent = "Copied. Paste it to a mate."; return true; } catch (e) { if (msgEl) msgEl.textContent = text; return false; } }
+  function share(text, msgEl) { try { openChallenge(text, msgEl); } catch (e) { copyText(text, msgEl); } }
   // games whose best is a real high score get the new-personal-best celebration
   const RECORD_KEYS = { barBest: 1, bowlBest: 1, cardsBest: 1, mergeBest: 1, pongBest: 1, pourBest: 1, quizBest: 1, stackBest: 1 };
   const best = (key, v) => { const cur = +(store.get(key) || 0); if (v != null && v > cur) { store.set(key, String(v)); if (RECORD_KEYS[key] && cur > 0) record(cur, v); return v; } return cur; };
@@ -213,7 +214,7 @@ window.PUB = (() => {
   }
   const todayKey = () => new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" });
   function recordDay(game, score) { try { const k = "day-" + todayKey(), d = JSON.parse(store.get(k) || "{}"); if (!(d[game] >= score)) { d[game] = score; store.set(k, JSON.stringify(d)); } } catch (e) {} }
-  function submit(game, score) { score = Math.floor(score); if (!GAME_NAMES[game] || !(score > 0)) return; recordDay(game, score); let q = []; try { q = JSON.parse(store.get("lbQueue") || "[]"); } catch (e) {} q = q.filter((x) => x.game !== game || x.score > score); if (!q.some((x) => x.game === game && x.score >= score)) q.push({ game, score }); store.set("lbQueue", JSON.stringify(q.slice(-30))); flush(); }
+  function submit(game, score) { score = Math.floor(score); if (!GAME_NAMES[game] || !(score > 0)) return; lastRun = { game, score }; try { chalCheck(game, score); } catch (e) {} recordDay(game, score); let q = []; try { q = JSON.parse(store.get("lbQueue") || "[]"); } catch (e) {} q = q.filter((x) => x.game !== game || x.score > score); if (!q.some((x) => x.game === game && x.score >= score)) q.push({ game, score }); store.set("lbQueue", JSON.stringify(q.slice(-30))); flush(); }
   function note(j, game) {
     if (!j || !j.today) return; const el = document.createElement("div"); el.className = "lb-note";
     el.innerHTML = `${j.todayBest ? "New best today! " : ""}You're <b>#${j.today.r}</b> today on ${GAME_NAMES[game]}` + (j.all ? ` · <b>#${j.all.r}</b> all time` : "") + ` <button type="button" data-lb="${game}">See board</button>`;
@@ -325,6 +326,131 @@ window.PUB = (() => {
         g.globalAlpha = 1; },
       get count() { return list.length; },
     };
+  }
+
+  // ---------- challenge a mate: a personalised score card + link that opens the game with a target to beat ----------
+  // Games where one run gives one score, so "beat my score" makes sense. The rest still share a score card.
+  const CHALLENGE_OK = { flying: 1, goggles: 1, barman: 1, stack: 1, bowling: 1, pong: 1, pour: 1, merge: 1, cards: 1, quiz: 1 };
+  // Current prize line, added to shares automatically until it ends. Edit or remove for the next competition.
+  const PROMO = { game: "flying", until: Date.parse("2026-11-16T00:00:00Z"), text: "🏆 Top of the Flying Pint leaderboard by Sunday 11:59pm wins £50!" };
+  let lastRun = null;
+  const CPAGE = (location.pathname.split("/").pop() || "").replace(/\.html?$/i, "");
+  const HERO = { "run-lite": "run" };
+  const chalGame = () => { const g = { "flying-pint": "flying", run: "goggles", "run-lite": "goggles", barman: "barman", stack: "stack", bowling: "bowling", pong: "pong", pour: "pour", merge: "merge", cards: "cards", quiz: "quiz", darts: "darts", pop: "pop", crush: "crush", pool: "pool", sort: "sort" }; return g[CPAGE]; };
+  const escH = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const CHCSS = `.ch-wrap{position:fixed;inset:0;z-index:200;background:rgba(4,6,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;animation:chFade .2s ease-out}
+.ch-box{width:100%;max-width:440px;max-height:94vh;overflow-y:auto;background:#121839;border:1px solid rgba(150,170,255,.18);border-radius:24px 24px 0 0;padding:14px 16px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;animation:chUp .28s cubic-bezier(.2,.9,.3,1);font-family:Inter,system-ui,sans-serif;color:#EEF1FF}
+.ch-grab{align-self:center;width:40px;height:5px;border-radius:3px;background:rgba(150,170,255,.3)}
+.ch-box h3{margin:2px 0 0;font:400 22px Bungee,Impact,sans-serif;color:#FFC64D;text-align:center}
+.ch-box p{margin:0;font-size:13px;color:#A3ABD6;text-align:center;line-height:1.4}
+.ch-card{width:100%;aspect-ratio:1;border-radius:16px;background:#070A1F center/cover;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.ch-name{display:flex;gap:8px;align-items:center}.ch-name label{font-size:12px;font-weight:800;color:#A3ABD6;white-space:nowrap}
+.ch-name input{flex:1;min-width:0;height:42px;border-radius:12px;border:1px solid rgba(150,170,255,.25);background:#0B1030;color:#fff;font:600 16px Inter,system-ui,sans-serif;padding:0 12px}
+.ch-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:14px;border:0;font:800 16px Inter,system-ui,sans-serif;cursor:pointer;color:#fff;text-decoration:none}
+.ch-btn:active{transform:scale(.97)}.ch-go{background:linear-gradient(135deg,#4C8DFF,#8A6CFF)}.ch-fb{background:#1877F2}.ch-wa{background:#1FAF5A}
+.ch-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ch-ghost{background:#1B2250;border:1px solid rgba(150,170,255,.2);min-height:44px;font-size:14px}
+.ch-msg{font-size:12.5px;color:#5FE3B0;text-align:center;min-height:16px}
+.ch-promo{background:linear-gradient(120deg,rgba(255,198,77,.18),rgba(255,198,77,.06));border:1px solid rgba(255,198,77,.35);border-radius:12px;padding:8px 10px;font-size:12.5px;font-weight:700;color:#FFD983;text-align:center}
+.chal-rib{margin:-4px 0 10px;padding:10px 12px;border-radius:14px;background:linear-gradient(120deg,#FF5A7A,#8A6CFF);color:#fff;font:700 14px/1.35 Inter,system-ui,sans-serif;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.chal-rib b{font-weight:800}.chal-rib big{display:block;font:400 22px Bungee,Impact,sans-serif;margin-top:2px}
+.chal-note{position:fixed;left:50%;top:18px;transform:translate(-50%,-140%);z-index:210;padding:12px 18px;border-radius:16px;background:linear-gradient(120deg,#FFC64D,#FF9A3D);color:#1A1240;font:800 15px Inter,system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:transform .35s cubic-bezier(.2,1.3,.4,1);max-width:90vw;text-align:center}
+.chal-note.on{transform:translate(-50%,0)}
+@keyframes chUp{from{transform:translateY(40px);opacity:0}}@keyframes chFade{from{opacity:0}}`;
+  function chCss() { if (!document.getElementById("chcss")) { const st = document.createElement("style"); st.id = "chcss"; st.textContent = CHCSS; document.head.appendChild(st); } }
+  function promoLine(game) { return PROMO && PROMO.game === game && Date.now() < PROMO.until ? PROMO.text : ""; }
+  function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+  async function drawCard(name, game, score, challenge) {
+    const S = 1080, c = document.createElement("canvas"); c.width = c.height = S; const g = c.getContext("2d");
+    try { await Promise.all([document.fonts.load("400 90px Bungee"), document.fonts.load("800 40px Inter")]); } catch (e) {}
+    g.fillStyle = "#070A1F"; g.fillRect(0, 0, S, S);
+    try { const im = await loadImg(`/img/games/${HERO[CPAGE] || CPAGE}-hero.webp`); const sc = Math.max(S / im.width, S / im.height); const w = im.width * sc, h = im.height * sc; g.drawImage(im, (S - w) / 2, (S - h) / 2, w, h); } catch (e) {}
+    let gr = g.createLinearGradient(0, 0, 0, S); gr.addColorStop(0, "rgba(7,10,31,.92)"); gr.addColorStop(.3, "rgba(7,10,31,.55)"); gr.addColorStop(.55, "rgba(7,10,31,.6)"); gr.addColorStop(1, "rgba(7,10,31,.97)"); g.fillStyle = gr; g.fillRect(0, 0, S, S);
+    const fit = (t, font, size, max) => { do { g.font = `${font.replace("@", size)}`; size -= 4; } while (g.measureText(t).width > max && size > 20); };
+    const ct = (t, y, font, size, col, max = S - 120) => { fit(t, font, size, max); g.textAlign = "center"; g.fillStyle = "rgba(0,0,0,.55)"; g.fillText(t, S / 2 + 4, y + 6); g.fillStyle = col; g.fillText(t, S / 2, y); };
+    g.textBaseline = "alphabetic";
+    ct("ROBBO'S GAME LAB · LAST ORDERS", 92, "800 @px Inter, sans-serif", 30, "#8FB4FF");
+    ct(name.toUpperCase(), 250, "400 @px Bungee, Impact, sans-serif", 110, "#FFC64D");
+    ct(challenge ? "HAS CHALLENGED YOU" : "JUST SCORED", 330, "400 @px Bungee, Impact, sans-serif", 54, "#FFFFFF");
+    // the score in a glowing disc
+    g.save(); g.shadowColor = "rgba(255,198,77,.6)"; g.shadowBlur = 60; g.fillStyle = "rgba(18,24,57,.88)"; g.beginPath(); g.arc(S / 2, 575, 185, 0, Math.PI * 2); g.fill(); g.restore();
+    g.lineWidth = 8; g.strokeStyle = "#FFC64D"; g.beginPath(); g.arc(S / 2, 575, 185, 0, Math.PI * 2); g.stroke();
+    ct(Number(score).toLocaleString("en-GB"), 625, "400 @px Bungee, Impact, sans-serif", 150, "#FFFFFF", 320);
+    ct(UNITS[game] ? UNITS[game].toUpperCase() : "POINTS", 690, "800 @px Inter, sans-serif", 30, "#FFC64D", 300);
+    ct("ON " + (GAME_NAMES[game] || "LAST ORDERS").toUpperCase(), 850, "400 @px Bungee, Impact, sans-serif", 64, "#FFFFFF");
+    ct(challenge ? "CAN YOU BEAT IT?" : "BEAT THAT 🍺".replace(" 🍺", ""), 935, "400 @px Bungee, Impact, sans-serif", 58, "#FFC64D");
+    g.font = "800 34px Inter, sans-serif"; const u = location.host, w = g.measureText(u).width + 70; g.fillStyle = "#4C8DFF"; const x = (S - w) / 2; g.beginPath(); g.roundRect ? g.roundRect(x, 975, w, 66, 33) : g.rect(x, 975, w, 66); g.fill(); g.fillStyle = "#fff"; g.textAlign = "center"; g.fillText(u, S / 2, 1020);
+    return c;
+  }
+  async function openChallenge(fallbackText, msgEl) {
+    chCss(); const old = document.getElementById("chWrap"); if (old) old.remove();
+    const game = (lastRun && lastRun.game) || chalGame(); const score = lastRun ? lastRun.score : 0;
+    if (!game || !score) { copyText(fallbackText, msgEl); return; }
+    const canBeat = !!CHALLENGE_OK[game], chal = JSON.parse(sessionStorage.getItem("chal") || "null");
+    const rival = chal && chal.g === game && chal.won ? chal.from : "";
+    const w = document.createElement("div"); w.className = "ch-wrap"; w.id = "chWrap"; w.setAttribute("role", "dialog"); w.setAttribute("aria-label", "Challenge a mate");
+    const promo = promoLine(game);
+    w.innerHTML = `<div class="ch-box"><span class="ch-grab"></span><h3>${rival ? "SEND IT BACK TO " + escH(rival).toUpperCase() : canBeat ? "CHALLENGE A MATE" : "SHARE YOUR SCORE"}</h3>
+      <p>${canBeat ? "They get a link that opens the game with your score to beat." : "Show your mates how you're getting on."}</p>
+      <div class="ch-card" id="chCard" role="img" aria-label="Your score card"></div>
+      <div class="ch-name"><label for="chName">Your name</label><input id="chName" maxlength="16" placeholder="e.g. Chris" autocomplete="nickname" value="${escH(realName())}"></div>
+      ${promo ? `<div class="ch-promo">${escH(promo)}</div>` : ""}
+      <button type="button" class="ch-btn ch-go" id="chSend">📣 ${canBeat ? "Send challenge" : "Share score"}</button>
+      <div class="ch-row"><button type="button" class="ch-btn ch-fb" id="chFb">Post to Facebook</button><a class="ch-btn ch-wa" id="chWa" href="#" target="_blank" rel="noopener">WhatsApp</a></div>
+      <div class="ch-row"><button type="button" class="ch-btn ch-ghost" id="chCopy">Copy message</button><button type="button" class="ch-btn ch-ghost" id="chClose">Close</button></div>
+      <div class="ch-msg" id="chMsg" aria-live="polite"></div></div>`;
+    document.body.appendChild(w);
+    const $c = (id) => w.querySelector("#" + id), msg = (t) => ($c("chMsg").textContent = t);
+    const nm = () => ($c("chName").value.replace(/\s+/g, " ").trim() || "Your mate");
+    const link = () => { const u = new URL(`/${CPAGE}.html`, location.origin); if (canBeat) { u.searchParams.set("beat", score); u.searchParams.set("from", nm()); } u.searchParams.set("utm_campaign", canBeat ? "challenge" : "share"); return u.toString(); };
+    const text = () => { const n = nm(), gn = GAME_NAMES[game]; const base = canBeat ? (rival ? `${n} just beat ${rival}'s score with ${score} on ${gn} 😤🍺 Your turn` : `${n} has challenged you to beat ${score} on ${gn} 🍺 Think you can?`) : `${fallbackText}`; return `${base}\n👉 ${link()}${promo ? "\n\n" + promo : ""}`; };
+    let file = null, cardT = null;
+    const render = async () => { const cv = await drawCard(nm() === "Your mate" ? "I" : nm(), game, score, canBeat); $c("chCard").style.backgroundImage = `url(${cv.toDataURL("image/jpeg", .85)})`; file = await new Promise((r) => cv.toBlob((b) => r(b ? new File([b], "last-orders-challenge.jpg", { type: "image/jpeg" }) : null), "image/jpeg", .9)); $c("chWa").href = "https://wa.me/?text=" + encodeURIComponent(text()); };
+    render(); $c("chName").addEventListener("input", () => { clearTimeout(cardT); cardT = setTimeout(render, 350); });
+    const saveName = () => { const n = $c("chName").value.replace(/\s+/g, " ").trim(); if (n.length >= 2 && !realName()) { store.set("lbName", n); store.set("lbNamePending", "1"); store.set("nameAsked", "1"); } };
+    const close = () => w.remove();
+    $c("chClose").addEventListener("click", close); w.addEventListener("click", (e) => { if (e.target === w) close(); });
+    $c("chCopy").addEventListener("click", async () => { saveName(); (await copyText(text())) ? msg("Message copied. Paste it anywhere.") : msg("Press and hold to copy: " + text()); });
+    $c("chWa").addEventListener("click", () => { saveName(); $c("chWa").href = "https://wa.me/?text=" + encodeURIComponent(text()); });
+    $c("chSend").addEventListener("click", async () => {
+      saveName();
+      try {
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: text(), title: GAME_NAMES[game] }); msg("Sent! 🍻"); return; }
+        if (navigator.share) { await navigator.share({ text: text(), title: GAME_NAMES[game] }); msg("Sent! 🍻"); return; }
+      } catch (e) { if (e && e.name === "AbortError") return; }
+      (await copyText(text())) ? msg("Copied. Paste it to a mate.") : msg(text());
+    });
+    $c("chFb").addEventListener("click", async () => {
+      saveName(); const copied = await copyText(text());
+      try { if (file && navigator.canShare && navigator.canShare({ files: [file] }) && /Android|iPhone|iPad/i.test(navigator.userAgent)) { msg(copied ? "Message copied: pick Facebook, then paste it as your caption." : "Pick Facebook to post your score card."); await navigator.share({ files: [file] }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+      window.open("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(link()), "_blank", "noopener");
+    });
+  }
+  // Someone opened a challenge link: remember it and show the target on the start screen.
+  (function readChallenge() {
+    let p; try { p = new URLSearchParams(location.search); } catch (e) { return; }
+    const beat = parseInt(p.get("beat"), 10), from = (p.get("from") || "").replace(/[<>]/g, "").slice(0, 16).trim(), game = chalGame();
+    if (beat > 0 && from && game && CHALLENGE_OK[game]) {
+      try { sessionStorage.setItem("chal", JSON.stringify({ g: game, beat, from, won: false })); } catch (e) {}
+      p.delete("beat"); p.delete("from"); try { history.replaceState(history.state, "", location.pathname + (p.toString() ? "?" + p : "") + location.hash); } catch (e) {}
+    }
+    addEventListener("DOMContentLoaded", () => {
+      let c = null; try { c = JSON.parse(sessionStorage.getItem("chal") || "null"); } catch (e) {}
+      if (!c || c.g !== chalGame()) return; chCss();
+      const card = document.querySelector("#start .card"); if (!card || card.querySelector(".chal-rib")) return;
+      const r = document.createElement("div"); r.className = "chal-rib"; r.innerHTML = c.won ? `🏆 You beat <b>${escH(c.from)}</b>'s ${c.beat}!<big>SEND IT BACK</big>` : `🍺 <b>${escH(c.from)}</b> has challenged you!<big>BEAT ${c.beat}</big>`;
+      card.insertBefore(r, card.firstChild);
+    });
+    const btnLabel = () => { const b = document.getElementById("share"), g = chalGame(); if (!b || !g) return; b.textContent = CHALLENGE_OK[g] ? "📣 Challenge a mate" : "📣 Share my score"; };
+    addEventListener("DOMContentLoaded", btnLabel);
+  })();
+  function chalCheck(game, score) {
+    let c = null; try { c = JSON.parse(sessionStorage.getItem("chal") || "null"); } catch (e) {}
+    if (!c || c.g !== game || c.won || score <= c.beat) return;
+    c.won = true; try { sessionStorage.setItem("chal", JSON.stringify(c)); } catch (e) {}
+    chCss(); const el = document.createElement("div"); el.className = "chal-note"; el.innerHTML = `🏆 You beat ${escH(c.from)}'s ${c.beat}! Send it back 😏`; document.body.appendChild(el);
+    setTimeout(() => el.classList.add("on"), 30); setTimeout(() => { el.classList.remove("on"); setTimeout(() => el.remove(), 500); }, 4200);
+    const b = document.getElementById("share"); if (b) b.textContent = "📣 Send it back to " + c.from;
+    const rib = document.querySelector("#start .chal-rib"); if (rib) rib.innerHTML = `🏆 You beat <b>${escH(c.from)}</b>'s ${c.beat}!<big>SEND IT BACK</big>`;
   }
   // for games with their own soundtrack: the music bus (follows the mute button) and the shared noise buffer
   const bus = () => { ctx(); return { ac: AC, music: MUSIC, master: MASTER, noise: NOISE }; };

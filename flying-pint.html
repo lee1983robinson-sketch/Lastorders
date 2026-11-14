@@ -473,9 +473,7 @@ a.btn { display: flex; align-items: center; justify-content: center; text-decora
   $("no").addEventListener("click", () => { $("gateMsg").hidden = false; });
   $("share").addEventListener("click", async () => {
     const txt = `I scored ${score} on Flying Pint as a ${D().name.toLowerCase()} ${D().emoji} (${MEDALS.find(([n]) => score >= n)[1]}). Beat that.`;
-    const m = $("shareMsg"); m.hidden = false;
-    try { await navigator.clipboard.writeText(txt); m.textContent = "Copied. Paste it to a mate."; }
-    catch (e) { m.textContent = txt; }
+    PUB.share(txt, $("shareMsg"));
   });
   function toast(msg) { const el = $("toast"); el.textContent = msg; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 700); }
 

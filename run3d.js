@@ -426,7 +426,7 @@ $("yes").addEventListener("click", () => { store.set("lo18", "1"); show("start")
 $("no").addEventListener("click", () => { $("gateMsg").hidden = false; });
 $("share").addEventListener("click", async () => {
   const n = LEVELS[levelOf(beers).i].name, txt = `I ran ${score} on Beer Goggles and got caught by ${/^[AEIOU]/.test(n) ? "an" : "a"} ${n} after ${beers} beers 🍺😂 Beat that.`;
-  const m = $("shareMsg"); m.hidden = false; try { await navigator.clipboard.writeText(txt); m.textContent = "Copied. Paste it to a mate."; } catch (e) { m.textContent = txt; }
+    PUB.share(txt, $("shareMsg"));
 });
 
 // ---------------- update ----------------

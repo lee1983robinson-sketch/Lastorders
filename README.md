@@ -120,3 +120,9 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 
 ## 4.6: visitor stats
 - GoatCounter (lastorders.goatcounter.com) on every page. No cookies. Hub tabs are counted as /#games, /#boards and so on. The privacy page is updated.
+
+## 4.7: challenge a mate
+- Every game-over "share" button now opens a challenge sheet with a personalised score card ("Lee has challenged you"), plus Send, Post to Facebook, WhatsApp and Copy.
+- Challenge links (?beat=17&from=Lee) show a "Beat 17" banner. Beating it pops "You beat Chris!" and offers to send it back.
+- PROMO in common.js adds the current prize line to shares until its end date. Edit it for the next competition.
+- GoatCounter shows challenge visits under Campaigns as "challenge".
