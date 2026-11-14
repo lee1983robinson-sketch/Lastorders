@@ -106,3 +106,8 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - Back from any tab goes to Home, then out of the app.
 - The top bar stays clear until you scroll; on other tabs the big title moves up into the bar.
 - No text selection, tap flash or page bounce. A "Get the app" banner appears when Chrome allows installing. The small print has moved to Profile.
+
+## 4.3: Play Store prep
+- .well-known/assetlinks.json links the Android app (com.onrender.lastorders.twa) to the site, so it opens full screen.
+- privacy.html is the privacy policy for the store listing, linked from Profile.
+- The manifest has an id.

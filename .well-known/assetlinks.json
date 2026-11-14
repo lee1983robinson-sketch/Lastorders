@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.onrender.lastorders.twa",
+        "sha256_cert_fingerprints": ["C9:C7:1A:B1:D2:E1:52:09:3E:B6:B9:36:E1:DC:E1:72:E0:68:B8:2D:F4:A6:1A:92:47:63:6D:F4:74:D4:C2:79"]
+      }
+    }]
