@@ -117,3 +117,6 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 
 ## 4.5: competition link
 - win.html is a share link for the £50 Flying Pint weekend. Facebook shows the WIN £50 picture and tapping opens Flying Pint.
+
+## 4.6: visitor stats
+- GoatCounter (lastorders.goatcounter.com) on every page. No cookies. Hub tabs are counted as /#games, /#boards and so on. The privacy page is updated.

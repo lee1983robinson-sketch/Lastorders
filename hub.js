@@ -245,6 +245,7 @@
     $("searchbox").hidden = true; $("barTitle").textContent = TITLES[name];
     if (name === "home") renderHome(); else if (name === "games") renderGames(arg || "all"); else if (name === "boards") renderBoardsShell(arg); else if (name === "awards") renderAwards(); else renderMe();
     if (changed) scrollTo(0, arg ? 0 : scrollMem[name] || 0); else if (keep === true) scrollTo(0, y);
+    if (changed && name !== "home") { try { window.goatcounter && window.goatcounter.count && window.goatcounter.count({ path: "/#" + name, title: TITLES[name] }); } catch (e) {} }   // visitor stats per tab
     onScroll();
   }
   addEventListener("hashchange", () => route());
