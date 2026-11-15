@@ -136,3 +136,7 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - Phone-first board with 3D dice, hopping pint tokens, deed cards and a My pubs sheet. Saves automatically so you can continue later.
 - Leaderboard "empire" counts wins against the computer. The API GAMES list includes empire, so redeploy the API if it does not auto-deploy.
 - Hub: featured first, Pub Games row, achievements Pub Landlord and Superpub. og.png now says 18 games.
+
+## 5.0.1: updates show straight away
+- sw.js checks with the server on every request (no-cache) instead of reusing an old copy.
+- common.js checks for a new version whenever the app comes back into view and reloads the home page once when a new version takes over (never mid-game).

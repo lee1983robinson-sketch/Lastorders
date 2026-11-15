@@ -161,7 +161,17 @@ window.PUB = (() => {
   }
   // studio credit on every start screen
   addEventListener("DOMContentLoaded", () => { const c = document.querySelector("#start .card"); if (c && !c.querySelector(".credit") && !/Robbo/.test(c.textContent)) { const p = document.createElement("p"); p.className = "fine credit"; p.innerHTML = '18+ · Know your limits: drinkaware.co.uk<br>A Robbo\'s Game Lab game'; c.appendChild(p); } });
-  if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+  // offline support, plus picking up new versions: check for an update whenever the app comes back into view,
+  // and reload once when a new version takes over (only on the home page, never mid-game)
+  if ("serviceWorker" in navigator) addEventListener("load", () => {
+    const hadController = !!navigator.serviceWorker.controller, onHub = document.body.classList.contains("hub");
+    navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).then((reg) => {
+      reg.update().catch(() => {});
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}); });
+    }).catch(() => {});
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && onHub && !reloaded) { reloaded = true; location.reload(); } });
+  });
 
 
 
