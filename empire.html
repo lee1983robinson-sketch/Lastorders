@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pub Empire</title>
+<meta name="description" content="Buy the pubs, charge a round, build superpubs and bankrupt your mates. A pub property board game for 2 to 4 players.">
+<meta name="theme-color" content="#070A1F">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Pub Empire">
+<meta property="og:description" content="Buy the pubs, charge a round, build superpubs and bankrupt your mates.">
+<meta property="og:image" content="https://lastorders.onrender.com/img/share/empire.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://lastorders.onrender.com/empire.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Robbo's Game Lab">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css">
+<link rel="stylesheet" href="/empire.css">
+</head>
+<body class="emp">
+<header class="ebar">
+  <a class="ebtn" href="/" aria-label="All games"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+  <div class="etitle"><b>PUB EMPIRE</b><small id="roundTxt">Round 1</small></div>
+  <button class="ebtn" id="rulesBtn" type="button" aria-label="How to play"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9M12 17.2v.1"/></svg></button>
+  <button class="ebtn" id="music" type="button" aria-label="Turn music off"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="note"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></g></svg></button>
+  <button class="ebtn" id="mute" type="button" aria-label="Turn sound off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+</header>
+
+<div class="eplayers" id="players" aria-label="Players"></div>
+
+<main class="elayout">
+  <div class="boardwrap">
+    <div class="board" id="board" aria-label="Pub Empire board">
+      <div class="centre" id="centre">
+        <div class="clogo">PUB <span>EMPIRE</span></div>
+        <div class="cturn" id="turnTxt"></div>
+        <div class="dice" id="dice" aria-hidden="true"><div class="die" id="d1"></div><div class="die" id="d2"></div></div>
+        <div class="cmsg" id="msg" aria-live="polite"></div>
+        <div class="cacts" id="acts"></div>
+      </div>
+      <div class="tokens" id="tokens"></div>
+    </div>
+  </div>
+  <aside class="eside">
+    <div class="deed" id="deed"></div>
+    <button class="mybtn" id="mineBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V10l8-6 8 6v11"/><path d="M9 21v-6h6v6"/></svg>My pubs</button>
+    <div class="logbox"><b>What's happened</b><ol class="log" id="log"></ol></div>
+  </aside>
+</main>
+
+<div class="etoast" id="toast" aria-live="polite"></div>
+
+<!-- 18+ -->
+<div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>PUB EMPIRE</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+
+<!-- set up -->
+<div class="overlay" id="start" hidden><div class="card wide">
+  <h1>PUB EMPIRE</h1>
+  <p class="big">Buy the pubs. Charge a round. Build superpubs and bankrupt your mates.</p>
+  <button class="btn" id="continueBtn" type="button" hidden>CONTINUE GAME</button>
+  <div class="setup">
+    <div class="sh">Your drink</div>
+    <div class="charpick" id="charPick"></div>
+    <div class="sh">Who's playing?</div>
+    <div class="seats" id="seats"></div>
+    <div class="sh">How long?</div>
+    <div class="seg" id="lenPick">
+      <button type="button" data-len="20" class="on"><b>Quick</b><small>20 rounds</small></button>
+      <button type="button" data-len="35"><b>Standard</b><small>35 rounds</small></button>
+      <button type="button" data-len="0"><b>Full</b><small>Last one standing</small></button>
+    </div>
+  </div>
+  <button class="btn" id="newBtn" type="button">NEW GAME</button>
+  <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="empire">Leaderboard</button><a class="btn ghost" href="/">All pub games</a></div>
+  <p class="fine">Pretend money only. Your game saves on this phone, so you can come back to it.</p>
+</div></div>
+
+<!-- event card -->
+<div class="overlay" id="cardBox" hidden><div class="ecard" id="ecard">
+  <div class="ecard-deck" id="cDeck">ROUND ON THE HOUSE</div>
+  <div class="ecard-ic" id="cIcon"></div>
+  <h2 id="cTitle"></h2>
+  <p id="cText"></p>
+  <button class="btn" id="cOk" type="button">CHEERS</button>
+</div></div>
+
+<!-- my pubs -->
+<div class="overlay sheetwrap" id="mine" hidden><div class="msheet">
+  <span class="grab" aria-hidden="true"></span>
+  <div class="mhead"><h2 id="mTitle">My pubs</h2><button class="xbtn" id="mClose" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="debt" id="debtBox" hidden></div>
+  <p class="fine mhint">Own every pub in a colour to build. Upgrades boost the round everyone has to buy when they land on you.</p>
+  <div class="mlist" id="mList"></div>
+</div></div>
+
+<!-- rules -->
+<div class="overlay" id="rules" hidden><div class="card wide rulescard">
+  <h2>HOW TO PLAY</h2>
+  <ul class="rlist">
+    <li><b>Roll and move</b> round the high street. Pass <b>First Round</b> to collect £200 wages.</li>
+    <li><b>Buy pubs</b> you land on. When someone lands on yours, they <b>buy you a round</b> (pay rent).</li>
+    <li><b>Own a whole colour</b> and the round doubles. Then build a <b>Beer garden, Big screen, Function room, Late licence</b> and finally a <b>Superpub</b>.</li>
+    <li><b>Taxi ranks</b> earn more the more you own. The <b>Brewery</b> and <b>Jukebox</b> charge 4× the dice, or 10× if you own both.</li>
+    <li><b>Doubles</b> roll again. Three doubles in a row and you're off to <b>The Cells</b>.</li>
+    <li><b>The Cells:</b> pay £50, use a Bail card, or try for doubles (three goes).</li>
+    <li><b>Taxes and fines</b> go into the <b>Taxi Kitty</b>. Land on <b>Free Taxi Home</b> to scoop it.</li>
+    <li>Short of cash? <b>Sell upgrades</b> or <b>mortgage</b> pubs in <b>My pubs</b>. Can't pay? You're <b>bust</b>.</li>
+    <li><b>Winning:</b> last landlord standing, or in a timed game, the richest at <b>closing time</b> (cash, pubs and upgrades).</li>
+  </ul>
+  <button class="btn" id="rulesOk" type="button">GOT IT</button>
+</div></div>
+
+<!-- game over -->
+<div class="overlay" id="over" hidden><div class="card wide">
+  <h2 id="oTitle">CLOSING TIME!</h2>
+  <div class="winner" id="oWinner"></div>
+  <p class="big" id="oSub"></p>
+  <ol class="standings" id="oStand"></ol>
+  <button class="btn" id="again" type="button">PLAY AGAIN</button>
+  <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="empire">Leaderboard</button><button class="btn ghost" id="share" type="button">Share</button></div>
+  <a class="btn ghost" href="/">All pub games</a>
+  <p class="fine" id="shareMsg" hidden></p>
+</div></div>
+
+<script src="/common.js"></script>
+<script src="/empire.js"></script>
+<script data-goatcounter="https://lastorders.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

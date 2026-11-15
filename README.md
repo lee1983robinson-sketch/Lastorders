@@ -129,3 +129,10 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 
 ## 4.8: Pint Stacker wine fix
 - The red wine glass is drawn without its nearly invisible empty top and has a rim line, so drinks stack flush on it. Its stacking height is 64 (was 76).
+
+## 5.0: Pub Empire (game 18)
+- empire.html, empire.css and empire.js: a pub property board game for 2 to 4 players (computer regulars Jamie, Big Dave and Shaz, or mates on the same phone).
+- Full rules: colour sets double rent, 5 upgrade levels up to a Superpub, taxi ranks, Brewery and Jukebox, The Cells, doubles, 28 cards, Taxi Kitty, mortgages, selling upgrades and bankruptcy. Quick (20 rounds), Standard (35) or Full games.
+- Phone-first board with 3D dice, hopping pint tokens, deed cards and a My pubs sheet. Saves automatically so you can continue later.
+- Leaderboard "empire" counts wins against the computer. The API GAMES list includes empire, so redeploy the API if it does not auto-deploy.
+- Hub: featured first, Pub Games row, achievements Pub Landlord and Superpub. og.png now says 18 games.

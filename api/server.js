@@ -9,7 +9,7 @@ const ORIGIN = (process.env.ALLOWED_ORIGIN || "*").trim();
 const FILE = path.join(__dirname, "cache", "lb.json");
 
 // game key -> highest believable score (stops silly numbers)
-const GAMES = { flying: 2000, goggles: 200000, darts: 100000, pop: 2000, merge: 200000, crush: 2000, barman: 500000, stack: 5000,
+const GAMES = { empire: 10000, flying: 2000, goggles: 200000, darts: 100000, pop: 2000, merge: 200000, crush: 2000, barman: 500000, stack: 5000,
   bowling: 300, pong: 1000, pool: 100000, pour: 100000, sort: 2000, quiz: 1000, cards: 1000, slots: 2000000, mega: 20000000 };
 const BAD = ["fuck", "shit", "cunt", "nigg", "fag", "paki", "twat", "wank", "nazi", "rape", "slut", "whore", "bitch", "dick", "cock", "pussy", "retard"];
 

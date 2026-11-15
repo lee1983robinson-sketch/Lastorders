@@ -132,7 +132,7 @@ window.PUB = (() => {
   function record(prev, v) { recordAt = Date.now(); const over = $("over"); pendingRecord = { prev, v }; if (over && !over.hidden) { showRecord(pendingRecord); pendingRecord = null; } }
   // ---------- player activity (for the home screen, profile and achievements) ----------
   const PAGE_GAME = { "flying-pint": "flying", run: "goggles", "run-lite": "goggles", darts: "darts", pop: "pop", merge: "merge", crush: "crush", barman: "barman", stack: "stack",
-    bowling: "bowling", pong: "pong", pool: "pool", pour: "pour", sort: "sort", quiz: "quiz", cards: "cards", slots: "slots", goldpints: "mega" };
+    bowling: "bowling", pong: "pong", pool: "pool", pour: "pour", sort: "sort", quiz: "quiz", cards: "cards", slots: "slots", goldpints: "mega", empire: "empire" };
   (function trackPlay() {
     const page = (location.pathname.split("/").pop() || "").replace(/\.html?$/i, ""), game = PAGE_GAME[page]; if (!game) return;
     try {
@@ -191,9 +191,9 @@ window.PUB = (() => {
   });
   addEventListener("pageshow", () => document.body && document.body.classList.remove("leaving"));
   // ---------- online leaderboards ----------
-  const GAME_NAMES = { flying: "Flying Pint", goggles: "Beer Goggles", darts: "Darts", pop: "Pub Pop", merge: "Snack Merge", crush: "Bar Crush", barman: "Barman Rush", stack: "Pint Stacker",
+  const GAME_NAMES = { empire: "Pub Empire", flying: "Flying Pint", goggles: "Beer Goggles", darts: "Darts", pop: "Pub Pop", merge: "Snack Merge", crush: "Bar Crush", barman: "Barman Rush", stack: "Pint Stacker",
     bowling: "Bottle Bowling", pong: "Beer Pong", pool: "Pool", pour: "Perfect Pour", sort: "Drink Sort", quiz: "Pub Quiz", cards: "Higher or Lower", slots: "Club Fruitie", mega: "Golden Pints" };
-  const UNITS = { pop: "level", crush: "level", sort: "level", darts: "legs won", stack: "high", cards: "in a row", slots: "credits", mega: "credits" };
+  const UNITS = { empire: "wins", pop: "level", crush: "level", sort: "level", darts: "legs won", stack: "high", cards: "in a row", slots: "credits", mega: "credits" };
   const LB_API = (store.get("lbApi") || "https://lastorders-api.onrender.com").replace(/\/+$/, "");
   function playerId() { let id = store.get("lbId"); if (!id || !/^[a-z0-9]{12,40}$/.test(id)) { id = ""; const a = new Uint8Array(14); (crypto.getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => (a[i] = Math.random() * 256))); for (const b of a) id += (b % 36).toString(36); store.set("lbId", id); } return id; }
   async function api(path, body) {
