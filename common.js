@@ -132,7 +132,7 @@ window.PUB = (() => {
   function record(prev, v) { recordAt = Date.now(); const over = $("over"); pendingRecord = { prev, v }; if (over && !over.hidden) { showRecord(pendingRecord); pendingRecord = null; } }
   // ---------- player activity (for the home screen, profile and achievements) ----------
   const PAGE_GAME = { "flying-pint": "flying", run: "goggles", "run-lite": "goggles", darts: "darts", pop: "pop", merge: "merge", crush: "crush", barman: "barman", stack: "stack",
-    bowling: "bowling", pong: "pong", pool: "pool", pour: "pour", sort: "sort", quiz: "quiz", cards: "cards", slots: "slots", goldpints: "mega", empire: "empire" };
+    bowling: "bowling", pong: "pong", pool: "pool", pour: "pour", sort: "sort", quiz: "quiz", cards: "cards", slots: "slots", goldpints: "mega", empire: "empire", kebab: "kebab" };
   (function trackPlay() {
     const page = (location.pathname.split("/").pop() || "").replace(/\.html?$/i, ""), game = PAGE_GAME[page]; if (!game) return;
     try {
@@ -201,7 +201,7 @@ window.PUB = (() => {
   });
   addEventListener("pageshow", () => document.body && document.body.classList.remove("leaving"));
   // ---------- online leaderboards ----------
-  const GAME_NAMES = { empire: "Pub Empire", flying: "Flying Pint", goggles: "Beer Goggles", darts: "Darts", pop: "Pub Pop", merge: "Snack Merge", crush: "Bar Crush", barman: "Barman Rush", stack: "Pint Stacker",
+  const GAME_NAMES = { kebab: "Kebab Run", empire: "Pub Empire", flying: "Flying Pint", goggles: "Beer Goggles", darts: "Darts", pop: "Pub Pop", merge: "Snack Merge", crush: "Bar Crush", barman: "Barman Rush", stack: "Pint Stacker",
     bowling: "Bottle Bowling", pong: "Beer Pong", pool: "Pool", pour: "Perfect Pour", sort: "Drink Sort", quiz: "Pub Quiz", cards: "Higher or Lower", slots: "Club Fruitie", mega: "Golden Pints" };
   const UNITS = { empire: "wins", pop: "level", crush: "level", sort: "level", darts: "legs won", stack: "high", cards: "in a row", slots: "credits", mega: "credits" };
   const LB_API = (store.get("lbApi") || "https://lastorders-api.onrender.com").replace(/\/+$/, "");
@@ -340,13 +340,13 @@ window.PUB = (() => {
 
   // ---------- challenge a mate: a personalised score card + link that opens the game with a target to beat ----------
   // Games where one run gives one score, so "beat my score" makes sense. The rest still share a score card.
-  const CHALLENGE_OK = { flying: 1, goggles: 1, barman: 1, stack: 1, bowling: 1, pong: 1, pour: 1, merge: 1, cards: 1, quiz: 1 };
+  const CHALLENGE_OK = { kebab: 1, flying: 1, goggles: 1, barman: 1, stack: 1, bowling: 1, pong: 1, pour: 1, merge: 1, cards: 1, quiz: 1 };
   // Current prize line, added to shares automatically until it ends. Edit or remove for the next competition.
   const PROMO = { game: "flying", until: Date.parse("2026-11-16T00:00:00Z"), text: "🏆 Top of the Flying Pint leaderboard by Sunday 11:59pm wins £50!" };
   let lastRun = null;
   const CPAGE = (location.pathname.split("/").pop() || "").replace(/\.html?$/i, "");
   const HERO = { "run-lite": "run" };
-  const chalGame = () => { const g = { "flying-pint": "flying", run: "goggles", "run-lite": "goggles", barman: "barman", stack: "stack", bowling: "bowling", pong: "pong", pour: "pour", merge: "merge", cards: "cards", quiz: "quiz", darts: "darts", pop: "pop", crush: "crush", pool: "pool", sort: "sort" }; return g[CPAGE]; };
+  const chalGame = () => { const g = { kebab: "kebab", "flying-pint": "flying", run: "goggles", "run-lite": "goggles", barman: "barman", stack: "stack", bowling: "bowling", pong: "pong", pour: "pour", merge: "merge", cards: "cards", quiz: "quiz", darts: "darts", pop: "pop", crush: "crush", pool: "pool", sort: "sort" }; return g[CPAGE]; };
   const escH = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const CHCSS = `.ch-wrap{position:fixed;inset:0;z-index:200;background:rgba(4,6,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;animation:chFade .2s ease-out}
 .ch-box{width:100%;max-width:440px;max-height:94vh;overflow-y:auto;background:#121839;border:1px solid rgba(150,170,255,.18);border-radius:24px 24px 0 0;padding:14px 16px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;animation:chUp .28s cubic-bezier(.2,.9,.3,1);font-family:Inter,system-ui,sans-serif;color:#EEF1FF}

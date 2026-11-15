@@ -140,3 +140,10 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 ## 5.0.1: updates show straight away
 - sw.js checks with the server on every request (no-cache) instead of reusing an old copy.
 - common.js checks for a new version whenever the app comes back into view and reloads the home page once when a new version takes over (never mid-game).
+
+## 5.1: Kebab Run (game 19)
+- New 3D game: kebab.html / kebab.js / kebab.css, artwork in img/kebab/ (Lee's original prototype kept in img/kebab/source/).
+- Four routes (Estate, High Street, City Centre, Seaside), garage upgrades and helmets, stars, tips, a leaderboard.
+- Hub: added as the newest featured game, two new achievements, "19 games".
+- API: `kebab` added to GAMES in api/server.js, so redeploy the API for scores to post.
+- sw.js VERSION lastorders-5.1.
