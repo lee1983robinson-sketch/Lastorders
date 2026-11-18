@@ -13,6 +13,8 @@ import { OutputPass } from "/vendor/jsm/postprocessing/OutputPass.js";
 import { ShaderPass } from "/vendor/jsm/postprocessing/ShaderPass.js";
 import { RoundedBoxGeometry } from "/vendor/jsm/geometries/RoundedBoxGeometry.js";
 
+// if the browser served an old copy of the page with this new script, reload once to get the matching page
+if (!document.getElementById("loading")) { try { if (!sessionStorage.getItem("reloaded-loading")) { sessionStorage.setItem("reloaded-loading", "1"); location.replace(location.pathname + "?v=" + Date.now()); } } catch (e) {} throw new Error("stale page"); }
 const $ = (id) => document.getElementById(id);
 const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.max(a, Math.min(b, v));

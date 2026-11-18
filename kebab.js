@@ -14,6 +14,8 @@ import { ShaderPass } from "/vendor/jsm/postprocessing/ShaderPass.js";
 import { Reflector } from "/vendor/jsm/objects/Reflector.js";
 import { RoundedBoxGeometry } from "/vendor/jsm/geometries/RoundedBoxGeometry.js";
 
+// if the browser served an old copy of the page with this new script, reload once to get the matching page
+if (!document.getElementById("lever")) { try { if (!sessionStorage.getItem("reloaded-lever")) { sessionStorage.setItem("reloaded-lever", "1"); location.replace(location.pathname + "?v=" + Date.now()); } } catch (e) {} throw new Error("stale page"); }
 const PUB = window.PUB;
 const $ = (id) => document.getElementById(id);
 const store = PUB.store;
