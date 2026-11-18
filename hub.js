@@ -12,7 +12,7 @@
   // ---------- the catalogue ----------
   const quizStatus = () => store.get("quizDay") === today() ? "Tonight: " + (store.get("quizScore-" + today()) || 0) + " pts" : "Tonight's quiz is ready";
   const GAMES = [
-    { id: "kebab", page: "kebab", name: "Kebab Run", cat: "arcade", tag: "Ride the rainy streets and land the kebab on the doormat.", hero: "The Last Delivery. Weave through traffic on a scooter at night, follow the green beam and throw the kebab onto the doormat while it's still hot.", isNew: true, best: () => num("kbBest") ? "Best " + fmt(num("kbBest")) : "" },
+    { id: "kebab", page: "kebab", name: "Kebab Run", cat: "arcade", tag: "Ride round town taking Uber-style kebab orders.", hero: "Kebab Run 2. A whole British town to ride round at night. Accept orders on your phone, follow the sat-nav and land the kebab on the doormat while it's hot.", isNew: true, best: () => num("kbBest") ? "Best £" + (num("kbBest") / 100).toFixed(2) : "" },
     { id: "empire", page: "empire", name: "Pub Empire", cat: "pub", tag: "Buy the pubs, charge a round, bankrupt your mates.", hero: "The pub property board game. Buy the high street, build Superpubs and make your mates buy the rounds. Play the regulars or pass the phone.", isNew: true, best: () => num("empWins") ? num("empWins") + " game" + (num("empWins") > 1 ? "s" : "") + " won" : store.get("empSave") ? "Game in progress" : "" },
     { id: "mega", page: "goldpints", name: "Golden Pints", cat: "slots", tag: "Modern 5-reel slot with free spins and a daily wheel.", hero: "Five reels, twenty lines, a Cool Pint wild and free spins that pay triple. Spin the daily wheel too.", isNew: true, best: () => num("gpBest") ? "Biggest win " + fmt(num("gpBest")) : "" },
     { id: "crush", page: "crush", name: "Bar Crush", cat: "puzzles", tag: "Swap drinks, match three, set off rockets and bombs.", hero: "Match drinks, build rockets, bombs and wilds, and smash through the levels. Every fifth one is the Big Round.", isNew: true, best: () => num("crushLevel") > 1 ? "On level " + num("crushLevel") : "" },
@@ -89,7 +89,7 @@
     ["sort", "🧪", "Sorted", "Reach level 6 in Drink Sort", () => num("sortLevel") >= 6],
     ["fruit", "🍒", "Lucky Fruit", "Collect a 500 win on Club Fruitie", () => num("slotBest") >= 500],
     ["kebabpro", "🥙", "Hot Delivery", "Land a kebab right on the doormat", () => num("kbPerfect") >= 1],
-    ["kebabking", "🛵", "Kebab King", "Get a star on Seaside Madness in Kebab Run", () => { try { return (JSON.parse(store.get("kbStars") || "{}").seaside || 0) >= 1; } catch (e) { return false; } }],
+    ["kebabking", "🛵", "Kebab King", "Earn all three stars in one Kebab Run shift", () => { try { return (JSON.parse(store.get("kbStars") || "{}").seaside || 0) >= 1; } catch (e) { return false; } }],
     ["landlord", "🏠", "Pub Landlord", "Win a game of Pub Empire", () => num("empWins") >= 1],
     ["superpub", "🏨", "Superpub", "Build a Superpub in Pub Empire", () => store.get("empSuper") === "1"],
     ["gold", "🏆", "Golden Touch", "Land a 1,000 win on Golden Pints", () => num("gpBest") >= 1000],

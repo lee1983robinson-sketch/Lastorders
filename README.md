@@ -147,3 +147,13 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - Hub: added as the newest featured game, two new achievements, "19 games".
 - API: `kebab` added to GAMES in api/server.js, so redeploy the API for scores to post.
 - sw.js VERSION lastorders-5.1.
+
+## 6.0: Kebab Run 2 (open world)
+- Kebab Run rebuilt as an open-world town: a 6 × 6 grid of British streets (terraces, High Street and Market Street shops, pubs, a park and a church) built in code and merged for phones.
+- Uber-style orders on a phone card (Accept / Decline), collect from one of four takeaways, sat-nav arrows on the road, minimap and turn-by-turn prompts.
+- Speed lever (slide up for faster, down to slow or stop), speedometer dial with gears, steering with lane assist, camera that always stays behind the rider.
+- Weather changes every shift (clear night, evening, cloudy, fog, drizzle, downpour) or pick one on the title screen. Wet roads reflect the lights.
+- Traffic drives the grid and keeps left (cars, black cabs, vans, buses, police), pedestrians walk the pavements, real street-lamp lighting, glow, shadows.
+- 5-minute shifts; score is earnings in pence (leaderboard "kebab"). Stars at £15 / £30 / £45. Garage upgrades and helmets carry over.
+- New three.js helpers in /vendor/jsm (post-processing, Reflector, RoundedBoxGeometry), MIT licence like three.js.
+- sw.js VERSION lastorders-6.0. No API change needed.

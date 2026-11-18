@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Kebab Run</title>
-<meta name="description" content="Kebab Run: The Last Delivery. Ride a scooter through rainy British streets at night, dodge the traffic and land the kebab on the doormat.">
-<meta name="theme-color" content="#070A1F">
+<meta name="description" content="Kebab Run: ride a scooter round a British town at night, take Uber-style orders, follow the sat-nav and land the kebab on the doormat.">
+<meta name="theme-color" content="#070A12">
 <meta name="color-scheme" content="dark">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon-192.png">
@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta property="og:title" content="Kebab Run: The Last Delivery">
-<meta property="og:description" content="Hot kebabs. Mad roads. Impossible deliveries.">
+<meta property="og:description" content="Take the orders, ride the town, land it on the doormat.">
 <meta property="og:image" content="https://lastorders.onrender.com/img/share/kebab.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -22,31 +22,51 @@
 <meta property="og:site_name" content="Robbo's Game Lab">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;600;800&display=swap">
 <link rel="stylesheet" href="/common.css">
 <link rel="stylesheet" href="/kebab.css">
 </head>
 <body class="game kr">
-<canvas id="game" aria-label="Kebab Run. Steer the scooter and throw the kebab onto the glowing doormat." role="img"></canvas>
+<canvas id="game" aria-label="Kebab Run. Ride round the town, collect orders and throw them onto the doormat." role="img"></canvas>
 <div class="vignette" id="vignette"></div>
 
 <!-- HUD -->
 <div class="hud" id="hud" hidden>
   <div class="hrow top">
-    <div class="hbox score"><small>SCORE</small><b id="hScore">0</b><em id="hMult">×1</em></div>
-    <div class="hbox orders"><small>DELIVERIES</small><b id="hOrders">0 / 5</b></div>
+    <div class="hbox"><small>EARNINGS</small><b class="cash" id="hCash">£0.00</b></div>
+    <div class="hbox"><small>RATING</small><b><span id="hRating">5.0</span><i class="star">★</i></b></div>
+    <div class="hbox" id="hTimeBox"><small>SHIFT</small><b id="hTime">5:00</b></div>
     <button class="hbtn" id="pauseBtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
   </div>
-  <div class="hrow mid">
-    <div class="hbox temp"><small>FOOD</small><div class="tbar"><i id="hTemp"></i></div><b id="hTempTxt">HOT</b></div>
-    <div class="hbox drop" id="hDropBox"><small>NEXT DROP</small><b id="hDrop">—</b><span class="arrow" id="hArrow"></span></div>
-  </div>
-  <div class="hrow mini">
+  <div class="hrow under">
     <div class="dents" id="hDents" aria-label="Scooter condition"></div>
-    <div class="tips"><span class="coin"></span><b id="hTips">0</b></div>
+    <span class="wx" id="hWeather" aria-label="Weather"></span>
   </div>
+  <div class="job" id="job" hidden><b id="jobTitle"></b><small id="jobSub"></small><div class="tbar" hidden><i id="jobTemp"></i></div></div>
+  <div class="nav" id="nav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path id="navP" d=""/></svg><div><b id="navD"></b><small id="navS"></small></div></div>
+  <canvas class="map" id="map" width="208" height="208" aria-label="Minimap"></canvas>
+  <div class="combo" id="combo"></div>
+  <svg class="speedo" viewBox="0 0 120 120" aria-hidden="true">
+    <circle cx="60" cy="60" r="56" class="sbg"/>
+    <path d="M24.6 89.7 A46 46 0 1 1 95.4 89.7" class="sarc"/>
+    <g class="ticks"><line x1="60" y1="10" x2="60" y2="18" transform="rotate(-130 60 60)"/><line x1="60" y1="10" x2="60" y2="18" transform="rotate(-78 60 60)"/><line x1="60" y1="10" x2="60" y2="18" transform="rotate(-26 60 60)"/><line x1="60" y1="10" x2="60" y2="18" transform="rotate(26 60 60)"/><line x1="60" y1="10" x2="60" y2="18" transform="rotate(78 60 60)"/><line x1="60" y1="10" x2="60" y2="18" transform="rotate(130 60 60)"/></g>
+    <line id="needle" x1="60" y1="60" x2="60" y2="17" class="needle" transform="rotate(-130 60 60)"/><circle cx="60" cy="60" r="5" class="hub"/>
+    <text x="60" y="88" text-anchor="middle" class="sv" id="spdTxt">0</text><text x="60" y="100" text-anchor="middle" class="su">MPH</text><text x="60" y="112" text-anchor="middle" class="sg" id="gearTxt">N</text>
+  </svg>
   <div class="pop" id="pop" aria-live="polite"></div>
+  <div class="toast" id="toast" aria-live="polite"></div>
   <div class="say" id="say"></div>
+  <div class="dsuc" id="dsuc"><b id="dTitle">DELIVERED!</b><div class="dstars" id="dStars"></div><em id="dPay">+£0.00</em><div class="drows" id="dRows"></div></div>
+</div>
+
+<!-- incoming order -->
+<div class="phone" id="phone" role="dialog" aria-label="New order">
+  <div class="ph"><i>KR</i>NEW ORDER<em>now</em></div>
+  <h3><span id="pFrom"></span> → <span id="pTo"></span></h3>
+  <p id="pItems"></p>
+  <div class="pay"><b id="pPay"></b><span id="pDist"></span><span id="pEta"></span></div>
+  <div class="pbar"><i id="pBar"></i></div>
+  <div class="row"><button class="dec" id="decBtn" type="button">Decline</button><button class="acc" id="accBtn" type="button">Accept</button></div>
 </div>
 
 <!-- touch controls -->
@@ -56,11 +76,11 @@
     <button class="cbtn" id="rightBtn" type="button" aria-label="Steer right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
   </div>
   <div class="act">
-    <button class="cbtn brake" id="brakeBtn" type="button" aria-label="Brake">BRAKE</button>
-    <button class="throw" id="throwBtn" type="button" aria-label="Hold to aim, let go to throw the kebab"><svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45"/><circle id="powerArc" cx="50" cy="50" r="45"/></svg><img src="/img/kebab/kebab.webp" alt=""><span>HOLD &amp; THROW</span></button>
+    <div class="lever" id="lever" role="slider" aria-label="Speed. Slide up to go faster, down to slow down" tabindex="0"><span class="lab">FAST</span><div class="track"><i class="fill"></i><i class="thumb"><b id="leverTxt">0</b></i></div><span class="lab">STOP</span></div>
+    <button class="throw off" id="throwBtn" type="button" aria-label="Hold to aim, let go to throw the kebab"><svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45"/><circle id="powerArc" cx="50" cy="50" r="45"/></svg><img src="/img/kebab/kebab.webp" alt=""><span>HOLD &amp; THROW</span></button>
   </div>
 </div>
-<p class="keys" id="keys" hidden>← → steer · ↓ brake · hold <b>Space</b> to aim, let go to throw · P pause</p>
+<p class="keys" id="keys" hidden>← → steer · ↑ ↓ speed · hold <b>Space</b> to throw · <b>Y</b>/<b>N</b> orders · P pause</p>
 
 <!-- 18+ -->
 <div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>KEBAB RUN</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
@@ -68,25 +88,19 @@
 <!-- title -->
 <div class="overlay" id="start" hidden><div class="card title">
   <img class="titleart" src="/img/kebab/title.webp" alt="Kebab Run: The Last Delivery. A rider on a red scooter with a kebab box.">
-  <p class="big">Ride the rainy streets, dodge the traffic and land the kebab on the doormat while it's still hot.</p>
-  <button class="btn go" id="playBtn" type="button">▶ PLAY</button>
+  <p class="big">Take the orders, ride round town, follow the sat-nav and land the kebab on the doormat while it's hot.</p>
+  <button class="btn go" id="playBtn" type="button">START SHIFT</button>
+  <button class="btn ghost chip" id="weatherBtn" type="button">🎲 Random weather</button>
   <div class="row"><button class="btn ghost" id="garageBtn" type="button">Garage</button><button class="btn ghost" id="howBtn" type="button">How to play</button></div>
   <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="kebab">Leaderboard</button><a class="btn ghost" href="/">All pub games</a></div>
-  <p class="fine">Best: <b id="bestTxt">0</b> · Tips: <b id="tipsTxt">0</b> · Stars: <b id="starsTxt">0</b></p>
-</div></div>
-
-<!-- route select -->
-<div class="overlay" id="routes" hidden><div class="card wide">
-  <h2>PICK YOUR ROUTE</h2>
-  <div class="rgrid" id="rgrid"></div>
-  <button class="btn ghost" id="routesBack" type="button">Back</button>
+  <p class="fine">Best shift: <b id="bestTxt">£0.00</b> · Coins: <b id="tipsTxt">0</b> · Stars: <b id="starsTxt">0</b></p>
 </div></div>
 
 <!-- garage -->
 <div class="overlay" id="garage" hidden><div class="card wide">
   <h2>THE GARAGE</h2>
-  <p class="fine">Spend your tips on upgrades. Tips come from deliveries, hot food and coins on the road.</p>
-  <div class="tipsbig"><span class="coin"></span><b id="gTips">0</b> tips</div>
+  <p class="fine">Spend coins on upgrades. You earn coins from tips and deliveries.</p>
+  <div class="tipsbig"><span class="coin"></span><b id="gTips">0</b> coins</div>
   <div class="ulist" id="ulist"></div>
   <div class="sh">Helmet</div>
   <div class="helmets" id="helmets"></div>
@@ -97,14 +111,12 @@
 <div class="overlay" id="how" hidden><div class="card wide howcard">
   <h2>HOW TO PLAY</h2>
   <ul class="rlist">
-    <li><b>Steer</b> with the arrow buttons (or ← → keys). The scooter speeds up on its own. <b>Brake</b> if it gets hairy.</li>
-    <li>Follow the <b>green beam</b> to the next customer. The distance is at the top.</li>
-    <li><b>Hold THROW</b> to aim. A dotted arc shows where the kebab will land and the power swings back and forth.</li>
-    <li><b>Let go</b> when the landing ring sits on the glowing doormat. It's all down to your timing, lane and power.</li>
-    <li><b>Doormat = Perfect</b>, doorstep = Good, garden = OK. Anything else is a miss, so have another go before you pass the house.</li>
-    <li>Food cools as you ride. <b>Hotter food = bigger tips.</b></li>
-    <li>Dodge cars, buses, cyclists, bins, roadworks and people on zebra crossings. Three crashes and the scooter's knackered.</li>
-    <li>Squeeze past traffic for <b>near-miss</b> points. Chain deliveries to build your <b>multiplier</b>.</li>
+    <li>Orders pop up on your phone. Tap <b>Accept</b> (or <b>Decline</b> if it's too far).</li>
+    <li>Follow the <b>green arrows</b> and the minimap to the takeaway and <b>stop in the yellow ring</b> to collect.</li>
+    <li>Then ride to the customer. <b>Steer</b> with the arrows and slide the <b>speed lever</b> up to go faster, down to slow or stop.</li>
+    <li>When the throw button lights up, <b>hold</b> it to aim and <b>let go</b> when the ring sits on the doormat. Perfect throws get the biggest tips.</li>
+    <li>Hot food and quick deliveries earn more. Squeeze past traffic for <b>near-miss</b> combos.</li>
+    <li>Three crashes and the scooter's knackered. Earn as much as you can in a 5-minute shift.</li>
   </ul>
   <button class="btn" id="howOk" type="button">LET'S GO</button>
 </div></div>
@@ -112,15 +124,14 @@
 <!-- pause -->
 <div class="overlay" id="pause" hidden><div class="card">
   <h2>PAUSED</h2>
-  <button class="btn" id="resumeBtn" type="button">RESUME</button>
+  <button class="btn go" id="resumeBtn" type="button">RESUME</button>
   <div class="settings">
     <label class="tog"><input type="checkbox" id="setMusic"><span>Music</span></label>
-    <label class="tog"><input type="checkbox" id="setRain"><span>Rain</span></label>
     <label class="tog"><input type="checkbox" id="setShake"><span>Camera shake</span></label>
     <label class="tog"><input type="checkbox" id="setHi"><span>High detail</span></label>
+    <button class="iconbtn mute inline tog" id="mute" type="button" aria-label="Turn sound off"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg><span>Sound</span></button>
   </div>
-  <div class="row"><button class="btn ghost" id="restartBtn" type="button">Restart</button><button class="btn ghost" id="quitBtn" type="button">Quit shift</button></div>
-  <button class="iconbtn mute inline" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg><span>Sound</span></button>
+  <div class="row"><button class="btn ghost" id="restartBtn" type="button">Restart</button><button class="btn ghost" id="quitBtn" type="button">End shift</button></div>
 </div></div>
 
 <!-- end of shift -->
@@ -128,16 +139,15 @@
   <h2 id="oTitle">SHIFT OVER</h2>
   <div class="ostars" id="oStars"><span>★</span><span>★</span><span>★</span></div>
   <p class="big" id="oSub"></p>
-  <div class="stats"><div class="stat"><b id="oScore">0</b><span>Score</span></div><div class="stat"><b id="oBest">0</b><span>Best</span></div></div>
+  <div class="stats"><div class="stat"><b id="oScore">£0</b><span>Earned</span></div><div class="stat"><b id="oBest">£0</b><span>Best shift</span></div></div>
   <div class="osum" id="oSum"></div>
-  <button class="btn" id="again" type="button">GO AGAIN</button>
-  <div class="row"><button class="btn ghost" id="toRoutes" type="button">Routes</button><button class="btn ghost" id="toGarage" type="button">Garage</button></div>
-  <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="kebab">Leaderboard</button><button class="btn ghost" id="share" type="button">Challenge a mate</button></div>
-  <a class="btn ghost" href="/">All pub games</a>
+  <button class="btn go" id="again" type="button">CONTINUE</button>
+  <div class="row"><button class="btn ghost" id="toGarage" type="button">Garage</button><button class="btn ghost lb-btn" type="button" data-lb="kebab">Leaderboard</button></div>
+  <div class="row"><button class="btn ghost" id="share" type="button">Challenge a mate</button><a class="btn ghost" href="/">All pub games</a></div>
   <p class="fine" id="shareMsg" hidden></p>
 </div></div>
 
-<div class="loading" id="loading"><div class="spin"></div><p>Warming up the scooter…</p></div>
+<div class="loading" id="loading"><div class="spin"></div><p>Building the town…</p></div>
 <script src="/common.js"></script>
 <script type="module" src="/kebab.js"></script>
 <script data-goatcounter="https://lastorders.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
