@@ -164,3 +164,10 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - Streets made from pre-baked chunk templates (High Street, Terraces, City Centre, Canal) that are moved, never rebuilt; obstacles pooled; coins and beers instanced; 3 real lights max; auto quality (High / Medium / Low).
 - New: moving traffic, buses, barriers, coins, shield, magnet, kebab boost, weather per run, new runner and chaser models and animation, footsteps / traffic / ambience / layered music, music + SFX volume, pause menu, game-over stats.
 - run-lite.html unchanged. sw.js VERSION lastorders-6.1.
+
+## 6.2 — Pub Golf (18 holes)
+- New game: Pub Golf (golf.html, golf.js, golf-art.js, golf-audio.js, golf-holes.js), built on kit3d.js.
+- 18 holes, each in its own setting, with working obstacles: windmill, barrel and pint-glass tunnels, moving bridge, planks, rotating gates, bottle slalom, wooden ramps and a ramp jump, copper pipe, sliding barriers and goalkeeper, barrel maze, loop-the-loop, spinning coaster, floor dartboard bonus, pool table with pockets and balls, seesaw, bottle bumpers, bell bonus, and a combined Grand Finale.
+- Modes: Front Nine (leaderboard "golf9"), Championship 18 holes (leaderboard "golf"), Practice (any hole, no score).
+- Original synthesised music (acoustic, blues, rock, lounge, jig, finale) and effects, separate music and effects volume.
+- API: golf and golf9 added to GAMES. Redeploy the API on Render after pushing.

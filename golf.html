@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Pub Golf</title>
+<meta name="description" content="Pub Golf: 18 holes of 3D crazy golf, each in a different pub setting. Windmills, loops, pipes, pool tables, moving bridges and more. Front Nine or the full Championship.">
+<meta name="theme-color" content="#0a0810"><meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Pub Golf"><meta property="og:description" content="18 holes of crazy golf across 18 pubs. Windmills, loops, pipes and a pool table. Can you go under par?"><meta property="og:image" content="https://lastorders.onrender.com/img/share/golf.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:url" content="https://lastorders.onrender.com/golf.html"><meta property="og:type" content="website"><meta property="og:site_name" content="Robbo's Game Lab"><meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css"><link rel="stylesheet" href="/arcade3d.css">
+<style>
+body.k3 .card { width: min(440px, 100%); }
+.wood { background: linear-gradient(180deg, rgba(58,32,16,.94), rgba(30,16,8,.95)); border: 2px solid #8a5a2a; box-shadow: 0 0 0 1px #2a1408, inset 0 1px 0 rgba(255,220,160,.18), 0 30px 80px rgba(0,0,0,.6); }
+.logo { font: 400 46px/0.9 Bungee, Impact, sans-serif; color: #ffc64d; text-shadow: 0 3px 0 #6a2a00, 0 0 26px rgba(255,190,60,.5); letter-spacing: 1px; }
+.logo small { display: block; font: 800 15px var(--cond); letter-spacing: 3px; color: #f4e2c0; text-shadow: none; margin-top: 8px; }
+.modes { display: grid; gap: 9px; }
+.mode { display: grid; grid-template-columns: 54px 1fr auto; align-items: center; gap: 10px; text-align: left; padding: 10px 12px; border-radius: 16px; border: 1px solid rgba(255,198,77,.35); background: linear-gradient(180deg, rgba(255,198,77,.16), rgba(255,198,77,.05)); color: #fff; cursor: pointer; font: inherit; }
+.mode:active { transform: translateY(2px); }
+.mode .ic { width: 54px; height: 54px; border-radius: 12px; display: grid; place-items: center; font: 400 22px Bungee, Impact; color: #2a1400; background: linear-gradient(180deg, #ffd36b, #e89a1a); box-shadow: 0 3px 0 #8a5000; }
+.mode.champ .ic { background: linear-gradient(180deg, #7cf5c3, #13b873); box-shadow: 0 3px 0 #0a7a48; }
+.mode.prac .ic { background: linear-gradient(180deg, #8ac8ff, #3a7ad8); box-shadow: 0 3px 0 #1a3a8a; color: #fff; }
+.mode b { display: block; font: 800 22px/1 var(--cond); letter-spacing: .5px; } .mode span { font-size: 12.5px; color: rgba(255,255,255,.65); } .mode i { font: 700 12px Inter; font-style: normal; color: #ffc64d; text-align: right; }
+.pick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; max-height: 56vh; overflow-y: auto; padding: 2px; }
+.hole-btn { border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); border-radius: 12px; color: #fff; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; font: inherit; }
+.hole-btn b { font: 400 20px Bungee, Impact; color: #ffc64d; } .hole-btn span { font: 700 11px/1.15 Inter; } .hole-btn i { font: 600 10px Inter; font-style: normal; color: rgba(255,255,255,.5); }
+/* HUD */
+.hud .hbox.name { flex: 1; min-width: 0; } .hud .hbox.name b { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffc64d; }
+.hbtns { position: fixed; right: 12px; top: calc(78px + env(safe-area-inset-top)); display: flex; flex-direction: column; gap: 7px; z-index: 11; }
+.hbtns .hbtn { width: 44px; height: 44px; margin: 0; } .hbtns .hbtn.on { background: rgba(255,198,77,.35); }
+.power { position: fixed; left: 50%; bottom: calc(30px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(280px, 66vw); height: 16px; border-radius: 9px; background: rgba(10,8,16,.65); border: 1px solid rgba(255,255,255,.2); overflow: hidden; opacity: 0; transition: opacity .2s; z-index: 11; }
+.power.on { opacity: 1; } .power::after { content: ""; position: absolute; inset: 0; width: calc(var(--p, 0) * 100%); background: linear-gradient(90deg, #2EE59D, #FFC64D 60%, #FF3B5A); }
+.hint { position: fixed; left: 50%; bottom: calc(54px + env(safe-area-inset-bottom)); transform: translateX(-50%); font: 700 13px Inter, sans-serif; color: rgba(255,255,255,.7); text-shadow: 0 2px 8px #000; white-space: nowrap; pointer-events: none; z-index: 11; }
+.banner { position: fixed; left: 50%; top: 24%; transform: translate(-50%, -50%); z-index: 15; pointer-events: none; text-align: center; opacity: 0; padding: 14px 26px 12px; border-radius: 18px; background: linear-gradient(180deg, rgba(58,32,16,.92), rgba(30,16,8,.92)); border: 2px solid #c8923a; box-shadow: 0 20px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,220,160,.2); min-width: 230px; }
+.banner small { display: block; font: 800 13px var(--cond); letter-spacing: 4px; color: #f4e2c0; } .banner b { display: block; font: 400 30px/1.05 Bungee, Impact; color: #ffc64d; text-shadow: 0 3px 0 #5a2400; margin: 4px 0; } .banner span { font: 700 13px Inter; color: #7cf5c3; letter-spacing: .5px; }
+.banner.on { animation: bannerIn 2.6s cubic-bezier(.2,1.2,.3,1) forwards; }
+@keyframes bannerIn { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); } 20% { transform: translate(-50%, -50%) scale(1); } 82% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -60%) scale(.96); } }
+/* scorecard */
+table.sc { width: 100%; border-collapse: separate; border-spacing: 2px; font: 700 12px Inter, sans-serif; table-layout: fixed; }
+table.sc th { font: 800 10px var(--cond); letter-spacing: .5px; color: #2a1400; background: linear-gradient(180deg, #ffd36b, #e8a02a); border-radius: 4px; padding: 3px 0; }
+table.sc td { background: rgba(255,255,255,.07); border-radius: 4px; padding: 4px 0; text-align: center; color: #fff; opacity: 0; transform: scale(.6); transition: opacity .25s, transform .3s cubic-bezier(.2,1.6,.4,1); }
+table.sc td.in { opacity: 1; transform: none; }
+table.sc tr.par td { color: rgba(255,255,255,.6); } table.sc td:first-child, table.sc th:first-child { width: 34px; font-size: 9px; } table.sc td:last-child, table.sc th:last-child { width: 30px; background: rgba(255,198,77,.18); color: #ffc64d; }
+table.sc td.u { color: #2a1400; background: #7cf5c3; } table.sc td.o { color: #fff; background: rgba(255,90,110,.45); } table.sc td.ace { color: #2a1400; background: radial-gradient(#fff2b0, #ffc64d); } table.sc td.e { color: rgba(255,255,255,.3); }
+.stat b.u { color: #7cf5c3; } .stat b.o { color: #ff8a9a; }
+.res-title { font: 800 15px var(--cond); letter-spacing: 3px; color: #f4e2c0; }
+</style>
+</head>
+<body class="k3">
+<canvas id="game" aria-label="Pub Golf. Drag back from anywhere and let go to putt." role="img"></canvas>
+<div class="hud" id="hud" hidden>
+  <div class="hrow">
+    <div class="hbox"><small>HOLE</small><b id="hHole">1/9</b></div>
+    <div class="hbox name"><small>COURSE</small><b id="hName">The Local</b></div>
+    <div class="hbox"><small>PAR</small><b id="hPar">2</b></div>
+    <button class="hbtn" id="pauseBtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
+  </div>
+  <div class="hrow" style="margin-top:7px"><div class="hbox"><small>SHOTS</small><b id="hStrokes">0</b></div><div class="hbox"><small>TO PAR</small><b id="hTotal">E</b></div><div class="hbox"><small>POINTS</small><b id="hPts" style="color:var(--gold)">0</b></div></div>
+  <p class="hint">Drag back anywhere, let go to putt</p>
+</div>
+<div class="hbtns" id="hbtns">
+  <button class="hbtn" id="viewBtn" type="button" aria-label="Whole hole view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  <button class="hbtn" id="rotL" type="button" aria-label="Turn camera left"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button class="hbtn" id="rotR" type="button" aria-label="Turn camera right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+</div>
+<div class="power" id="power"></div>
+<div class="banner" id="banner"></div>
+<div class="toast" id="toast"></div>
+<button class="iconbtn mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+<a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+
+<div class="overlay" id="gate" hidden><div class="card wood"><span class="age">18+</span><div class="logo">PUB GOLF</div><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+<div class="overlay" id="start" hidden><div class="card wood">
+  <div class="logo">PUB GOLF<small>18 HOLES · 18 PUBS · ONE CHAMPION</small></div>
+  <div class="modes">
+    <button class="mode" id="modeFront" type="button"><span class="ic">9</span><span><b>FRONT NINE</b><span>Holes 1 to 9. A quick round.</span></span><i>Best<br><span id="bestF">0</span></i></button>
+    <button class="mode champ" id="modeChamp" type="button"><span class="ic">18</span><span><b>CHAMPIONSHIP</b><span>All 18 holes, finishing at the Grand Finale.</span></span><i>Best<br><span id="bestC">0</span></i></button>
+    <button class="mode prac" id="modePractice" type="button"><span class="ic">▶</span><span><b>PRACTICE</b><span>Pick any hole and play it as often as you like.</span></span><i></i></button>
+  </div>
+  <ul class="how"><li><b>Drag back</b> from anywhere and <b>let go</b> to putt. Further back = harder.</li><li>Windmills, loops, pipes, bridges, a pool table and more. Water and drops cost a stroke.</li><li>Ring the bell, stop on the dartboard and pot the pool balls for bonus points.</li></ul>
+  <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="golf">Championship board</button><button class="btn ghost lb-btn" type="button" data-lb="golf9">Front Nine board</button></div>
+  <div class="settings"><label>Music <input type="range" class="vMusic" min="0" max="1" step="0.05"></label><label>Sound effects <input type="range" class="vSfx" min="0" max="1" step="0.05"></label><label>Graphics <select class="vQual"><option value="auto">Auto</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label></div>
+  <a class="btn ghost" href="/">All pub games</a>
+  <p class="fine">18+ · drinkaware.co.uk</p>
+</div></div>
+<div class="overlay" id="pick" hidden><div class="card wood"><h2>PICK A HOLE</h2><div class="pick-grid" id="pickGrid"></div><button class="btn ghost" id="pickBack" type="button">Back</button></div></div>
+<div class="overlay" id="pause" hidden><div class="card wood"><h2>PAUSED</h2><button class="btn go" id="resumeBtn" type="button">RESUME</button><div class="settings"><label>Music <input type="range" class="vMusic" min="0" max="1" step="0.05"></label><label>Sound effects <input type="range" class="vSfx" min="0" max="1" step="0.05"></label><label>Graphics <select class="vQual"><option value="auto">Auto</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label></div><div class="row"><button class="btn ghost" id="restartBtn" type="button">Restart</button><button class="btn ghost" id="quitBtn" type="button">Quit</button></div></div></div>
+<div class="overlay" id="between" hidden><div class="card wood"></div></div>
+<div class="overlay" id="over" hidden><div class="card wood">
+  <div class="res-title" id="fTitle">RESULTS</div><h2>ROUND OVER</h2><span class="newbest" id="newBest" hidden>NEW PERSONAL BEST!</span>
+  <div class="stats"><div class="stat"><b id="fScore">0</b><span>Points</span></div><div class="stat"><b id="fPar">E</b><span>To par</span></div><div class="stat"><b id="fBest">0</b><span>Best</span></div></div>
+  <p class="fine" id="fExtra"></p>
+  <div id="card"></div>
+  <button class="btn go" id="again" type="button">PLAY AGAIN</button>
+  <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="golf">Leaderboard</button><button class="btn ghost" id="share" type="button">Challenge a mate</button></div>
+  <button class="btn ghost" id="overMenu" type="button">Main menu</button><p class="fine" id="shareMsg" hidden></p>
+</div></div>
+<div class="loading" id="loading"><div class="spin"></div><p>Setting up the course…</p></div>
+<script src="/common.js"></script>
+<script type="module" src="/golf.js"></script>
+<script data-goatcounter="https://lastorders.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Shuffleboard</title>
+<meta name="description" content="Shuffleboard: the long pub table. Slide your pucks to the edge and knock Big Dave's off. First to 15.">
+<meta name="theme-color" content="#0a0810"><meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Shuffleboard"><meta property="og:description" content="Shuffleboard: the long pub table. Slide your pucks to the edge and knock Big Dave's off. First to 15."><meta property="og:image" content="https://lastorders.onrender.com/img/share/shuffle.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:url" content="https://lastorders.onrender.com/shuffle.html"><meta property="og:type" content="website"><meta property="og:site_name" content="Robbo's Game Lab"><meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css"><link rel="stylesheet" href="/arcade3d.css">
+<style>.power { position: fixed; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(260px, 64vw); height: 14px; border-radius: 8px; background: rgba(10,8,16,.6); border: 1px solid var(--line); overflow: hidden; opacity: 0; transition: opacity .2s; z-index: 11; }
+.power.on { opacity: 1; } .power::after { content: ""; position: absolute; inset: 0; width: calc(var(--p, 0) * 100%); background: linear-gradient(90deg, #2EE59D, #FFC64D 60%, #FF3B5A); }
+.hint { position: fixed; left: 50%; bottom: calc(50px + env(safe-area-inset-bottom)); transform: translateX(-50%); font: 700 13px Inter, sans-serif; color: rgba(255,255,255,.6); text-shadow: 0 2px 8px #000; white-space: nowrap; pointer-events: none; }
+.lives { display: flex; gap: 4px; align-items: center; } .lives i { width: 10px; height: 24px; border-radius: 4px 4px 3px 3px; background: linear-gradient(180deg, #3a6a2a 0 30%, #ffb028 30%); } .lives i.gone { opacity: .2; }
+.pks { display: flex; gap: 8px; } .pk { display: flex; gap: 3px; } .pk i { width: 12px; height: 12px; border-radius: 50%; background: #d81e28; box-shadow: inset 0 0 0 2px #e0e4ea; } .pk.t1 i { background: #2a5ad8; } .pk i.gone { opacity: .18; }
+.turn { position: fixed; left: 50%; top: calc(118px + env(safe-area-inset-top)); transform: translateX(-50%); font: 800 16px var(--cond); letter-spacing: 2px; color: rgba(255,255,255,.8); text-shadow: 0 2px 8px #000; pointer-events: none; }</style>
+</head>
+<body class="k3">
+<canvas id="game" aria-label="Shuffleboard. Drag back and let go to slide the puck." role="img"></canvas>
+<div class="hud" id="hud" hidden>
+  <div class="hrow">
+    <div class="hbox"><small>YOU</small><b id="hYou" style="color:#ff5a64">0</b></div>
+    <div class="hbox"><small>BIG DAVE</small><b id="hDave" style="color:#6a9aff">0</b></div>
+    <div class="hbox"><small>END</small><b id="hEnd">1</b></div>
+    <button class="hbtn" id="pauseBtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
+  </div>
+  <div class="hrow" style="margin-top:7px"><div class="hbox"><small>PUCKS LEFT</small><div class="pks" id="hPucks"></div></div></div>
+  <div class="turn" id="turn">YOUR GO</div>
+  <p class="hint">Drag down to set power, sideways to aim, let go</p>
+</div>
+<div class="power" id="power"></div>
+<div class="toast" id="toast"></div>
+<button class="iconbtn mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+<a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+<div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>SHUFFLEBOARD</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+<div class="overlay" id="start" hidden><div class="card">
+  <h1>SHUFFLE&shy;BOARD</h1>
+  <p class="big">The long table at the back of the pub. You v Big Dave, first to 15.</p>
+  <ul class="how"><li><b>Drag down</b> to set the power, a bit <b>sideways</b> to aim, then <b>let go</b>.</li><li>Get as close to the far edge as you dare: zones score <b>1, 2 and 3</b>. Hanging over the edge is <b>4</b>.</li><li>Only the player with the furthest puck scores, so <b>knock Big Dave's off</b>.</li><li>Touch the sides or go off the end and it's gone.</li></ul>
+  <button class="btn go" id="go" type="button">PLAY BIG DAVE</button>
+  <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="shuffle">Leaderboard</button><a class="btn ghost" href="/">All pub games</a></div>
+  <div class="settings"><label>Music <input type="range" id="volMusic" min="0" max="1" step="0.05"></label><label>Graphics <select id="qual"><option value="auto">Auto</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label></div>
+  <p class="fine">Best: <b id="bestStart">0</b> · 18+ · drinkaware.co.uk</p>
+</div></div>
+<div class="overlay" id="pause" hidden><div class="card"><h2>PAUSED</h2><button class="btn go" id="resumeBtn" type="button">RESUME</button><div class="row"><button class="btn ghost" id="restartBtn" type="button">Restart</button><button class="btn ghost" id="quitBtn" type="button">Quit</button></div></div></div>
+<div class="overlay" id="over" hidden><div class="card">
+  <h2 id="oTitle">GAME OVER</h2><span class="newbest" id="newBest" hidden>NEW PERSONAL BEST!</span>
+  <div class="stats"><div class="stat"><b id="fYou">0</b><span>You</span></div><div class="stat"><b id="fDave">0</b><span>Big Dave</span></div><div class="stat"><b id="fScore">0</b><span>Score</span></div></div>
+  <button class="btn go" id="again" type="button">REMATCH</button>
+  <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="shuffle">Leaderboard</button><button class="btn ghost" id="share" type="button">Challenge a mate</button></div>
+  <a class="btn ghost" href="/">All pub games</a><p class="fine" id="shareMsg" hidden></p>
+</div></div>
+<div class="loading" id="loading"><div class="spin"></div><p>Waxing the table…</p></div>
+<script src="/common.js"></script>
+<script type="module" src="/shuffle.js"></script>
+<script data-goatcounter="https://lastorders.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

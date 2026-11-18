@@ -12,6 +12,7 @@
   // ---------- the catalogue ----------
   const quizStatus = () => store.get("quizDay") === today() ? "Tonight: " + (store.get("quizScore-" + today()) || 0) + " pts" : "Tonight's quiz is ready";
   const GAMES = [
+    { id: "golf", page: "golf", name: "Pub Golf", cat: "pub", tag: "18 holes of 3D crazy golf across 18 pubs.", hero: "Pub Golf. Eighteen holes of crazy golf, each in a different pub: windmills, a loop-the-loop, a copper pipe, a pool table, moving bridges and the Grand Finale. Front Nine or the full Championship.", isNew: true, best: () => num("golfBest") ? "Best " + num("golfBest").toLocaleString("en-GB") + " pts" : num("golfBest9") ? "Front 9 best " + num("golfBest9").toLocaleString("en-GB") : "" },
     { id: "kebab", page: "kebab", name: "Kebab Run", cat: "arcade", tag: "Ride round town taking Uber-style kebab orders.", hero: "Kebab Run 2. A whole British town to ride round at night. Accept orders on your phone, follow the sat-nav and land the kebab on the doormat while it's hot.", isNew: true, best: () => num("kbBest") ? "Best £" + (num("kbBest") / 100).toFixed(2) : "" },
     { id: "empire", page: "empire", name: "Pub Empire", cat: "pub", tag: "Buy the pubs, charge a round, bankrupt your mates.", hero: "The pub property board game. Buy the high street, build Superpubs and make your mates buy the rounds. Play the regulars or pass the phone.", isNew: true, best: () => num("empWins") ? num("empWins") + " game" + (num("empWins") > 1 ? "s" : "") + " won" : store.get("empSave") ? "Game in progress" : "" },
     { id: "mega", page: "goldpints", name: "Golden Pints", cat: "slots", tag: "Modern 5-reel slot with free spins and a daily wheel.", hero: "Five reels, twenty lines, a Cool Pint wild and free spins that pay triple. Spin the daily wheel too.", isNew: true, best: () => num("gpBest") ? "Biggest win " + fmt(num("gpBest")) : "" },
@@ -33,7 +34,7 @@
     { id: "sort", page: "sort", name: "Drink Sort", cat: "puzzles", tag: "Tricky puzzle. One drink per glass.", best: () => num("sortLevel") > 1 ? "On level " + num("sortLevel") : "" },
   ];
   const BY = Object.fromEntries(GAMES.map((g) => [g.id, g]));
-  const FEATURED = ["kebab", "empire", "mega", "crush", "flying", "goggles", "slots"];
+  const FEATURED = ["golf", "kebab", "empire", "mega", "crush", "flying", "goggles", "slots"];
   const CATS = [["arcade", "Arcade"], ["pub", "Pub Games"], ["puzzles", "Puzzles"], ["slots", "Slots"]];
   const art = (g) => `/img/games/${g.page}.webp`, heroArt = (g) => `/img/games/${g.page}-hero.webp`, href = (g) => `/${g.page}.html`;
 

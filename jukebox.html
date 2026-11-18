@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Jukebox Hero</title>
+<meta name="description" content="Jukebox Hero: a neon rhythm game in the pub. Tap the notes as they fly out of the jukebox. Every song gets faster.">
+<meta name="theme-color" content="#0a0810"><meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="Jukebox Hero"><meta property="og:description" content="Jukebox Hero: a neon rhythm game in the pub. Tap the notes as they fly out of the jukebox. Every song gets faster."><meta property="og:image" content="https://lastorders.onrender.com/img/share/jukebox.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:url" content="https://lastorders.onrender.com/jukebox.html"><meta property="og:type" content="website"><meta property="og:site_name" content="Robbo's Game Lab"><meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="/common.css"><link rel="stylesheet" href="/arcade3d.css">
+<style>.lanes { position: fixed; left: 0; right: 0; bottom: 0; height: 34vh; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 8px calc(10px + env(safe-area-inset-bottom)); z-index: 11; }
+.lane { border: 0; border-radius: 18px 18px 14px 14px; background: linear-gradient(180deg, rgba(255,255,255,0), color-mix(in srgb, var(--c) 22%, transparent)); border-bottom: 4px solid var(--c); color: rgba(255,255,255,.55); font: 800 14px Inter, sans-serif; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px; cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none; }
+.lane.on { background: linear-gradient(180deg, rgba(255,255,255,0), color-mix(in srgb, var(--c) 55%, transparent)); }
+.judge { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(.6); opacity: 0; font: 800 34px var(--cond); letter-spacing: 2px; pointer-events: none; text-shadow: 0 3px 14px rgba(0,0,0,.8); z-index: 12; }
+.judge.on { animation: jIn .45s cubic-bezier(.2,1.6,.4,1) forwards; } @keyframes jIn { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -70%) scale(1); } }
+.judge.perfect { color: #FFD23A; } .judge.great { color: #2EE59D; } .judge.good { color: #3DA0FF; } .judge.miss { color: #FF5A6A; }
+.hp { width: 120px; height: 10px; border-radius: 6px; background: rgba(255,255,255,.12); overflow: hidden; margin-top: 2px; } .hp i { display: block; height: 100%; background: linear-gradient(90deg, #FF3D7F, #FFD23A 50%, #2EE59D); transition: width .15s; } .hp.low i { animation: blinkhp .4s steps(2) infinite; } @keyframes blinkhp { 50% { opacity: .3; } }</style>
+</head>
+<body class="k3">
+<canvas id="game" aria-label="Jukebox Hero. Tap the lanes as the notes cross the line." role="img"></canvas>
+<div class="hud" id="hud" hidden>
+  <div class="hrow">
+    <div class="hbox"><small>SCORE</small><b id="hScore">0</b></div>
+    <div class="hbox"><small>COMBO</small><b id="hCombo">0</b></div>
+    <div class="hbox"><small>MULTI</small><b id="hMult" style="color:var(--gold)">×1</b></div>
+    <div class="hbox"><small>SONG</small><b id="hSong">1</b></div>
+    <button class="hbtn" id="pauseBtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
+  </div>
+  <div class="hrow" style="margin-top:7px"><div class="hbox"><small>ROCK METER</small><div class="hp"><i id="hHealth" style="width:100%"></i></div></div></div>
+</div>
+<div class="lanes" id="lanes" hidden><button class="lane" data-l="0" style="--c:#ff3d7f" type="button">D</button><button class="lane" data-l="1" style="--c:#ffd23a" type="button">F</button><button class="lane" data-l="2" style="--c:#2ee59d" type="button">J</button><button class="lane" data-l="3" style="--c:#3da0ff" type="button">K</button></div>
+<div class="judge" id="judge"></div>
+<div class="toast" id="toast"></div>
+<button class="iconbtn mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+<a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
+<div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>JUKEBOX HERO</h1><p class="big">These pub games are about booze and have some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, these are for grown-ups.</p></div></div>
+<div class="overlay" id="start" hidden><div class="card">
+  <h1>JUKEBOX HERO</h1>
+  <p class="big">The jukebox is on fire. Tap the notes as they hit the line and keep the pub rocking.</p>
+  <ul class="how"><li>Tap the <b>lane</b> (or press <b>D F J K</b>) as each note crosses the white line.</li><li>Hit notes play the tune. <b>Perfect</b> timing scores most.</li><li>Every 10 in a row ups your <b>multiplier</b> to ×4.</li><li>Misses drain the <b>rock meter</b>. Every song is faster than the last.</li></ul>
+  <button class="btn go" id="go" type="button">PLAY</button>
+  <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="jukebox">Leaderboard</button><a class="btn ghost" href="/">All pub games</a></div>
+  <div class="settings"><label>Music <input type="range" id="volMusic" min="0" max="1" step="0.05"></label><label>Graphics <select id="qual"><option value="auto">Auto</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label></div>
+  <p class="fine">Best: <b id="bestStart">0</b> · Sound on for this one! · 18+</p>
+</div></div>
+<div class="overlay" id="pause" hidden><div class="card"><h2>PAUSED</h2><button class="btn go" id="resumeBtn" type="button">RESUME</button><div class="row"><button class="btn ghost" id="restartBtn" type="button">Restart</button><button class="btn ghost" id="quitBtn" type="button">Quit</button></div></div></div>
+<div class="overlay" id="over" hidden><div class="card">
+  <h2>THE CROWD'S GONE HOME</h2><span class="newbest" id="newBest" hidden>NEW PERSONAL BEST!</span>
+  <div class="stats"><div class="stat"><b id="fScore">0</b><span>Score</span></div><div class="stat"><b id="fCombo">0</b><span>Best combo</span></div><div class="stat"><b id="fAcc">0%</b><span>Accuracy</span></div><div class="stat"><b id="fSongs">0</b><span>Songs</span></div><div class="stat"><b id="fBest">0</b><span>Best</span></div><div class="stat"><b>🎸</b><span>Rock on</span></div></div>
+  <p class="fine" id="fLine"></p>
+  <button class="btn go" id="again" type="button">ENCORE</button>
+  <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="jukebox">Leaderboard</button><button class="btn ghost" id="share" type="button">Challenge a mate</button></div>
+  <a class="btn ghost" href="/">All pub games</a><p class="fine" id="shareMsg" hidden></p>
+</div></div>
+<div class="loading" id="loading"><div class="spin"></div><p>Warming up the jukebox…</p></div>
+<script src="/common.js"></script>
+<script type="module" src="/jukebox.js"></script>
+<script data-goatcounter="https://lastorders.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
