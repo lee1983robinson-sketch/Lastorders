@@ -157,3 +157,10 @@ All gameplay logic, game data, leaderboards, and existing image assets are retai
 - 5-minute shifts; score is earnings in pence (leaderboard "kebab"). Stars at £15 / £30 / £45. Garage upgrades and helmets carry over.
 - New three.js helpers in /vendor/jsm (post-processing, Reflector, RoundedBoxGeometry), MIT licence like three.js.
 - sw.js VERSION lastorders-6.0. No API change needed.
+
+## 6.1: Beer Goggles rebuilt
+- run3d.js / run.html rebuilt on a new engine; gameplay, chaser levels, lad/lass, bgBest and the "goggles" leaderboard are unchanged.
+- Fixed: camera shake never switched off after a stumble (it kept shaking all run). Shakes now fade within a second and can be turned off.
+- Streets made from pre-baked chunk templates (High Street, Terraces, City Centre, Canal) that are moved, never rebuilt; obstacles pooled; coins and beers instanced; 3 real lights max; auto quality (High / Medium / Low).
+- New: moving traffic, buses, barriers, coins, shield, magnet, kebab boost, weather per run, new runner and chaser models and animation, footsteps / traffic / ambience / layered music, music + SFX volume, pause menu, game-over stats.
+- run-lite.html unchanged. sw.js VERSION lastorders-6.1.

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Beer Goggles</title>
-<meta name="description" content="Run from the Swamp Monster. Every beer you grab makes them look a little bit better. 18+.">
+<meta name="description" content="Run from the Swamp Monster through British streets at night. Every beer you grab makes them look a little bit better. 18+.">
 <meta name="theme-color" content="#0A0E24">
 <meta name="color-scheme" content="dark">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -22,125 +22,171 @@
 <meta property="og:site_name" content="Robbo's Game Lab">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;600;800&display=swap">
 <link rel="stylesheet" href="/common.css">
 <style>
-/* Layout: one full-height arcade screen; a 360x640 world letterboxed in the middle, HUD and menus float over it. Single dark look by choice. */
 :root {
-  --night: #0A0E24; --lager: #FFB627; --foam: #FFF6E0; --neon: #FF3D7F; --slime: #7BC74D;
-  --ink: #F4F1FF; --muted: #B9B6D9; --panel: rgba(12, 14, 38, .93);
-  --display: "Bungee", "Impact", "Arial Black", sans-serif; --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  color-scheme: dark; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box;
+  --night: #0A0E24; --lager: #FFB627; --foam: #FFF6E0; --neon: #FF3D7F; --slime: #7BC74D; --ok: #2EE59D;
+  --ink: #F4F1FF; --muted: #B9B6D9; --glass: rgba(8,10,22,.6); --line: rgba(255,255,255,.13);
+  --display: "Bungee", "Impact", "Arial Black", sans-serif; --cond: "Barlow Condensed", "Arial Narrow", sans-serif; --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
 }
 html, body { height: 100%; }
 [hidden] { display: none !important; }
 body { margin: 0; background: var(--night); color: var(--ink); font-family: var(--body); overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
-.stage { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; }
-.screen { position: absolute; inset: 0; }
+.stage { position: fixed; inset: 0; }
 canvas#game { display: block; touch-action: none; width: 100%; height: 100%; }
-.hud { position: absolute; top: max(10px, env(safe-area-inset-top, 0px)); left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
-.chaser { display: flex; align-items: center; gap: 8px; background: #0A0E24cc; border: 1px solid #2C2F66; border-radius: 16px; padding: 6px 10px 6px 6px; }
-.chaser canvas { width: 52px; height: 52px; border-radius: 50%; background: #1C1640; }
-.chaser .lv { display: flex; flex-direction: column; gap: 4px; min-width: 96px; }
-.chaser .lv b { font-family: var(--display); font-weight: 400; font-size: 13px; color: var(--foam); line-height: 1; }
-.chaser .lv span { font-size: 10px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
-.meter { height: 6px; border-radius: 9px; background: #2A2350; overflow: hidden; }
-.meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--slime), var(--neon)); }
-.nums { text-align: right; display: flex; flex-direction: column; gap: 2px; }
-.nums .sc { font-family: var(--display); font-size: 30px; color: var(--foam); text-shadow: 0 3px 0 #000; font-variant-numeric: tabular-nums; line-height: 1; }
-.nums .bz { font-weight: 800; font-size: 14px; color: var(--lager); text-shadow: 0 2px 0 #000; }
-.danger { position: absolute; left: 0; right: 0; bottom: 0; height: 90px; pointer-events: none; background: linear-gradient(0deg, #FF3D7F66, transparent); opacity: 0; transition: opacity .2s; }
-.mute { position: absolute; bottom: 12px; right: 12px; width: 44px; height: 44px; border-radius: 12px; border: 1px solid #2C2F66; background: #12163Acc; color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.toast { position: absolute; left: 50%; top: 92px; transform: translateX(-50%); font-family: var(--display); font-size: 20px; color: var(--lager); text-shadow: 0 3px 0 #000; pointer-events: none; opacity: 0; transition: opacity .2s; white-space: nowrap; text-align: center; }
-.toast.on { opacity: 1; }
-.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
-.card { width: min(340px, 100%); background: var(--panel); border: 2px solid #2C2F66; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 12px; text-align: center; box-shadow: 0 20px 60px #000c; margin: auto; }
+/* HUD */
+.hud { position: absolute; inset: 0; pointer-events: none; padding: calc(10px + env(safe-area-inset-top)) 10px 0; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.gl { background: var(--glass); border: 1px solid var(--line); border-radius: 16px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.chaser { display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; min-width: 0; }
+.chaser canvas { width: 46px; height: 46px; border-radius: 50%; background: #1C1640; flex: none; }
+.chaser .lv { display: flex; flex-direction: column; gap: 3px; min-width: 104px; }
+.chaser .lv span { font-size: 9.5px; font-weight: 800; letter-spacing: 1.3px; color: var(--muted); }
+.chaser .lv b { font: 700 19px/1 var(--cond); color: var(--foam); letter-spacing: .3px; }
+.meter { height: 5px; border-radius: 9px; background: rgba(255,255,255,.12); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--slime), var(--neon)); transition: width .3s; }
+.chasebox { margin-top: 2px; } .chasebox small { font-size: 8.5px; font-weight: 800; letter-spacing: 1.2px; color: var(--muted); }
+.chasebox .meter i { background: linear-gradient(90deg, #4CB4FF, #FFC64D 60%, #FF3B5A); transition: width .2s; }
+.chasebox.hot small { color: #FF6A7A; animation: blink .5s steps(2) infinite; } @keyframes blink { 50% { opacity: .4; } }
+.right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.scorebox { display: flex; align-items: center; gap: 8px; }
+.score { text-align: right; padding: 6px 12px; line-height: 1; }
+.score b { display: block; font: 700 32px/1 var(--cond); color: #fff; font-variant-numeric: tabular-nums; letter-spacing: .5px; }
+.score small { font: 700 11px var(--body); color: var(--muted); letter-spacing: 1px; }
+.pbtn { pointer-events: auto; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: #fff; cursor: pointer; padding: 0; }
+.pbtn svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; fill: none; }
+.counts { display: flex; gap: 6px; }
+.cnt { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; font: 700 18px var(--cond); color: #fff; }
+.cnt i { width: 20px; height: 20px; border-radius: 50%; display: inline-block; flex: none; }
+.cnt .coin { background: radial-gradient(circle at 35% 30%, #FFF0A8, #F2B21E 60%, #A86A00); box-shadow: inset 0 0 0 2px rgba(120,70,0,.35); }
+.cnt .pint { border-radius: 4px 4px 6px 6px; width: 15px; height: 20px; background: linear-gradient(180deg, #fff6e0 0 26%, #ffa51f 26%); }
+.cnt.bump { animation: bump .35s cubic-bezier(.2,1.8,.4,1); } @keyframes bump { 40% { transform: scale(1.22); } }
+.tag { font: 800 10px var(--body); letter-spacing: 1px; color: var(--lager); padding: 3px 8px; }
+.pus { display: flex; gap: 6px; margin-top: 8px; justify-content: flex-end; }
+.pu { --p: 1; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; background: conic-gradient(var(--c) calc(var(--p) * 360deg), rgba(255,255,255,.1) 0); padding: 3px; }
+.pu span { width: 100%; height: 100%; border-radius: 50%; background: rgba(8,10,22,.85); display: grid; place-items: center; }
+.danger { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 120px rgba(255,40,80,.7); opacity: 0; transition: opacity .25s; }
+.mute { position: absolute; bottom: calc(12px + env(safe-area-inset-bottom)); right: 12px; width: 44px; height: 44px; border-radius: 12px; color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 3; }
+.home { z-index: 3; }
+.toast { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -6px) scale(.9); font: 800 30px/1.05 var(--cond); letter-spacing: 1px; color: #fff; text-shadow: 0 3px 14px rgba(0,0,0,.85); pointer-events: none; opacity: 0; transition: opacity .2s, transform .25s cubic-bezier(.2,1.5,.4,1); white-space: nowrap; text-align: center; }
+.toast.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.toast.gold { color: var(--lager); } .toast.good { color: #7CF5C3; } .toast.bad { color: #FF6A7A; } .toast.env { font-size: 22px; letter-spacing: 4px; color: rgba(255,255,255,.85); top: 22%; }
+/* menus */
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; background: linear-gradient(180deg, rgba(4,6,14,.25), rgba(4,6,14,.75)); z-index: 5; }
+.card { width: min(360px, 100%); background: rgba(12,14,30,.88); border: 1px solid var(--line); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 12px; text-align: center; box-shadow: 0 24px 70px rgba(0,0,0,.6); margin: auto; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 40px; line-height: .95; color: var(--lager); text-shadow: 0 0 18px #FFB62766, 3px 3px 0 #7A2E00; }
-h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 24px; line-height: 1.1; color: var(--neon); text-wrap: balance; }
+h2 { margin: 0; font: 800 26px/1.1 var(--cond); letter-spacing: .5px; color: var(--neon); text-wrap: balance; }
 p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
-.big { font-size: 16px; color: var(--ink); font-weight: 600; }
-.btn { min-height: 52px; border-radius: 14px; border: 0; background: var(--lager); color: #2A1400; font-family: var(--display); font-size: 19px; cursor: pointer; box-shadow: 0 4px 0 #A86A00; text-decoration: none; display: flex; align-items: center; justify-content: center; }
-.btn.ghost { background: #1C2150; color: var(--ink); box-shadow: 0 4px 0 #0A0C26; font-family: var(--body); font-weight: 800; font-size: 15px; min-height: 46px; }
-.btn:focus-visible, .mute:focus-visible, .who:focus-visible { outline: 3px solid var(--neon); outline-offset: 2px; }
+.big { font-size: 15.5px; color: var(--ink); font-weight: 600; }
+.btn { min-height: 52px; border-radius: 16px; border: 0; background: var(--lager); color: #2A1400; font: 800 22px var(--cond); letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 0 #A86A00; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+.btn.go { background: linear-gradient(180deg, #FFC64D, #F2A01E); font-size: 28px; min-height: 58px; animation: pulse 2s ease-in-out infinite; } @keyframes pulse { 50% { box-shadow: 0 4px 0 #A86A00, 0 0 28px rgba(255,182,39,.55); } }
+.btn.ghost { background: rgba(255,255,255,.08); color: var(--ink); box-shadow: none; border: 1px solid var(--line); font: 700 15px var(--body); letter-spacing: 0; min-height: 46px; }
+.btn:focus-visible, .mute:focus-visible, .who:focus-visible, .pbtn:focus-visible { outline: 3px solid var(--neon); outline-offset: 2px; }
 .row { display: flex; gap: 10px; } .row > * { flex: 1; }
-.who { min-height: 52px; border-radius: 14px; border: 2px solid #2C2F66; background: #161A44; color: var(--muted); font: 800 15px var(--body); cursor: pointer; }
-.who.on { border-color: var(--lager); color: var(--foam); background: #2A2350; }
+.who { min-height: 50px; border-radius: 14px; border: 2px solid var(--line); background: rgba(255,255,255,.05); color: var(--muted); font: 800 15px var(--body); cursor: pointer; }
+.who.on { border-color: var(--lager); color: var(--foam); background: rgba(255,182,39,.12); }
 .ladder { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
 .ladder div { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 9px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; line-height: 1.1; }
 .ladder canvas { width: 50px; height: 50px; border-radius: 50%; background: #1C1640; }
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.stat { background: #161A44; border-radius: 12px; padding: 8px 4px; display: flex; flex-direction: column; gap: 2px; }
-.stat b { font-family: var(--display); font-weight: 400; font-size: 24px; color: var(--foam); font-variant-numeric: tabular-nums; }
-.stat span { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 800; }
-.portrait { width: 132px; height: 132px; border-radius: 50%; align-self: center; background: #1C1640; border: 3px solid var(--neon); }
+.stat { background: rgba(255,255,255,.06); border-radius: 12px; padding: 8px 4px; display: flex; flex-direction: column; gap: 2px; }
+.stat b { font: 700 24px var(--cond); color: var(--foam); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 9.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+.portrait { width: 120px; height: 120px; border-radius: 50%; align-self: center; background: #1C1640; border: 3px solid var(--neon); }
+.newbest { align-self: center; font: 800 14px var(--body); letter-spacing: 1px; color: #2A1400; background: linear-gradient(90deg, #FFD36B, #F2A622); border-radius: 10px; padding: 4px 12px; animation: pulse 1.4s infinite; }
 .fine { font-size: 12px; color: #8F8CB8; }
-.keys { font-size: 13px; color: var(--ink); background: #161A44; border-radius: 12px; padding: 10px; line-height: 1.6; }
+.keys { font-size: 12.5px; color: var(--ink); background: rgba(255,255,255,.05); border-radius: 12px; padding: 10px; line-height: 1.6; }
 .age { align-self: center; font-family: var(--display); font-size: 14px; color: #2A1400; background: var(--neon); padding: 4px 10px; border-radius: 8px; }
+.settings { display: flex; flex-direction: column; gap: 9px; text-align: left; background: rgba(255,255,255,.05); border-radius: 14px; padding: 12px; }
+.settings label { display: flex; align-items: center; justify-content: space-between; gap: 10px; font: 700 13.5px var(--body); color: var(--ink); }
+.settings input[type=range] { width: 55%; accent-color: var(--lager); }
+.settings select { background: #1C2150; color: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; font: 700 13px var(--body); }
+.settings input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--lager); }
+.loading { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #05070F; color: var(--muted); font: 700 14px var(--body); transition: opacity .4s; }
+.loading.done { opacity: 0; pointer-events: none; }
+.spin { width: 42px; height: 42px; border-radius: 50%; border: 4px solid rgba(255,255,255,.12); border-top-color: var(--lager); animation: spin .8s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .btn.go, .newbest { animation: none; } }
+@media (orientation: landscape) and (max-height: 500px) { .score b { font-size: 26px; } .chaser canvas { width: 38px; height: 38px; } .toast { top: 26%; } }
 </style>
 </head>
 <body>
 <div class="stage" id="stage">
-  <div class="screen" id="screen">
-    <canvas id="game" aria-label="Beer Goggles running game. Swipe or use the arrow keys." role="img"></canvas>
-    <div class="danger" id="danger"></div>
-    <div class="hud" id="hud" hidden>
-      <div class="chaser"><canvas id="mini" width="52" height="52" aria-hidden="true"></canvas><div class="lv"><span>Chasing you</span><b id="lvName">Swamp Monster</b><div class="meter"><i id="meter"></i></div></div></div>
-      <div class="nums"><div class="sc" id="score">0</div><div class="bz" id="beers">0 beers</div></div>
-    </div>
-    <div class="toast" id="toast" aria-live="polite"></div>
-    <button class="mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
-
-    <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
-    <div class="overlay" id="gate" hidden>
-      <div class="card">
-        <span class="age">18+</span>
-        <h1>BEER GOGGLES</h1>
-        <p class="big">This game is about booze and has some cheeky language.</p>
-        <p>Are you 18 or over?</p>
-        <div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div>
-        <p class="fine" id="gateMsg" hidden>Sorry, this one's for grown-ups.</p>
+  <canvas id="game" aria-label="Beer Goggles running game. Swipe or use the arrow keys." role="img"></canvas>
+  <div class="danger" id="danger"></div>
+  <div class="hud" id="hud" hidden>
+    <div class="top">
+      <div>
+        <div class="gl chaser"><canvas id="mini" width="46" height="46" aria-hidden="true"></canvas><div class="lv"><span>CHASING YOU</span><b id="lvName">Swamp Monster</b><div class="meter" title="Beer goggles"><i id="meter"></i></div><div class="chasebox" id="chaseBox"><small>HOW CLOSE</small><div class="meter"><i id="chaseBar"></i></div></div></div></div>
+        <div class="pus"><div class="pu" id="puShield" style="--c:#3da0ff" hidden><span>🛡️</span></div><div class="pu" id="puMagnet" style="--c:#ff3d5a" hidden><span>🧲</span></div><div class="pu" id="puBoost" style="--c:#ffb030" hidden><span>🥙</span></div></div>
       </div>
-    </div>
-
-    <div class="overlay" id="start" hidden>
-      <div class="card">
-        <h1>BEER GOGGLES</h1>
-        <p class="big">Something's chasing you home. Every beer you grab makes it look a little bit better.</p>
-        <div class="ladder" id="ladder" aria-label="The five beer goggles levels"></div>
-        <div class="row" role="group" aria-label="Run as">
-          <button class="who" type="button" data-g="lad">Run as a lad</button>
-          <button class="who" type="button" data-g="lass">Run as a lass</button>
-        </div>
-        <div class="keys">Swipe left / right to change lanes<br>Swipe up to jump bins and cones<br>Swipe down to slide under scaffolding<br>Kebabs give you a burst of speed</div>
-        <button class="btn" id="go" type="button">LEG IT!</button>
-        <button class="btn ghost lb-btn" type="button" data-lb="goggles">Leaderboard</button>
-        <div class="row"><a class="btn ghost" href="/">All games</a><a class="btn ghost" href="/darts.html">Darts</a></div>
-        <a class="fine" href="/run-lite.html" style="color:#B9B6D9">Older phone? Play the lite version</a>
-        <p class="fine">Best: <b id="bestStart">0</b> · 18+ · Know your limits: drinkaware.co.uk<br>A Robbo's Game Lab game</p>
-      </div>
-    </div>
-
-    <div class="overlay" id="over" hidden>
-      <div class="card">
-        <canvas class="portrait" id="caughtBy" width="132" height="132" aria-hidden="true"></canvas>
-        <h2 id="line">The Swamp Monster got you.</h2>
-        <div class="stats">
-          <div class="stat"><b id="fScore">0</b><span>Score</span></div>
-          <div class="stat"><b id="fBeers">0</b><span>Beers</span></div>
-          <div class="stat"><b id="fBest">0</b><span>Best</span></div>
-        </div>
-        <button class="btn" id="again" type="button">RUN AGAIN</button>
-        <button class="btn ghost lb-btn" type="button" data-lb="goggles">Leaderboard</button>
-        <div class="row"><button class="btn ghost" id="menu" type="button">Change runner</button><button class="btn ghost" id="share" type="button">Copy score</button></div>
-        <p class="fine" id="shareMsg" hidden></p>
+      <div class="right">
+        <div class="scorebox"><div class="gl score"><b id="score">0</b><small id="dist">0 m</small></div><button class="gl pbtn" id="pauseBtn" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button></div>
+        <div class="counts"><div class="gl cnt"><i class="coin"></i><span id="coinsN">0</span></div><div class="gl cnt"><i class="pint"></i><span id="beersN">0</span></div></div>
+        <div class="gl tag" id="bestTag" hidden></div>
       </div>
     </div>
   </div>
-</div>
+  <div class="toast" id="toast" aria-live="polite"></div>
+  <button class="gl mute" id="mute" type="button" aria-label="Turn sound off"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+  <a class="iconbtn home" href="/" aria-label="All games"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></a>
 
+  <div class="overlay" id="gate" hidden><div class="card"><span class="age">18+</span><h1>BEER GOGGLES</h1><p class="big">This game is about booze and has some cheeky language.</p><p>Are you 18 or over?</p><div class="row"><button class="btn" id="yes" type="button">YES</button><button class="btn ghost" id="no" type="button">No</button></div><p class="fine" id="gateMsg" hidden>Sorry, this one's for grown-ups.</p></div></div>
+
+  <div class="overlay" id="start" hidden><div class="card">
+    <h1>BEER GOGGLES</h1>
+    <p class="big">Something's chasing you home. Every beer you grab makes it look a little bit better.</p>
+    <div class="ladder" id="ladder" aria-label="The five beer goggles levels"></div>
+    <div class="row" role="group" aria-label="Run as"><button class="who" type="button" data-g="lad">Run as a lad</button><button class="who" type="button" data-g="lass">Run as a lass</button></div>
+    <div class="keys">Swipe left / right to change lanes · Swipe up to jump · Swipe down to slide<br>🪙 Coins · 🍺 Beers · 🛡️ Shield · 🧲 Magnet · 🥙 Kebab boost<br>Dodge cars, buses, vans, bins and barriers</div>
+    <button class="btn go" id="go" type="button">LEG IT!</button>
+    <div class="row"><button class="btn ghost lb-btn" type="button" data-lb="goggles">Leaderboard</button><button class="btn ghost" id="setBtn" type="button">Settings</button></div>
+    <div class="settings" id="setPanel" hidden>
+      <label>Music <input type="range" id="volMusic2" min="0" max="1" step="0.05"></label>
+      <label>Sound effects <input type="range" id="volSfx2" min="0" max="1" step="0.05"></label>
+      <label>Graphics <select id="qual2"><option value="auto">Auto</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
+      <label>Camera shake <input type="checkbox" id="shake2"></label>
+    </div>
+    <div class="row"><a class="btn ghost" href="/">All games</a><a class="btn ghost" href="/darts.html">Darts</a></div>
+    <a class="fine" href="/run-lite.html" style="color:#B9B6D9">Older phone? Play the lite version</a>
+    <p class="fine">Best: <b id="bestStart">0</b> · Coins: <b id="coinsStart">0</b> · 18+ · Know your limits: drinkaware.co.uk<br>A Robbo's Game Lab game</p>
+  </div></div>
+
+  <div class="overlay" id="pause" hidden><div class="card">
+    <h2>PAUSED</h2>
+    <button class="btn go" id="resumeBtn" type="button">RESUME</button>
+    <div class="settings">
+      <label>Music <input type="range" id="volMusic" min="0" max="1" step="0.05"></label>
+      <label>Sound effects <input type="range" id="volSfx" min="0" max="1" step="0.05"></label>
+      <label>Graphics <select id="qual"><option value="auto">Auto</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
+      <label>Camera shake <input type="checkbox" id="shake"></label>
+      <label>Sound <button class="btn ghost" id="mute2" type="button" aria-label="Turn sound off" style="min-height:38px;padding:0 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="wave2" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button></label>
+    </div>
+    <div class="row"><button class="btn ghost" id="restartBtn" type="button">Restart</button><button class="btn ghost" id="quitBtn" type="button">Quit</button></div>
+  </div></div>
+
+  <div class="overlay" id="over" hidden><div class="card">
+    <canvas class="portrait" id="caughtBy" width="120" height="120" aria-hidden="true"></canvas>
+    <span class="newbest" id="newBest" hidden>NEW PERSONAL BEST!</span>
+    <h2 id="line">The Swamp Monster got you.</h2>
+    <div class="stats">
+      <div class="stat"><b id="fScore">0</b><span>Score</span></div>
+      <div class="stat"><b id="fDist">0 m</b><span>Distance</span></div>
+      <div class="stat"><b id="fBest">0</b><span>Best</span></div>
+      <div class="stat"><b id="fBeers">0</b><span>Beers</span></div>
+      <div class="stat"><b id="fCoins">0</b><span>Coins</span></div>
+      <div class="stat"><b id="fLevel">0</b><span>Goggles</span></div>
+    </div>
+    <button class="btn go" id="again" type="button">RUN AGAIN</button>
+    <button class="btn ghost lb-btn" type="button" data-lb="goggles">Leaderboard</button>
+    <div class="row"><button class="btn ghost" id="menu" type="button">Change runner</button><button class="btn ghost" id="share" type="button">Challenge a mate</button></div>
+    <p class="fine" id="shareMsg" hidden></p>
+  </div></div>
+</div>
+<div class="loading" id="loading"><div class="spin"></div><p>Getting the round in…</p></div>
 <script src="/common.js"></script>
 <script type="module" src="/run3d.js"></script>
-<script>if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));</script>
 <script data-goatcounter="https://lastorders.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
